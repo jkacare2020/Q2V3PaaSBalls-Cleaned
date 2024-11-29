@@ -20,23 +20,32 @@
           </div>
         </q-toolbar-title>
 
-        <!-- Render Avatar and Dropdown only if user is logged in -->
-        <div v-if="user">
-          <q-btn flat round @click.stop="toggleDropdown" class="q-ml-md">
-            <q-avatar>
-              <img :src="userAvatar || 'default-avatar.png'" />
-            </q-avatar>
-          </q-btn>
-          <q-menu v-model="dropdownOpen">
-            <q-list>
-              <q-item clickable @click="goToProfile">
-                <q-item-section>Profile</q-item-section>
-              </q-item>
-              <q-item clickable @click="logout">
-                <q-item-section>Logout</q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
+        <div>
+          <!-- Avatar and Dropdown only render if the user is logged in -->
+          <div v-if="user">
+            <q-btn flat round @click.stop="toggleDropdown" class="q-ml-md">
+              <q-avatar>
+                <img :src="userAvatar || 'default-avatar.png'" />
+              </q-avatar>
+            </q-btn>
+            <q-menu v-model="dropdownOpen">
+              <q-list>
+                <q-item clickable @click="goToProfile">
+                  <q-item-section>Profile</q-item-section>
+                </q-item>
+                <q-item clickable @click="logout">
+                  <q-item-section>Logout</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </div>
+
+          <!-- Login button is shown only if the user is not logged in -->
+          <div v-else>
+            <q-btn flat round @click="$router.push('/login')" class="q-ml-md">
+              Login
+            </q-btn>
+          </div>
         </div>
       </q-toolbar>
     </q-header>
@@ -129,13 +138,13 @@ function quitApp() {
 }
 
 function goToProfile() {
-  router.push("/profile");
-  dropdownOpen.value = false; // Ensure to close dropdown when navigating
+  router.push("/profile"); // Redirects to the User Profile page
+  dropdownOpen.value = false; // Ensure dropdown closes
 }
 
 function logout() {
   storeAuth.logoutUser();
+  dropdownOpen.value = false;
   $q.notify({ type: "negative", message: "Logged out successfully" });
-  dropdownOpen.value = false; // Ensure to close dropdown when logging out
 }
 </script>

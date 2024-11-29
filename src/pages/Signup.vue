@@ -38,10 +38,12 @@
           />
 
           <q-input
-            v-model="credentials.phoneNo"
+            v-model="formattedPhone"
             filled
             label="Phone Number"
-            :rules="[(value) => !!value || 'Phone number is required']"
+            :rules="[
+              (value) => !!normalizePhone(value) || 'Phone number is required',
+            ]"
           />
 
           <q-input
@@ -68,6 +70,7 @@
 import { ref } from "vue";
 import { useStoreAuth } from "src/stores/storeAuth";
 import { useRouter } from "vue-router";
+import { usePhoneFormat } from "src/use/formatPhone";
 
 const authStore = useStoreAuth();
 const router = useRouter();
@@ -81,11 +84,14 @@ const credentials = ref({
   companyName: "",
 });
 
+const { formattedPhone, normalizePhone } = usePhoneFormat();
+
 const loading = ref(false);
 
 const registerUser = async () => {
   loading.value = true;
   try {
+    credentials.value.phoneNo = normalizePhone(formattedPhone.value); // Normalize phone before submission
     await authStore.registerUser(credentials.value, {
       firstName: credentials.value.firstName,
       lastName: credentials.value.lastName,
@@ -101,9 +107,3 @@ const registerUser = async () => {
   }
 };
 </script>
-
-<style scoped>
-.full-width {
-  width: 100%;
-}
-</style>

@@ -20,7 +20,9 @@ export const useStoreAuth = defineStore("storeAuth", {
   actions: {
     async init() {
       const auth = getAuth();
+
       await setPersistence(auth, browserLocalPersistence);
+
       onAuthStateChanged(auth, (user) => {
         if (user) {
           this.user = user;
@@ -66,10 +68,12 @@ export const useStoreAuth = defineStore("storeAuth", {
         );
         const user = userCredential.user;
 
+        // Update the Firebase user profile with a display name
         await updateProfile(user, {
           displayName: `${additionalUserInfo.firstName} ${additionalUserInfo.lastName}`,
         });
 
+        // Create a reference for the Firestore document
         const userRef = doc(db, "users", user.uid);
         const registrationDate = new Date();
         const trialPeriodDays = 10;
@@ -77,7 +81,9 @@ export const useStoreAuth = defineStore("storeAuth", {
           registrationDate.getTime() + trialPeriodDays * 24 * 60 * 60 * 1000
         );
 
+        // Add email to the Firestore document
         await setDoc(userRef, {
+          email: credentials.email, // Include the email
           ...additionalUserInfo,
           role: "user",
           registrationDate: registrationDate,
@@ -87,7 +93,7 @@ export const useStoreAuth = defineStore("storeAuth", {
         return true; // Indicate successful registration
       } catch (error) {
         console.error("Registration error:", error.message);
-        throw error; // Rethrow the error to be handled in component
+        throw error; // Rethrow the error to be handled in the component
       }
     },
   },
