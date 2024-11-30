@@ -1,129 +1,88 @@
-// import { defineStore } from "pinia";
-// import { doc, getDoc } from "firebase/firestore";
-// import { db } from "../firebase/init";
-// import { useStoreAuth } from "src/stores/storeAuth";
-
-// export const useStoreUsers = defineStore("storeUsers", {
-//   state: () => {
-//     return {
-//       user: null,
-//       userLoaded: false,
-//     };
-//   },
-//   actions: {
-//     async init() {
-//       const storeAuth = useStoreAuth();
-
-//       // Ensure the user is authenticated
-//       if (!storeAuth.user) {
-//         console.error("No authenticated user found");
-//         this.userLoaded = true; // Stop spinner
-//         return;
-//       }
-
-//       // Use 'uid' for the user document reference
-//       const userDocRef = doc(db, "users", storeAuth.user.uid);
-//       console.log("Fetching data for UID:", storeAuth.user.uid);
-//       this.getUser(userDocRef);
-//     },
-
-//     async getUser(userDocRef) {
-//       this.userLoaded = false;
-
-//       try {
-//         const userDocSnapshot = await getDoc(userDocRef);
-//         if (userDocSnapshot.exists()) {
-//           this.user = {
-//             id: userDocSnapshot.id,
-//             email: userDocSnapshot.data().email, // Ensure email is retrieved
-//             firstName: userDocSnapshot.data().firstName,
-//             lastName: userDocSnapshot.data().lastName,
-//             role: userDocSnapshot.data().role,
-//             phoneNo: userDocSnapshot.data().phoneNo,
-//             companyName: userDocSnapshot.data().companyName,
-//             registrationDate: userDocSnapshot.data().registrationDate,
-//             trialEndDate: userDocSnapshot.data().trialEndDate,
-//           };
-//         } else {
-//           console.warn("User document not found in Firestore");
-//           this.user = null;
-//         }
-//       } catch (error) {
-//         console.error("Error getting user data:", error);
-//         this.user = null;
-//       } finally {
-//         this.userLoaded = true;
-//       }
-//     },
-
-//     async updateUserProfile(updatedProfile) {
-//       try {
-//         const userDocRef = doc(db, "users", updatedProfile.id);
-//         await setDoc(userDocRef, updatedProfile, { merge: true }); // Merge updates into existing document
-//         console.log("User profile updated successfully.");
-//       } catch (error) {
-//         console.error("Error updating user profile:", error);
-//         throw error;
-//       }
-//     },
-//     clearUsers() {
-//       this.user = null;
-//       this.userLoaded = false;
-//     },
-//   },
-// });
 import { defineStore } from "pinia";
-import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/init";
-import { useStoreAuth } from "src/stores/storeAuth";
-import { LocalStorage } from "quasar"; // Import Quasar LocalStorage
+import { doc, getDoc, getDocs, collection } from "firebase/firestore";
+import { LocalStorage } from "quasar";
+import { useStoreAuth } from "src/stores/storeAuth"; // Import the storeAuth for user ID
 
 export const useStoreUsers = defineStore("storeUsers", {
   state: () => ({
     user: LocalStorage.getItem("user") || null, // Initialize with saved user or null
+    usersList: [], // Holds list of users for admin
     userLoaded: !!LocalStorage.getItem("user"), // Check if user exists in LocalStorage
   }),
   actions: {
     async init() {
+      // Avoid re-fetching if user is already loaded
+      if (this.userLoaded) return;
+
       const storeAuth = useStoreAuth();
+      if (!storeAuth.user?.uid) {
+        console.error("No logged-in user found");
+        return;
+      }
+
       const userDocRef = doc(db, "users", storeAuth.user.uid);
-      this.getUser(userDocRef);
+      await this.getUser(userDocRef);
     },
+
     async getUser(userDocRef) {
       this.userLoaded = false;
 
       try {
+        console.log("Fetching user data from Firestore for:", userDocRef.id);
         const userDocSnapshot = await getDoc(userDocRef);
         if (userDocSnapshot.exists()) {
           this.user = {
             id: userDocSnapshot.id,
-            firstName: userDocSnapshot.data().firstName,
-            lastName: userDocSnapshot.data().lastName,
-            role: userDocSnapshot.data().role,
-            phoneNo: userDocSnapshot.data().phoneNo,
-            companyName: userDocSnapshot.data().companyName,
-            registrationDate: userDocSnapshot.data().registrationDate,
-            trialEndDate: userDocSnapshot.data().trialEndDate,
+            ...userDocSnapshot.data(), // Includes the role field
           };
+          console.log("Fetched user data:", this.user);
 
-          // Save the user data in LocalStorage
+          // Save the user data in LocalStorage for persistence
           LocalStorage.set("user", this.user);
         } else {
+          console.error(
+            "No user found with the given reference:",
+            userDocRef.id
+          );
           this.user = null;
-          LocalStorage.remove("user"); // Clear LocalStorage if user not found
+          LocalStorage.remove("user");
         }
-        this.userLoaded = true;
       } catch (error) {
         console.error("Error getting user:", error);
         this.user = null;
-        this.userLoaded = true;
-        LocalStorage.remove("user"); // Clear LocalStorage on error
+        LocalStorage.remove("user");
+      } finally {
+        this.userLoaded = true; // Mark user data as loaded
       }
     },
+
+    async getAllUsers() {
+      if (this.user?.role === "admin") {
+        try {
+          console.log("Fetching all users from Firestore...");
+          const usersSnapshot = await getDocs(collection(db, "users"));
+          this.usersList = usersSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          console.log("Fetched users:", this.usersList);
+        } catch (error) {
+          console.error("Error fetching all users:", error);
+        }
+      } else {
+        console.warn(
+          "Attempted to fetch users, but the current user is not an admin."
+        );
+      }
+    },
+
+    //--------------------------------------------------------------------
     clearUsers() {
       this.user = null;
       this.userLoaded = false;
       LocalStorage.remove("user"); // Clear LocalStorage on logout
+      console.log("Cleared user data from storeUsers and LocalStorage.");
     },
   },
 });

@@ -95,50 +95,128 @@
   </q-page>
 </template>
 
+//
 <script setup>
+// import { ref, onMounted } from "vue";
+// import { doc, getDoc, updateDoc } from "firebase/firestore";
+// import { db } from "src/firebase/init";
+// import { formatPhoneNumber } from "src/use/formatPhoneNumber";
+// import { useStoreAuth } from "src/stores/storeAuth";
+
+// const storeAuth = useStoreAuth();
+// const userId = storeAuth.user?.uid; // Declare userId here to make it available globally within the component
+// const editableUser = ref(null);
+// //------------------------------------Phone Format-------------------------
+// const formatPhone = () => {
+//   if (editableUser.value && editableUser.value.phoneNo) {
+//     editableUser.value.phoneNo = formatPhoneNumber(editableUser.value.phoneNo);
+//   }
+// };
+
+// // ---------------------------Fetch user data on component mount --------------------------------------
+// onMounted(async () => {
+//   // const userId = storeAuth.user?.uid; // Get the logged-in user's UID from storeAuth
+//   if (userId) {
+//     try {
+//       const userDoc = await getDoc(doc(db, "users", userId));
+//       if (userDoc.exists()) {
+//         editableUser.value = userDoc.data(); // Populate editableUser
+//       } else {
+//         console.error("User not found");
+//       }
+//     } catch (error) {
+//       console.error("Error fetching user:", error);
+//     }
+//   } else {
+//     console.error("User ID not found");
+//   }
+// });
+
+// // Save updated profile
+// const saveProfile = async () => {
+//   if (!editableUser.value) return;
+
+//   try {
+//     const userRef = doc(db, "users", userId);
+//     await updateDoc(userRef, {
+//       firstName: editableUser.value.firstName,
+//       lastName: editableUser.value.lastName,
+//       phoneNo: editableUser.value.phoneNo,
+//       companyName: editableUser.value.companyName,
+//       email: editableUser.value.email, // Include email update
+//     });
+//     console.log("Profile updated successfully");
+//     alert("Profile updated successfully!"); // Notify user
+//   } catch (error) {
+//     console.error("Error saving profile:", error);
+//     alert("Error updating profile.");
+//   }
+// };
+//
+
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "src/firebase/init";
-import { formatPhoneNumber } from "src/use/formatPhoneNumber";
+import { useStoreAuth } from "src/stores/storeAuth";
+import { useStoreUsers } from "src/stores/storeUsers";
 
 const route = useRoute();
-const userId = route.params.id;
+const storeAuth = useStoreAuth();
+const storeUsers = useStoreUsers();
+
 const editableUser = ref(null);
 
+// Use `let` instead of `const` for `userId` to allow reassignment.
+let userId = null; // Allow reassignment
+
+// Determine User ID to Fetch
+// If the route has an id parameter, it means the admin is trying to edit another user's profile.
+if (route.params.id) {
+  userId = route.params.id; // Admin editing another user's profile.
+} else {
+  // Otherwise, use the logged-in user's UID for a regular user editing their own profile.
+  userId = storeAuth.user?.uid;
+}
+
+// ------------------------------------Phone Format-------------------------
 const formatPhone = () => {
   if (editableUser.value && editableUser.value.phoneNo) {
     editableUser.value.phoneNo = formatPhoneNumber(editableUser.value.phoneNo);
   }
 };
 
-// Fetch user data on component mount
+// ---------------------------Fetch user data on component mount -----------------------------
 onMounted(async () => {
   if (userId) {
     try {
+      console.log("Fetching user data for:", userId);
       const userDoc = await getDoc(doc(db, "users", userId));
       if (userDoc.exists()) {
-        editableUser.value = userDoc.data(); // Populate editableUser
+        editableUser.value = userDoc.data(); // Populate editableUser with fetched data
       } else {
         console.error("User not found");
       }
     } catch (error) {
       console.error("Error fetching user:", error);
     }
+  } else {
+    console.error("User ID not found");
   }
 });
 
-// Save updated profile
+// ---------------------------Save updated profile -------------------------------------------
 const saveProfile = async () => {
   if (!editableUser.value) return;
 
   try {
-    const userRef = doc(db, "users", userId);
+    const userRef = doc(db, "users", userId); // Use the correct userId to update
     await updateDoc(userRef, {
       firstName: editableUser.value.firstName,
       lastName: editableUser.value.lastName,
       phoneNo: editableUser.value.phoneNo,
       companyName: editableUser.value.companyName,
+      email: editableUser.value.email,
     });
     console.log("Profile updated successfully");
     alert("Profile updated successfully!"); // Notify user

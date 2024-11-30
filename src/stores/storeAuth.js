@@ -4,7 +4,6 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   signInWithEmailAndPassword,
-  signOut,
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
@@ -12,27 +11,34 @@ import {
 
 import { db, auth } from "../firebase/init"; // Adjust the import path as necessary
 import { doc, setDoc } from "firebase/firestore";
+import { LocalStorage } from "quasar";
 
 export const useStoreAuth = defineStore("storeAuth", {
   state: () => ({
-    user: null,
+    user: LocalStorage.getItem("user") || null, // Initialize with user data from LocalStorage if available
   }),
   actions: {
+    // Initialize Firebase Authentication State Persistence
     async init() {
       const auth = getAuth();
 
       await setPersistence(auth, browserLocalPersistence);
 
+      // Check the current authentication state
       onAuthStateChanged(auth, (user) => {
         if (user) {
           this.user = user;
-          console.log("User is logged in:", user); // Log the user object to the console
+          LocalStorage.set("user", user); // Persist user data to LocalStorage
+          console.log("User is logged in:", user);
         } else {
           this.user = null;
-          console.log("No user is logged in."); // Notify when no user is logged in
+          LocalStorage.remove("user"); // Remove user data from LocalStorage when logged out
+          console.log("No user is logged in.");
         }
       });
     },
+
+    // Login User Action
     async loginUser({ email, password }) {
       const auth = getAuth();
       try {
@@ -41,22 +47,27 @@ export const useStoreAuth = defineStore("storeAuth", {
           email,
           password
         );
-        this.user = userCredential.user;
+        this.user = userCredential.user; // Set user state
+        LocalStorage.set("user", this.user); // Persist user data to LocalStorage
+        console.log("Login successful:", this.user);
       } catch (error) {
         throw new Error("Failed to login: " + error.message);
       }
     },
 
-    //-------------------------------Logout----------------
-    logoutUser() {
-      signOut(auth)
-        .then(() => {
-          // console.log('User signed out')
-        })
-        .catch((error) => {
-          // console.log(error.message)
-        });
+    // Logout User Action
+    async logoutUser() {
+      const auth = getAuth();
+      try {
+        await auth.signOut(); // Sign out the user
+        this.user = null; // Clear user state
+        LocalStorage.remove("user"); // Remove user data from LocalStorage
+        console.log("User logged out successfully");
+      } catch (error) {
+        throw new Error("Failed to log out: " + error.message);
+      }
     },
+
     //-------------------------------Signup-------------------------
     async registerUser(credentials, additionalUserInfo) {
       const auth = getAuth();

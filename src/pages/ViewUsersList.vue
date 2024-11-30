@@ -33,30 +33,30 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useStoreUsers } from "src/stores/storeUsers";
 import { useRouter } from "vue-router";
 
 const storeUsers = useStoreUsers();
 const router = useRouter();
+const isAdmin = computed(() => storeUsers.user?.role === "admin");
 
-const users = computed(() => {
-  if (storeUsers.user) {
-    return [
-      {
-        id: storeUsers.user.id,
-        registrationDate: storeUsers.user.registrationDate,
-        trialEndDate: storeUsers.user.trialEndDate,
-        email: storeUsers.user.email,
-        role: storeUsers.user.role,
-        firstName: storeUsers.user.firstName,
-        lastName: storeUsers.user.lastName,
-        phoneNo: storeUsers.user.phoneNo,
-        companyName: storeUsers.user.companyName,
-      },
-    ];
+// Fetch all users if the logged-in user is an admin
+onMounted(() => {
+  console.log("Admin Status:", isAdmin.value); // Check if the user is detected as an admin
+
+  if (isAdmin.value) {
+    storeUsers.getAllUsers(); // Fetch all users for admin
+  } else {
+    console.warn("User is not an admin, cannot fetch users list.");
   }
-  return [];
+});
+
+// Computed list of users for the table
+const users = computed(() => {
+  const usersData = isAdmin.value ? storeUsers.usersList : [];
+  console.log("Computed users list:", usersData);
+  return usersData;
 });
 
 const columns = [

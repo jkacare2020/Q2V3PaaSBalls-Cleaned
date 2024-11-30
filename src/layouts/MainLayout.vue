@@ -100,8 +100,11 @@ import { useQuasar } from "quasar";
 import { useStoreAuth } from "src/stores/storeAuth"; // Import your auth store
 import { useLightOrDark } from "src/use/useLightOrDark";
 import NavLink from "components/Nav/NavLink.vue";
-import router from "src/router";
+import { useRouter } from "vue-router";
+import { useStoreUsers } from "src/stores/storeUsers";
+const storeUsers = useStoreUsers();
 
+const router = useRouter();
 const $q = useQuasar();
 const storeAuth = useStoreAuth(); // Use auth store
 const user = computed(() => storeAuth.user); // Reactive user data
@@ -138,13 +141,34 @@ function quitApp() {
 }
 
 function goToProfile() {
-  router.push("/profile"); // Redirects to the User Profile page
-  dropdownOpen.value = false; // Ensure dropdown closes
+  if (storeAuth.user) {
+    router.push("/profile"); // Redirects to the User Profile page
+    dropdownOpen.value = false; // Ensure dropdown closes
+  } else {
+    console.error("User is not logged in");
+    router.push("/login"); // Redirect to login if the user is not logged in
+  }
 }
 
 function logout() {
+  // Perform the logout action
   storeAuth.logoutUser();
+
+  storeUsers.clearUsers(); // Clear the user data from storeUsers and LocalStorage
+
+  // Close the dropdown if it's open
   dropdownOpen.value = false;
-  $q.notify({ type: "negative", message: "Logged out successfully" });
+
+  // Notify the user
+  $q.notify({
+    type: "negative",
+    message: "Logged out successfully",
+    timeout: 1500, // Show the notification for 1.5 seconds
+  });
+
+  // Redirect to the homepage or login page after the notification
+  setTimeout(() => {
+    router.push("/login"); // Redirect to the homepage (or use "/login" if needed)
+  }, 1500); // Wait until notification is shown before redirecting
 }
 </script>
