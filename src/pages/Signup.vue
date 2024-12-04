@@ -47,10 +47,10 @@
           />
 
           <q-input
-            v-model="credentials.companyName"
+            v-model="credentials.displayName"
             filled
-            label="Company Name"
-            :rules="[(value) => !!value || 'Company name is required']"
+            label="Display Name"
+            :rules="[(value) => !!value || 'Display name is required']"
           />
 
           <q-btn
@@ -81,7 +81,7 @@ const credentials = ref({
   firstName: "",
   lastName: "",
   phoneNo: "",
-  companyName: "",
+  displayName: "",
 });
 
 const { formattedPhone, normalizePhone } = usePhoneFormat();
@@ -96,7 +96,7 @@ const registerUser = async () => {
       firstName: credentials.value.firstName,
       lastName: credentials.value.lastName,
       phoneNo: credentials.value.phoneNo,
-      companyName: credentials.value.companyName,
+      displayName: credentials.value.displayName,
     });
     // Navigate to home page or dashboard after successful registration
     router.push("/");

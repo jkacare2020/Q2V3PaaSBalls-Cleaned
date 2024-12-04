@@ -30,6 +30,13 @@ const routes = [
         name: "UserProfile",
       },
       {
+        path: "/camera",
+        component: () => import("pages/PageCamera.vue"),
+        meta: { requiresAuth: true },
+        name: "Camera",
+      },
+      { path: "/photo", component: () => import("pages/PageHome.vue") },
+      {
         path: "/users",
         component: () => import("pages/ViewUsersList.vue"),
         meta: { requiresAuth: true },
@@ -47,6 +54,16 @@ const routes = [
             next("/profile"); // Redirect to profile or another appropriate page if not admin
           }
         },
+      },
+      {
+        path: "/mongo-users",
+        component: () => import("pages/UsersPage.vue"),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "/mongo-transacts",
+        component: () => import("pages/PageMongoTran.vue"),
+        meta: { requiresAuth: true },
       },
     ],
   },

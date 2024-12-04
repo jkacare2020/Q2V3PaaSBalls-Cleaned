@@ -5,7 +5,8 @@
 
 // dark overrides
 .body--dark {
-  .bg-primary, .q-layout__section--marginal {
+  .bg-primary,
+  .q-layout__section--marginal {
     background-color: $primary-dark !important;
   }
   .q-drawer {
@@ -24,7 +25,7 @@
 }
 
 // number inputs
-input::-webkit-outer-spin-button, 
+input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   margin-left: 10px;
 }
@@ -76,5 +77,46 @@ input::-webkit-inner-spin-button {
 .add-entry-form {
   .q-field--error .q-field__bottom {
     color: $negative-light;
+  }
+}
+
+// Global styling for active and clickable q-items in the drawer
+.q-drawer {
+  .q-item {
+    opacity: 0.6;
+    transition: background-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+
+    &.q-router-link--exact-active {
+      opacity: 1;
+      background-color: #1976d2 !important; // Bright active background (blue)
+      color: #ffffff !important; // Bright white text color to ensure visibility
+      font-weight: bold; // Make the text bold when active
+    }
+
+    // Hover effect for all items, making it clear when hovered
+    &:hover {
+      background-color: rgba(
+        255,
+        255,
+        255,
+        0.2
+      ) !important; // Slightly lighter background when hovered
+      color: #ffffff !important; // Ensure the text remains readable
+    }
+
+    // Styling specifically for the Users link to differentiate it more clearly
+    &.admin-link.q-router-link--exact-active {
+      background-color: #ffca28 !important; // Highlight Users link with bright yellow when active
+      color: #000000 !important; // Ensure text contrast is good
+      font-weight: bold !important;
+    }
+    &:hover {
+      background-color: rgba(
+        255,
+        255,
+        255,
+        0.3
+      ) !important; // Slightly lighter background on hover for Users link
+    }
   }
 }

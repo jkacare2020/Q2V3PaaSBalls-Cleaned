@@ -17,6 +17,12 @@
             />
           </div>
         </q-form>
+
+        <!-- Add "Not registered yet?" link for signup -->
+        <div class="q-mt-md text-center">
+          <span>Not registered yet?</span>
+          <q-btn flat label="Sign Up" color="primary" @click="goToSignup" />
+        </div>
       </q-card-section>
     </q-card>
   </q-page>
@@ -42,6 +48,10 @@ function login() {
       console.error(error);
       alert(error.message); // Simple error feedback
     });
+}
+
+function goToSignup() {
+  router.push("/signup"); // Redirect to the signup page
 }
 </script>
 

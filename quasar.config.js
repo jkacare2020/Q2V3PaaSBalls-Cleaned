@@ -12,6 +12,12 @@ const { configure } = require("quasar/wrappers");
 const path = require("path");
 
 module.exports = configure(function (/* ctx */) {
+  // Hardcoded values as a fallback for testing purposes
+  let VUE_APP_API_LOCAL = "http://localhost:3000";
+
+  console.log("Current Environment:", process.env.NODE_ENV);
+  console.log("Hardcoded API Local:", VUE_APP_API_LOCAL);
+  console.log("Hardcoded API Production:", VUE_APP_API_PRODUCTION);
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -32,7 +38,7 @@ module.exports = configure(function (/* ctx */) {
       // 'ionicons-v4',
       // 'mdi-v7',
       // 'fontawesome-v6',
-      // 'eva-icons',
+      "eva-icons",
       // 'themify',
       // 'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
@@ -53,6 +59,24 @@ module.exports = configure(function (/* ctx */) {
           ...cfg.resolve.alias, // This adds to existing aliases
           "@": path.resolve(__dirname, "./src"),
         };
+      },
+
+      env: {
+        // Choose the correct API based on the environment
+        API: VUE_APP_API_LOCAL,
+        // process.env.NODE_ENV === "production"
+        //   ? process.env.VUE_APP_API_PRODUCTION // Production API for production build
+        //   : process.env.VUE_APP_API_LOCAL, // Local API for development
+
+        // Firebase keys
+        VUE_APP_FIREBASE_API_KEY: process.env.VUE_APP_FIREBASE_API_KEY,
+        VUE_APP_FIREBASE_AUTH_DOMAIN: process.env.VUE_APP_FIREBASE_AUTH_DOMAIN,
+        VUE_APP_FIREBASE_PROJECT_ID: process.env.VUE_APP_FIREBASE_PROJECT_ID,
+        VUE_APP_FIREBASE_STORAGE_BUCKET:
+          process.env.VUE_APP_FIREBASE_STORAGE_BUCKET,
+        VUE_APP_FIREBASE_MESSAGING_SENDER_ID:
+          process.env.VUE_APP_FIREBASE_MESSAGING_SENDER_ID,
+        VUE_APP_FIREBASE_APP_ID: process.env.VUE_APP_FIREBASE_APP_ID,
       },
 
       // vitePlugins: [
@@ -112,7 +136,7 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: ["Dialog", "Notify", "LocalStorage"],
+      plugins: ["Dialog", "Notify", "Loading", "LocalStorage"],
     },
 
     // animations: 'all', // --- includes all animations

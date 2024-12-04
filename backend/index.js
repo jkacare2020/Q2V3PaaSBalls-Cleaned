@@ -1,7 +1,7 @@
 const express = require("express");
 const admin = require("firebase-admin");
 const inspect = require("util").inspect;
-const Busboy = require("busboy");
+const Busboy = require("busboy").default || require("busboy");
 const path = require("path");
 const os = require("os");
 const fs = require("fs");
@@ -30,8 +30,8 @@ app.use(
   cors({
     origin: function (origin, callback) {
       const allowedOrigins = [
-        "https://guasar-jason2024.web.app",
-        "http://localhost:8080",
+        // "https://guasar-jason2024.web.app",
+        "http://localhost:9000",
       ];
       if (!origin || allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
@@ -43,7 +43,7 @@ app.use(
     allowedHeaders: "Content-Type, Authorization",
   })
 );
-
+//----------------------MongoDB---------------
 app.get("/mongo-users", async (req, res) => {
   const authHeader = req.headers.authorization;
 
@@ -92,7 +92,7 @@ async function isAdmin(userId) {
   }
 }
 
-//--------------------------------- Transactions Admin--------------------
+//----------------------------MongoDB Transactions Admin--------------------
 app.get("/mongo-transacts", async (req, res) => {
   const { phone } = req.query;
   const authHeader = req.headers.authorization;
@@ -269,9 +269,11 @@ const dbFirestore = admin.firestore();
 let bucket = admin.storage().bucket();
 
 app.get("/posts", async (req, res) => {
+  console.log("Received request to /posts"); // Log when a request is received
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("Authorization header missing or invalid");
       return res.status(401).send("Unauthorized");
     }
 
@@ -279,8 +281,8 @@ app.get("/posts", async (req, res) => {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
 
     const userId = decodedToken.uid;
-    // console.log("Post UserId :", userId);
-    // console.log("Post idToken :", idToken);
+    console.log("Post UserId :", userId);
+    console.log("Post idToken :", idToken);
 
     let posts = [];
     const snapshot = await dbFirestore
@@ -362,15 +364,27 @@ app.post("/createPost", async (request, response) => {
 
   // Proceed with the rest of the document creation logic
   const uuid = UUID(); // Use const if UUID result won't change
-  const busboy = new Busboy({ headers: request.headers }); // Use const as busboy is not reassigned
+  const busboy = Busboy({ headers: request.headers }); // Updated syntax: remove 'new'
+
   let fields = {};
   let fileData = {};
   let imageUrl;
 
-  busboy.on("file", function (fieldname, file, filename, encoding, mimetype) {
+  busboy.on("file", function (fieldname, file, info) {
+    const { filename, encoding, mimetype } = info;
+
+    if (!filename) {
+      console.error("No file provided");
+      return;
+    }
+
     console.log("Busboy received file:", filename);
-    let filepath = path.join(os.tmpdir(), filename);
+
+    // Use path.join and ensure filename is properly used
+    const filepath = path.join(os.tmpdir(), filename);
     file.pipe(fs.createWriteStream(filepath));
+
+    // Store file metadata
     fileData = { filepath, mimetype };
   });
 
@@ -381,8 +395,8 @@ app.post("/createPost", async (request, response) => {
 
   busboy.on("finish", function () {
     console.log("Busboy finished processing.");
-    // Rest of the code...
 
+    // Proceed with uploading the file to Firebase storage
     bucket.upload(
       fileData.filepath,
       {
@@ -397,6 +411,9 @@ app.post("/createPost", async (request, response) => {
       (err, uploadedFile) => {
         if (!err) {
           createDocument(uploadedFile);
+        } else {
+          console.error("Error uploading file:", err);
+          response.status(500).send("Error uploading file");
         }
       }
     );
@@ -410,7 +427,7 @@ app.post("/createPost", async (request, response) => {
         location: fields.location,
         date: parseInt(fields.date),
         imageUrl: imageUrl,
-        userId: userId, // Confirm this is being passed to Firestore
+        userId: userId,
       });
 
       dbFirestore
@@ -422,7 +439,7 @@ app.post("/createPost", async (request, response) => {
           location: fields.location,
           date: parseInt(fields.date),
           imageUrl: imageUrl,
-          userId: userId, // Make sure the userId is included here
+          userId: userId,
         })
         .then(() => {
           response.send("Post added: " + fields.id);

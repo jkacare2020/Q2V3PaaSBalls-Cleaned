@@ -81,7 +81,9 @@ export const useStoreAuth = defineStore("storeAuth", {
 
         // Update the Firebase user profile with a display name
         await updateProfile(user, {
-          displayName: `${additionalUserInfo.firstName} ${additionalUserInfo.lastName}`,
+          // displayName: `${additionalUserInfo.firstName} ${additionalUserInfo.lastName}`,
+
+          displayName: additionalUserInfo.displayName,
         });
 
         // Create a reference for the Firestore document
