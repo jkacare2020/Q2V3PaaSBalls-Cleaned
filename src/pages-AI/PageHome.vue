@@ -196,7 +196,7 @@ const getPosts = () => {
     .getIdToken()
     .then((idToken) => {
       axios
-        .get(`${process.env.API}/api/posts`, {
+        .get(`${process.env.API}/posts`, {
           headers: {
             Authorization: `Bearer ${idToken}`,
           },
@@ -225,7 +225,7 @@ const deletePost = (postId) => {
   console.log("deletePost function called with postId:", postId);
   auth.currentUser.getIdToken().then((idToken) => {
     axios
-      .delete(`${process.env.API}/api/posts/${postId}`, {
+      .delete(`${process.env.API}/posts/${postId}`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },

@@ -60,43 +60,12 @@ const users = computed(() => {
 });
 
 const columns = [
-  {
-    name: "firstName",
-    label: "First Name",
-    align: "left",
-    field: "firstName",
-  },
-  {
-    name: "lastName",
-    label: "Last Name",
-    align: "left",
-    field: "lastName",
-  },
-  {
-    name: "email",
-    label: "Email Address",
-    align: "left",
-    field: "email",
-  },
-  {
-    name: "phoneNo",
-    label: "Phone Number",
-    align: "left",
-    field: "phoneNo",
-  },
-  {
-    name: "companyName",
-    label: "Company Name",
-    align: "left",
-    field: "companyName",
-  },
-  {
-    name: "actions",
-    label: "Actions",
-    align: "left",
-    field: "actions",
-    align: "center",
-  },
+  { name: "firstName", label: "First Name", field: "firstName" },
+  { name: "lastName", label: "Last Name", field: "lastName" },
+  { name: "email", label: "Email", field: "email" },
+  { name: "phoneNo", label: "Phone Number", field: "phoneNo" },
+  { name: "companyName", label: "Company Name", field: "companyName" },
+  { name: "actions", label: "Actions", field: "actions", align: "center" },
 ];
 
 function openUserProfile(userId) {

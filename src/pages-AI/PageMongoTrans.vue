@@ -13,12 +13,12 @@
       </q-item-section>
     </q-item>
     <div v-if="!isAuthenticated" class="q-pa-md q-mt-lg">
-      <!-- <q-btn
+      <q-btn
         @click="goToSignup"
         label="Sign Up"
         color="primary"
         class="q-mt-md full-width"
-      /> -->
+      />
     </div>
   </div>
 
@@ -55,7 +55,6 @@
         <th class="text-left">TranAmount</th>
         <th class="text-left">TranStatus</th>
         <th class="text-left">Request Date</th>
-        <th class="text-left">Edit</th>
       </tr>
     </thead>
     <tbody>
@@ -70,22 +69,6 @@
         </td>
         <td class="text-left">{{ transact.tran_status }}</td>
         <td class="text-left">{{ formatDate(transact.req_date) }}</td>
-
-        <td class="text-left">
-          <q-btn
-            dense
-            flat
-            icon="edit"
-            color="primary"
-            @click="
-              () => {
-                console.log('Edit button clicked');
-                openEditForm(transact._id);
-              }
-            "
-            aria-label="Edit Transaction"
-          />
-        </td>
       </tr>
     </tbody>
   </q-markup-table>
@@ -106,9 +89,6 @@ import axios from "axios";
 import { db, storage } from "src/firebase/init"; // Import Firestore and Storage instances
 import { collection, getDocs } from "firebase/firestore"; // Import Firestore functions
 import defaultAvatar from "src/assets/avatar.jpg"; // Import default avatar
-import { useRouter } from "vue-router";
-import { auth } from "src/firebase/init"; // Adjust the path as needed
-const router = useRouter();
 
 const storeAuth = useStoreAuth();
 const avatarUrl = ref(defaultAvatar);
@@ -117,9 +97,6 @@ const email = ref(storeAuth.user?.email || "user@example.com");
 const isAuthenticated = ref(false);
 const formattedPhone = ref("");
 const transacts = ref([]);
-
-const editForm = ref({});
-const editDialog = ref(false);
 
 onMounted(async () => {
   if (storeAuth.user) {
@@ -169,7 +146,7 @@ async function fetchTransactions() {
 
       // Make the request with the Authorization header
       const response = await axios.get(
-        `${process.env.API}/api/mongo-transacts?phone=${normalizedPhone}`,
+        `${process.env.API}/mongo-transacts?phone=${normalizedPhone}`,
         {
           headers: {
             Authorization: `Bearer ${idToken}`, // Include token in Authorization header
@@ -186,48 +163,6 @@ async function fetchTransactions() {
     alert("Please enter a valid 10-digit phone number.");
   }
 }
-
-//------------------------------------------------------
-async function openEditForm(transactId) {
-  console.log("openEditForm triggered with transactId:", transactId);
-
-  // Ensure the user is logged in and retrieve a fresh token if needed
-  const currentUser = auth.currentUser;
-  if (!currentUser) {
-    console.error("User is not logged in.");
-    return;
-  }
-
-  const idToken = await currentUser.getIdToken(true);
-  console.log("Authorization Token:", idToken);
-  localStorage.setItem("idToken", idToken);
-
-  try {
-    const response = await axios.get(
-      `${process.env.API}/api/transactions/${transactId}`,
-      {
-        headers: { Authorization: `Bearer ${idToken}` },
-      }
-    );
-    console.log("PageMongoTran Fetched transaction data:", response.data);
-    router.push(`/view-transaction/${transactId}`);
-  } catch (error) {
-    console.error("Error fetching transaction data:", error);
-    if (error.response) {
-      console.error("API Error Response:", error.response.data);
-    }
-  }
-}
-
-// async function openEditForm(transactionId) {
-//   const transaction = transacts.value.find((t) => t._id === transactionId);
-//   if (transaction) {
-//     editForm.value = { ...transaction }; // Clone transaction data for editing
-//     editDialog.value = true; // Open the edit dialog
-//   } else {
-//     console.error("Transaction not found in the list.");
-//   }
-// }
 
 // Compute the total amount from all transactions
 const totalAmount = computed(() => {

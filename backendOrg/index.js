@@ -7,7 +7,6 @@ const os = require("os");
 const fs = require("fs");
 const { v4: UUID } = require("uuid"); // Updated to use `uuid` package
 const webpush = require("web-push");
-
 const cors = require("cors");
 // const mongoose = require("mongoose");
 const connectDB = require("./db/mongooseConfig");
@@ -133,10 +132,7 @@ app.get("/mongo-transacts", async (req, res) => {
   console.log("Querying MongoDB with filter:", query);
 
   try {
-    const transacts = await Transact.find(query).sort({
-      req_date: -1,
-      transact_number: -1,
-    });
+    const transacts = await Transact.find(query).sort({ req_date: -1 });
     if (transacts.length === 0) {
       return res.status(404).json({ message: "No transactions found" });
     }
@@ -211,7 +207,7 @@ app.get("/mongo-transacts-backupOrg", async (req, res) => {
   }
 });
 //--------------------------------------------------------------
-app.get("/api/transacts/:id", async (req, res) => {
+app.get("/transacts/:id", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {

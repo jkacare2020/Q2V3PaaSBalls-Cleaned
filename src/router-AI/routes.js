@@ -55,20 +55,37 @@ const routes = [
           }
         },
       },
+
+      {
+        path: "/mongo-transacts",
+        component: () => import("pages/PageMongoTrans.vue"),
+        meta: { requiresAuth: true },
+      },
       {
         path: "/mongo-users",
         component: () => import("pages/PageMongoUsers.vue"),
         meta: { requiresAuth: true },
       },
+
+      // New AI Functionality Routes
       {
-        path: "/mongo-transacts",
-        component: () => import("pages/PageMongoTran.vue"),
+        path: "/ai/image-processing",
+        component: () => import("pages/ImageProcessing.vue"),
         meta: { requiresAuth: true },
       },
-
       {
-        path: "/view-transaction/:transactId",
-        component: () => import("pages/ViewTransact.vue"),
+        path: "/ai/video-processing",
+        component: () => import("pages/VideoProcessing.vue"),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "/ai/voice-recognition",
+        component: () => import("pages/VoiceRecognition.vue"),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "/ai/model-training",
+        component: () => import("pages/ModelTraining.vue"),
         meta: { requiresAuth: true },
       },
     ],

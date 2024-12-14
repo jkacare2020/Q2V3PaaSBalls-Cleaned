@@ -85,8 +85,6 @@ import { ref, reactive, computed, onMounted } from "vue";
 import { uid, useQuasar } from "quasar";
 import { auth } from "src/firebase/init";
 import axios from "axios";
-import { useRouter } from "vue-router";
-const router = useRouter();
 
 const $q = useQuasar();
 
@@ -273,7 +271,7 @@ async function addPost() {
     console.log("API URL:", process.env.API);
 
     const idToken = await user.getIdToken();
-    await axios.post(`${process.env.API}/api/create-post`, formData, {
+    await axios.post(`${process.env.API}/createPost`, formData, {
       headers: { Authorization: `Bearer ${idToken}` },
     });
     $q.localStorage.set("postCreated", true);
@@ -281,10 +279,6 @@ async function addPost() {
       message: "Post created!",
       actions: [{ label: "Dismiss", color: "white" }],
     });
-
-    // Redirect to the photo page
-    router.push("/photo");
-
     $q.loading.hide();
   } catch (err) {
     addPostError();
