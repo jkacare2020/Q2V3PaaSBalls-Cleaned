@@ -1,48 +1,27 @@
 <template>
   <div class="col-4 large-screen-only">
     <q-item class="fixed">
-      <!-- <q-item-section avatar>
-        <q-avatar size="48px">
-          <img :src="avatarUrl" :alt="username" />
-        </q-avatar>
-      </q-item-section> -->
-
       <q-item-section>
         <q-item-label class="text-bold">{{ username }}</q-item-label>
         <q-item-label caption> {{ email }} </q-item-label>
       </q-item-section>
     </q-item>
-    <div v-if="!isAuthenticated" class="q-pa-md q-mt-lg">
-      <!-- <q-btn
-        @click="goToSignup"
-        label="Sign Up"
-        color="primary"
-        class="q-mt-md full-width"
-      /> -->
-    </div>
   </div>
 
-  <!-- Search transactions by phone number -->
-  <div class="q-mt-xl q-ml-sm q-mr-sm">
-    <q-input
-      v-model="formattedPhone"
-      label="Search by Phone (Auto Format: (xxx) xxx-xxxx)"
-      outlined
-      @input="formatPhone"
-      @keyup.enter="fetchTransactions"
-    />
-    <q-btn
-      label="Search"
+  <div>
+    <!-- Loading spinner -->
+    <q-spinner
+      v-if="isLoading"
       color="primary"
-      class="q-mt-sm"
-      @click="fetchTransactions"
+      size="3em"
+      class="q-mt-lg q-ml-md"
     />
   </div>
 
   <!-- Transactions Table -->
   <q-markup-table
     dark
-    class="bg-indigo-8 q-mt-lg q-p-md q-ml-sm q-mr-sm"
+    class="bg-indigo-8 q-mt-xl q-p-md q-ml-sm q-mr-sm"
     v-if="transacts.length > 0"
   >
     <thead>
@@ -105,138 +84,111 @@
       </tr>
     </tbody>
   </q-markup-table>
-
+  <div v-else-if="!isLoading" class="q-mt-md q-ml-sm"></div>
   <!-- Total Amount -->
   <div v-if="transacts.length > 0" class="q-mt-md q-ml-sm">
     <strong> Total Transaction Amount:</strong>
     {{ formatCurrency(totalAmount) }}
   </div>
-
-  <div v-else>No transactions found for the phone number.</div>
 </template>
 
 <script setup>
 import { useStoreAuth } from "src/stores/storeAuth";
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, computed } from "vue";
 import axios from "axios";
-import { db, storage } from "src/firebase/init"; // Import Firestore and Storage instances
-import { collection, getDocs } from "firebase/firestore"; // Import Firestore functions
-import defaultAvatar from "src/assets/avatar.jpg"; // Import default avatar
+import { db, auth } from "src/firebase/init"; // Import Firestore
+import { collection, getDocs } from "firebase/firestore";
+import defaultAvatar from "src/assets/avatar.jpg";
 import { useRouter } from "vue-router";
-import { auth } from "src/firebase/init"; // Adjust the path as needed
+import { onAuthStateChanged } from "firebase/auth";
 import { useQuasar } from "quasar";
+
 const $q = useQuasar();
-
 const router = useRouter();
-
 const storeAuth = useStoreAuth();
+
 const avatarUrl = ref(defaultAvatar);
-const username = ref(storeAuth.user?.displayName || "User Name");
-const email = ref(storeAuth.user?.email || "user@example.com");
+const username = ref("User Name");
+const email = ref("user@example.com");
 const isAuthenticated = ref(false);
-const formattedPhone = ref("");
 const transacts = ref([]);
+const isLoading = ref(false);
 
-const editForm = ref({});
-const editDialog = ref(false);
-
-onMounted(async () => {
-  if (storeAuth.user) {
-    username.value = storeAuth.user.displayName;
-    email.value = storeAuth.user.email;
-    isAuthenticated.value = true;
-
-    // Fetch avatar from users collection's avatar subcollection
-    try {
-      const avatarCollectionRef = collection(
-        db,
-        `users/${storeAuth.user.uid}/avatar`
-      );
-      const avatarSnapshot = await getDocs(avatarCollectionRef);
-      if (!avatarSnapshot.empty) {
-        const avatarDoc = avatarSnapshot.docs[0]; // Assume there is only one avatar
-        avatarUrl.value = avatarDoc.data().imageUrl;
-      }
-    } catch (error) {
-      console.error("Error fetching avatar: ", error);
+// Fetch avatar
+async function fetchAvatar(userId) {
+  try {
+    const avatarCollectionRef = collection(db, `users/${userId}/avatar`);
+    const avatarSnapshot = await getDocs(avatarCollectionRef);
+    if (!avatarSnapshot.empty) {
+      const avatarDoc = avatarSnapshot.docs[0];
+      avatarUrl.value = avatarDoc.data().imageUrl;
     }
-  }
-});
-
-// Watch the phone number input and auto-format it
-watch(formattedPhone, (newPhone) => {
-  formatPhone(newPhone);
-});
-
-function formatPhone(phone) {
-  const cleaned = phone.replace(/\D/g, ""); // Remove all non-numeric characters
-  if (cleaned.length >= 10) {
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      formattedPhone.value = `(${match[1]}) ${match[2]}-${match[3]}`;
-    }
+  } catch (error) {
+    console.error("Error fetching avatar: ", error);
   }
 }
 
+// Fetch transactions
 async function fetchTransactions() {
-  const normalizedPhone = formattedPhone.value.replace(/\D/g, ""); // Use normalized phone number for search
+  try {
+    const idToken = await storeAuth.user?.getIdToken();
 
-  if (normalizedPhone.length === 10) {
-    try {
-      // Get Firebase ID token
-      const idToken = await storeAuth.user.getIdToken();
-
-      // Make the request with the Authorization header
-      const response = await axios.get(
-        `${process.env.API}/api/mongo-transacts?phone=${normalizedPhone}`,
-        {
-          headers: {
-            Authorization: `Bearer ${idToken}`, // Include token in Authorization header
-          },
-        }
-      );
-
-      console.log("Transact Backend URL:", process.env.API);
-
-      // Handle response data
-      if (response.data && response.data.length > 0) {
-        transacts.value = response.data;
-        $q.notify({
-          color: "positive",
-          message: "Transactions fetched successfully!",
-          icon: "check",
-          position: "top",
-        });
-      } else {
-        transacts.value = []; // Clear the table if no records are found
-        $q.notify({
-          color: "warning",
-          message: "No transactions found for this phone number.",
-          icon: "warning",
-          position: "top",
-        });
+    const response = await axios.get(
+      `${process.env.API}/api/mongo-AllTransacts`,
+      {
+        headers: { Authorization: `Bearer ${idToken}` },
       }
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
+    );
+
+    if (response.data && response.data.length > 0) {
+      transacts.value = response.data;
       $q.notify({
-        color: "negative",
-        message: "Failed to fetch transactions.",
-        icon: "error",
-        position: "center",
+        color: "positive",
+        message: "Transactions fetched successfully!",
+        icon: "check",
+        position: "top",
+      });
+      isLoading.value = false; // Stop loading spinner
+    } else {
+      transacts.value = [];
+      $q.notify({
+        color: "warning",
+        message: "No transactions found.",
+        icon: "warning",
+        position: "top",
       });
     }
-  } else {
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
     $q.notify({
-      color: "warning",
-      message: "Please enter a valid 10-digit phone number.",
-      icon: "warning",
+      color: "negative",
+      message: "Failed to fetch transactions.",
+      icon: "error",
       position: "center",
     });
+    isLoading.value = false; // Stop loading spinner
   }
 }
 
+// Handle authentication state changes
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    console.log("User authenticated:", user);
+    username.value = user.displayName || "User Name";
+    email.value = user.email || "user@example.com";
+    isAuthenticated.value = true;
+    isLoading.value = true; // Start loading spinner
+    // Fetch avatar and transactions
+    await fetchAvatar(user.uid);
+    await fetchTransactions();
+  } else {
+    console.log("User not logged in.");
+    isAuthenticated.value = false;
+    transacts.value = []; // Clear transactions
+  }
+});
+
 //------------------------------------------------------
-const isLoading = ref(false);
 
 async function openEditForm(transactId) {
   console.log("openEditForm triggered with transactId:", transactId);
@@ -296,12 +248,6 @@ async function openDeleteForm(transactId) {
       })
       .onOk();
 
-    // if (!result) {
-    //   console.log("Delete action canceled by the user.");
-    //   return; // User canceled the action
-    // }
-
-    // Make the delete request
     const response = await axios.delete(
       `${process.env.API}/api/transactions/${transactId}`,
       {

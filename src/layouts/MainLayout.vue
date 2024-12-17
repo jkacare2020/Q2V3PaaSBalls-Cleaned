@@ -75,6 +75,29 @@
           :active-class="'active-link'"
         />
 
+        <!-- Transacts Submenu -->
+        <q-expansion-item
+          icon="folder"
+          class="text-white"
+          label="Transactions"
+          expand-separator
+          dense
+        >
+          <q-item clickable v-ripple @click="navigateToViewEditTransactions">
+            <q-item-section avatar>
+              <q-icon name="table_chart" />
+            </q-item-section>
+            <q-item-section>View / Edit</q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple @click="navigateToNewTransaction">
+            <q-item-section avatar>
+              <q-icon name="add" />
+            </q-item-section>
+            <q-item-section>Create New</q-item-section>
+          </q-item>
+        </q-expansion-item>
+
         <!-- Users link: Ensure proper styling for interactive elements -->
         <q-item
           v-if="isAdmin"
@@ -159,7 +182,7 @@ const navLinks = [
   { title: "Settings", icon: "settings", link: "/settings" },
   { title: "Camera", icon: "eva-camera", link: "/camera" },
   { title: "Photos", icon: "image", link: "/photo" },
-  { title: "Transacts", icon: "point_of_sale", link: "/mongo-transacts" },
+  { title: "allTransacts", icon: "point_of_sale", link: "/mongo-AllTransacts" },
 ];
 
 // Toggles the drawer's visibility
@@ -177,6 +200,16 @@ function goToPage(page) {
     default:
       break;
   }
+}
+
+function navigateToViewEditTransactions() {
+  router.push("/mongo-transacts");
+  leftDrawerOpen.value = false; // Close the drawer after navigation
+}
+
+function navigateToNewTransaction() {
+  router.push("/new-transaction"); // Add the route for creating a new transaction
+  leftDrawerOpen.value = false;
 }
 
 // Go to profile page of the logged-in user

@@ -71,9 +71,11 @@ import { ref } from "vue";
 import { useStoreAuth } from "src/stores/storeAuth";
 import { useRouter } from "vue-router";
 import { usePhoneFormat } from "src/use/formatPhone";
+import { useQuasar } from "quasar"; // Import Quasar Notify
 
 const authStore = useStoreAuth();
 const router = useRouter();
+const $q = useQuasar(); // Quasar instance for notifications
 
 const credentials = ref({
   email: "",
@@ -82,6 +84,7 @@ const credentials = ref({
   lastName: "",
   phoneNo: "",
   displayName: "",
+  email: "",
 });
 
 const { formattedPhone, normalizePhone } = usePhoneFormat();
@@ -91,19 +94,53 @@ const loading = ref(false);
 const registerUser = async () => {
   loading.value = true;
   try {
-    credentials.value.phoneNo = normalizePhone(formattedPhone.value); // Normalize phone before submission
+    // credentials.value.phoneNo = normalizePhone(formattedPhone.value); // Normalize phone before submission
+    credentials.value.phoneNo = formattedPhone.value; // Save formatted phone number
     await authStore.registerUser(credentials.value, {
       firstName: credentials.value.firstName,
       lastName: credentials.value.lastName,
       phoneNo: credentials.value.phoneNo,
       displayName: credentials.value.displayName,
+      email: credentials.value.email,
     });
     // Navigate to home page or dashboard after successful registration
+    $q.notify({
+      type: "positive",
+      message: "Registration successful!",
+      position: "top",
+      icon: "check_circle",
+    });
     router.push("/");
   } catch (error) {
     console.error("Error during registration:", error.message);
+    const errorCode = error.code || "unknown";
+    // Show user-friendly error message
+    const errorMessage = getFirebaseErrorMessage(errorCode);
+    $q.notify({
+      type: "negative",
+      message: errorMessage,
+      position: "top",
+      icon: "error",
+    });
   } finally {
     loading.value = false;
+  }
+  // Function to handle Firebase error codes and return user-friendly messages
+  function getFirebaseErrorMessage(errorCode) {
+    switch (errorCode) {
+      case "auth/email-already-in-use":
+        return "This email is already in use. Please try another one.";
+      case "auth/invalid-email":
+        return "The email address is invalid. Please check and try again.";
+      case "auth/weak-password":
+        return "The password is too weak. Please choose a stronger password.";
+      case "auth/network-request-failed":
+        return "Network error. Please check your internet connection.";
+      case "auth/operation-not-allowed":
+        return "Operation not allowed. Contact support.";
+      default:
+        return "An unexpected error occurred. Please try again.";
+    }
   }
 };
 </script>

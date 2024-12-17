@@ -65,10 +65,29 @@ const routes = [
         component: () => import("pages/PageMongoTran.vue"),
         meta: { requiresAuth: true },
       },
+      {
+        path: "/mongo-AllTransacts",
+        component: () => import("pages/PageMongoAllTransacts.vue"),
+        meta: { requiresAuth: true },
+      },
 
       {
         path: "/view-transaction/:transactId",
         component: () => import("pages/ViewTransact.vue"),
+        meta: { requiresAuth: true },
+      },
+
+      // Route for creating a new transaction
+      {
+        path: "/new-transaction",
+        component: () => import("pages/RetieveTranHistory.vue"),
+        meta: { requiresAuth: true },
+      },
+      // Route for creating a new transaction
+      {
+        path: "/CartPage",
+        name: "CartPage",
+        component: () => import("pages/NewTransactionCart.vue"),
         meta: { requiresAuth: true },
       },
     ],

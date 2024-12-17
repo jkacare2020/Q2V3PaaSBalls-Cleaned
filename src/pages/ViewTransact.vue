@@ -60,6 +60,13 @@
             class="q-mb-md"
           />
           <q-input
+            v-model="transactInfo.User_Email"
+            label="Email"
+            outlined
+            dense
+            class="q-mb-md"
+          />
+          <q-input
             v-model="transactInfo.transact_amount"
             label="Transaction Amount"
             outlined
@@ -126,6 +133,7 @@ const transactInfo = reactive({
   Payer_address_zip: "",
   Payer_address_country: "",
   Phone_Number: "",
+  User_Email: "",
   transact_amount: 0.0,
   transact_number: 0,
   description: "",

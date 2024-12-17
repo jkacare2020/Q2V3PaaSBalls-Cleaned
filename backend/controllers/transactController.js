@@ -19,7 +19,47 @@ async function isAdmin(userId) {
   }
 }
 
-// Controller for fetching transactions
+// Controller for fetching All Transactions by Role --
+exports.getAllTransactions = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized access" });
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+  let userId;
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    userId = decodedToken.uid;
+  } catch (error) {
+    console.error("Error verifying ID token:", error);
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+
+  try {
+    // Optional admin role check
+    const userIsAdmin = await isAdmin(req.user.uid);
+    if (!userIsAdmin) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: Admin access required." });
+    }
+
+    // Fetch all transactions
+    const transacts = await Transact.find().sort({
+      req_date: -1,
+      transact_number: -1,
+    });
+
+    res.status(200).json(transacts);
+  } catch (error) {
+    console.error("Error fetching all transactions:", error);
+    res.status(500).json({ message: "Error fetching all transactions." });
+  }
+};
+
+// Controller for fetching transactions by Phone Number --
 exports.getTransactions = async (req, res) => {
   const { phone } = req.query;
   const authHeader = req.headers.authorization;
@@ -62,7 +102,8 @@ exports.getTransactions = async (req, res) => {
       transact_number: -1,
     });
     if (transacts.length === 0) {
-      return res.status(404).json({ message: "No transactions found" });
+      // return res.status(404).json({ message: "No transactions found" });
+      return res.status(200).json(transacts);
     }
     res.json(transacts);
   } catch (error) {
@@ -71,6 +112,7 @@ exports.getTransactions = async (req, res) => {
   }
 };
 
+//------------fetch Transaction by Id for Update -----------
 exports.getTransactionById = async (req, res) => {
   const { id } = req.params; // Extract the transaction ID from the URL
   console.log(
@@ -90,53 +132,76 @@ exports.getTransactionById = async (req, res) => {
   }
 };
 
-// exports.updateTransaction = async (req, res) => {
-//   const { id } = req.params; // Extract `_id` from URL params
-//   const authHeader = req.headers.authorization;
+//--------- Get latest transaction history of a user ----
+exports.getTransactionHistoryByPhone = async (req, res) => {
+  const { phoneNo } = req.params;
+  // const { uid } = req.user; // Verify the logged-in user's identity
 
-//   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-//     return res.status(401).json({ message: "Unauthorized access" });
-//   }
+  try {
+    // Fetch transactions for the provided phone number
+    const lastTransaction = await Transact.findOne({
+      Phone_Number: phoneNo,
+    }).sort({ req_date: -1 });
 
-//   const idToken = authHeader.split("Bearer ")[1];
-//   let userId;
-//   try {
-//     const decodedToken = await admin.auth().verifyIdToken(idToken);
-//     userId = decodedToken.uid;
-//   } catch (error) {
-//     console.error("Error verifying ID token:", error);
-//     return res.status(401).json({ message: "Invalid or expired token" });
-//   }
+    if (!lastTransaction) {
+      return res.status(404).json({ message: "No transaction history found." });
+    }
 
-//   const userIsAdmin = await isAdmin(userId);
+    res.json({ lastTransaction });
+  } catch (error) {
+    console.error("Error fetching transaction history:", error);
+    res.status(500).json({ message: "Error fetching transaction history." });
+  }
+};
 
-//   if (!userIsAdmin) {
-//     return res
-//       .status(403)
-//       .json({ message: "Forbidden: Admin access required" });
-//   }
+// ---------------Create a new transaction -----
+exports.createNewTransaction = async (req, res) => {
+  let {
+    userId,
+    First_Name,
+    Last_Name,
+    Phone_Number,
+    User_Email,
+    Payer_address,
+    Payer_address_city,
+    Payer_address_state,
+    check_type,
+    transact_amount,
+    timestamp,
+    _id, // Destructure _id for explicit removal
+  } = req.body;
 
-//   try {
-//     const updatedData = req.body; // The new transaction data
-//     const updatedTransaction = await Transact.findByIdAndUpdate(
-//       id,
-//       updatedData,
-//       { new: true } // Return the updated document
-//     );
+  // Ensure _id is not passed to the database
+  if (_id) {
+    console.warn("Unexpected _id in request payload, removing it.");
+    _id = undefined;
+  }
 
-//     if (!updatedTransaction) {
-//       return res.status(404).json({ message: "Transaction not found" });
-//     }
+  try {
+    const transactionDate = timestamp || new Date();
+    const newTransaction = new Transact({
+      userId,
+      First_Name,
+      Last_Name,
+      Phone_Number,
+      User_Email,
+      Payer_address,
+      Payer_address_city,
+      Payer_address_state,
+      check_type,
+      transact_amount,
+      date: transactionDate,
+    });
 
-//     res.json({
-//       message: "Transaction updated successfully",
-//       updatedTransaction,
-//     });
-//   } catch (error) {
-//     console.error("Error updating transaction:", error);
-//     res.status(500).json({ message: "Error updating transaction" });
-//   }
-// };
+    await newTransaction.save();
+    res.status(201).json({ success: true, transaction: newTransaction });
+  } catch (error) {
+    console.error("Error saving transaction:", error.message);
+    res.status(500).json({ message: "Error saving transaction." });
+  }
+};
+
+//--------------------------Update Transaction Button clicked----------------
 exports.updateTransaction = async (req, res) => {
   const { id } = req.params; // Transaction ID
   let updatedData = req.body; // New transaction data
@@ -195,5 +260,24 @@ exports.updateTransaction = async (req, res) => {
   } catch (error) {
     console.error("Error updating transaction:", error);
     res.status(500).json({ message: "Error updating transaction." });
+  }
+};
+
+exports.deleteTransaction = async (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  try {
+    const deletedTransaction = await Transact.findByIdAndDelete(id);
+
+    if (!deletedTransaction) {
+      return res.status(404).json({ message: "Transaction not found." });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Transaction deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting transaction:", error);
+    res.status(500).json({ message: "Error deleting transaction." });
   }
 };
