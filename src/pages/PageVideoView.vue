@@ -1,79 +1,23 @@
 <template>
   <q-page class="constrain q-pa-md">
-    <transition
-      appear
-      enter-active-class="animated fadeIn"
-      leave-active-class="animated fadeOut"
-    >
-      <div
-        v-if="showNotificationsBanner && pushNotificationsSupported"
-        class="banner-container bg-primary"
-      >
-        <div class="constrain">
-          <q-banner class="bg-grey-3 q-mb-md">
-            <template v-slot:avatar>
-              <q-icon name="eva-bell-outline" color="primary" />
-            </template>
-
-            Would you like to enable notifications?
-
-            <template v-slot:action>
-              <q-btn
-                @click="enableNotifications"
-                label="Yes"
-                color="primary"
-                class="q-px-sm"
-                dense
-                flat
-              />
-              <q-btn
-                @click="showNotificationsBanner = false"
-                label="Later"
-                color="primary"
-                class="q-px-sm"
-                dense
-                flat
-              />
-              <q-btn
-                @click="neverShowNotificationsBanner"
-                label="Never"
-                color="primary"
-                class="q-px-sm"
-                dense
-                flat
-              />
-            </template>
-          </q-banner>
-        </div>
-      </div>
-    </transition>
     <div class="row q-col-gutter-lg">
       <div class="col-12 col-sm-8">
-        <template v-if="!loadingPosts && posts.length">
+        <template v-if="!loadingPosts && videos.length">
           <q-card
-            v-for="post in posts"
-            :key="post.id"
+            v-for="video in videos"
+            :key="video.id"
             class="card-post q-mb-md"
-            :class="{ 'bg-red-1': post.offline }"
             bordered
             flat
           >
-            <q-badge
-              v-if="post.offline"
-              class="badge-offline absolute-top-right"
-              color="red"
-            >
-              Stored offline
-            </q-badge>
-
-            <!-- New delete icon -->
+            <!-- Video Delete Icon -->
             <q-icon
               name="delete"
               color="red"
               class="delete-icon absolute"
               size="24px"
-              aria-label="Delete post"
-              @click="deletePost(post.id)"
+              aria-label="Delete video"
+              @click="deleteVideo(video.id)"
               tabindex="0"
             />
 
@@ -87,27 +31,32 @@
               <q-item-section>
                 <q-item-label class="text-bold">{{ username }}</q-item-label>
                 <q-item-label caption>
-                  {{ post.location }}
+                  {{ video.location }}
                 </q-item-label>
               </q-item-section>
             </q-item>
 
             <q-separator />
 
-            <q-img :src="post.imageUrl" />
+            <!-- Video Display -->
+            <video controls class="full-width">
+              <source :src="video.videoUrl" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
 
             <q-card-section>
-              <div>{{ post.caption }}</div>
+              <div>{{ video.caption }}</div>
               <div class="text-caption text-grey">
-                {{ niceDate(post.date) }}
+                {{ niceDate(video.date) }}
               </div>
             </q-card-section>
           </q-card>
         </template>
-        <template v-else-if="!loadingPosts && !posts.length">
-          <h5 class="text-center text-grey">No posts yet.</h5>
+        <template v-else-if="!loadingPosts && !videos.length">
+          <h5 class="text-center text-grey">No videos yet.</h5>
         </template>
         <template v-else>
+          <!-- Skeleton Loading -->
           <q-card flat bordered>
             <q-item>
               <q-item-section avatar>
@@ -160,34 +109,25 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useQuasar } from "quasar";
-import { auth, storage, db } from "src/firebase/init"; // Correct import for Firebase auth instance
-import { collection, query, getDocs, doc, getDoc } from "firebase/firestore"; // Add missing Firestore functions
-import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "src/firebase/init";
+import { collection, query, getDocs, doc, getDoc } from "firebase/firestore";
 import axios from "axios";
-import defaultAvatar from "src/assets/avatar.jpg"; // Import default avatar
+import defaultAvatar from "src/assets/avatar.jpg";
 import { useStoreAuth } from "src/stores/storeAuth";
 
 const storeAuth = useStoreAuth();
-
-// Reactive state for avatar URL, username, and email
-const posts = ref([]);
+const videos = ref([]);
 const loadingPosts = ref(false);
-const showNotificationsBanner = ref(false);
-// const displayName = ref("");
 const isAuthenticated = ref(false);
 const avatarUrl = ref(defaultAvatar);
 const username = ref(storeAuth.user?.displayName || "User Name");
 const email = ref(storeAuth.user?.email || "user@example.com");
-
 const $q = useQuasar();
 
-const serviceWorkerSupported = computed(() => "serviceWorker" in navigator);
-const pushNotificationsSupported = computed(() => "PushManager" in window);
-
-// Fetch posts from the backend
-const getPosts = () => {
+// Fetch videos from backend
+const getVideos = () => {
   if (!auth.currentUser) {
-    console.warn("No authenticated user, skipping post retrieval.");
+    console.warn("No authenticated user, skipping video retrieval.");
     return;
   }
 
@@ -197,20 +137,20 @@ const getPosts = () => {
     .getIdToken()
     .then((idToken) => {
       axios
-        .get(`${process.env.API}/api/posts`, {
+        .get(`${process.env.API}/api/videos`, {
           headers: {
             Authorization: `Bearer ${idToken}`,
           },
         })
         .then((response) => {
-          posts.value = response.data;
+          videos.value = response.data;
           loadingPosts.value = false;
         })
         .catch((err) => {
-          console.error("Error fetching posts:", err);
+          console.error("Error fetching videos:", err);
           $q.dialog({
             title: "Error",
-            message: "Could not download posts.",
+            message: "Could not download videos.",
           });
           loadingPosts.value = false;
         });
@@ -221,31 +161,34 @@ const getPosts = () => {
     });
 };
 
-// Delete a post
-const deletePost = (postId) => {
-  console.log("deletePost function called with postId:", postId);
+// Delete video
+const deleteVideo = (videoId) => {
+  console.log("Delete this Video triggered", videoId);
   auth.currentUser.getIdToken().then((idToken) => {
     axios
-      .delete(`${process.env.API}/api/posts/${postId}`, {
+      .delete(`${process.env.API}/api/videos/${videoId}`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
       })
       .then((response) => {
         console.log("Post deleted:", response);
-        posts.value = posts.value.filter((post) => post.id !== postId);
+        videos.value = videos.value.filter((video) => video.id !== videoId);
+        $q.notify({
+          type: "positive",
+          message: "Video deleted successfully.",
+        });
       })
       .catch((err) => {
-        console.error("Error deleting post:", err);
+        console.error("Error deleting video:", err);
         $q.dialog({
           title: "Error",
-          message: "Could not delete post.",
+          message: "Could not delete video.",
         });
       });
   });
 };
 
-// Nice date formatting
 const niceDate = (value) => {
   return new Date(value).toLocaleString("en-US", {
     month: "long",
@@ -255,40 +198,9 @@ const niceDate = (value) => {
   });
 };
 
-// onMounted without async
 onMounted(() => {
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log("User is authenticated, fetching posts.");
-      getPosts(); // Assuming you have a getPosts function defined elsewhere
-      fetchUserData(user.uid); // <-- This triggers the fetchUserData function
-    } else {
-      console.warn("User is not authenticated.");
-    }
-  });
+  getVideos();
 });
-//----------storeAuth preserving the username and email after a page reload. ----
-onMounted(() => {
-  if (storeAuth.user) {
-    username.value = storeAuth.user.displayName;
-    email.value = storeAuth.user.email;
-  }
-});
-//----------------------------------------------------
-// Function to fetch user data from Firestore
-async function fetchUserData(uid) {
-  try {
-    const userDocRef = doc(db, "users", uid);
-    const userDoc = await getDoc(userDocRef);
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
-      username.value = userData.displayName || "Guest";
-      email.value = userData.email;
-    }
-  } catch (error) {
-    console.error("Error fetching user data: ", error);
-  }
-}
 
 onMounted(async () => {
   if (storeAuth.user) {

@@ -70,12 +70,15 @@
               </q-item-section>
               <q-item-section>
                 <q-input
-                  v-model="editableUser.companyName"
+                  v-if="storeAuth.user"
+                  v-model="editableUser.role"
                   outlined
                   dense
-                  label="Company Name"
+                  label="Role Name"
                   required
+                  :readonly="!isAdmin"
                 />
+                <!-- Set field as readonly if not admin -->
               </q-item-section>
             </q-item>
           </q-list>
@@ -95,77 +98,23 @@
   </q-page>
 </template>
 
-//
 <script setup>
-// import { ref, onMounted } from "vue";
-// import { doc, getDoc, updateDoc } from "firebase/firestore";
-// import { db } from "src/firebase/init";
-// import { formatPhoneNumber } from "src/use/formatPhoneNumber";
-// import { useStoreAuth } from "src/stores/storeAuth";
-
-// const storeAuth = useStoreAuth();
-// const userId = storeAuth.user?.uid; // Declare userId here to make it available globally within the component
-// const editableUser = ref(null);
-// //------------------------------------Phone Format-------------------------
-// const formatPhone = () => {
-//   if (editableUser.value && editableUser.value.phoneNo) {
-//     editableUser.value.phoneNo = formatPhoneNumber(editableUser.value.phoneNo);
-//   }
-// };
-
-// // ---------------------------Fetch user data on component mount --------------------------------------
-// onMounted(async () => {
-//   // const userId = storeAuth.user?.uid; // Get the logged-in user's UID from storeAuth
-//   if (userId) {
-//     try {
-//       const userDoc = await getDoc(doc(db, "users", userId));
-//       if (userDoc.exists()) {
-//         editableUser.value = userDoc.data(); // Populate editableUser
-//       } else {
-//         console.error("User not found");
-//       }
-//     } catch (error) {
-//       console.error("Error fetching user:", error);
-//     }
-//   } else {
-//     console.error("User ID not found");
-//   }
-// });
-
-// // Save updated profile
-// const saveProfile = async () => {
-//   if (!editableUser.value) return;
-
-//   try {
-//     const userRef = doc(db, "users", userId);
-//     await updateDoc(userRef, {
-//       firstName: editableUser.value.firstName,
-//       lastName: editableUser.value.lastName,
-//       phoneNo: editableUser.value.phoneNo,
-//       companyName: editableUser.value.companyName,
-//       email: editableUser.value.email, // Include email update
-//     });
-//     console.log("Profile updated successfully");
-//     alert("Profile updated successfully!"); // Notify user
-//   } catch (error) {
-//     console.error("Error saving profile:", error);
-//     alert("Error updating profile.");
-//   }
-// };
-//
-
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute } from "vue-router";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "src/firebase/init";
 import { useStoreAuth } from "src/stores/storeAuth";
 import { useStoreUsers } from "src/stores/storeUsers";
+import { formatPhoneNumber, isValidPhoneNumber } from "src/utils/phoneUtils";
 
 const route = useRoute();
 const storeAuth = useStoreAuth();
 const storeUsers = useStoreUsers();
 
 const editableUser = ref(null);
+
+// Check if the logged-in user is an admin
+const isAdmin = computed(() => storeUsers.user?.role === "admin");
 
 // Use `let` instead of `const` for `userId` to allow reassignment.
 let userId = null; // Allow reassignment
@@ -215,7 +164,7 @@ const saveProfile = async () => {
       firstName: editableUser.value.firstName,
       lastName: editableUser.value.lastName,
       phoneNo: editableUser.value.phoneNo,
-      companyName: editableUser.value.companyName,
+      companyName: editableUser.value.role,
       email: editableUser.value.email,
     });
     console.log("Profile updated successfully");

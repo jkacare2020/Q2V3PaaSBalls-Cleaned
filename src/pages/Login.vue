@@ -32,26 +32,55 @@
 import { ref } from "vue";
 import { useStoreAuth } from "../stores/storeAuth";
 import { useRouter } from "vue-router";
+import { useQuasar } from "quasar";
 
 const email = ref("");
 const password = ref("");
 const storeAuth = useStoreAuth();
 const router = useRouter();
+const $q = useQuasar();
 
-function login() {
-  storeAuth
-    .loginUser({ email: email.value, password: password.value })
-    .then(() => {
-      router.push("/"); // Redirect after login
-    })
-    .catch((error) => {
-      console.error(error);
-      alert(error.message); // Simple error feedback
-    });
+// Firebase error message mapping function
+function getFriendlyErrorMessage(errorCode) {
+  const errorMessages = {
+    "auth/invalid-email":
+      "The email address is invalid. Please check and try again.",
+    "auth/user-disabled":
+      "This user account has been disabled. Contact support for help.",
+    "auth/user-not-found":
+      "No account found with this email. Please check or sign up.",
+    "auth/wrong-password":
+      "The password you entered is incorrect. Please try again.",
+    "auth/too-many-requests":
+      "Too many failed attempts. Please wait and try again later.",
+  };
+
+  return (
+    errorMessages[errorCode] ||
+    "Failed to login. Please check your credentials."
+  );
 }
 
-function goToSignup() {
-  router.push("/signup"); // Redirect to the signup page
+async function login() {
+  try {
+    await storeAuth.loginUser({ email: email.value, password: password.value });
+    router.push("/"); // Redirect after successful login
+    $q.notify({
+      color: "positive",
+      message: "Login successful! Welcome back.",
+      icon: "check",
+      position: "top",
+    });
+  } catch (error) {
+    const friendlyMessage = getFriendlyErrorMessage(error.code);
+    console.error("Login error:", error);
+    $q.notify({
+      color: "negative",
+      message: friendlyMessage,
+      icon: "error",
+      position: "top",
+    });
+  }
 }
 </script>
 

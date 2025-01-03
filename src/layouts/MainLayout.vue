@@ -181,8 +181,15 @@ const navLinks = [
   { title: "Entries", icon: "savings", link: "/" },
   { title: "Settings", icon: "settings", link: "/settings" },
   { title: "Camera", icon: "eva-camera", link: "/camera" },
-  { title: "Photos", icon: "image", link: "/photo" },
-  { title: "allTransacts", icon: "point_of_sale", link: "/mongo-AllTransacts" },
+  { title: "VideoCamera", icon: "eva-video-outline", link: "/videoCamera" },
+  { title: "Videos", icon: "eva-film-outline", link: "/videos" },
+  { title: "Audios", icon: "eva-headphones-outline", link: "/audios" },
+  { title: "Photos", icon: "image", link: "/photos" },
+  {
+    title: "All-Transacts",
+    icon: "point_of_sale",
+    link: "/mongo-AllTransacts",
+  },
 ];
 
 // Toggles the drawer's visibility

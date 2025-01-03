@@ -35,7 +35,31 @@ const routes = [
         meta: { requiresAuth: true },
         name: "Camera",
       },
-      { path: "/photo", component: () => import("pages/PageHome.vue") },
+      {
+        path: "/videoCamera",
+        component: () => import("pages/PageVideoCam.vue"),
+        meta: { requiresAuth: true },
+        name: "VideoCamera",
+      },
+      {
+        path: "/video-posts",
+        component: () => import("pages/PageVideoView.vue"),
+        meta: { requiresAuth: true },
+        name: "VideoPost",
+      },
+      {
+        path: "/audio-posts",
+        component: () => import("pages/PageAudioView.vue"),
+        meta: { requiresAuth: true },
+        name: "audioPost",
+      },
+
+      { path: "/photos", component: () => import("pages/PageHome.vue") },
+      { path: "/videos", component: () => import("pages/PageVideoView.vue") },
+      {
+        path: "/audios",
+        component: () => import("pages/PageAudio.vue"),
+      },
       {
         path: "/users",
         component: () => import("pages/ViewUsersList.vue"),

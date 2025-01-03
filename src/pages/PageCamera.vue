@@ -86,8 +86,8 @@ import { uid, useQuasar } from "quasar";
 import { auth } from "src/firebase/init";
 import axios from "axios";
 import { useRouter } from "vue-router";
-const router = useRouter();
 
+const router = useRouter();
 const $q = useQuasar();
 
 const post = reactive({
@@ -248,7 +248,7 @@ function locationError() {
   });
   locationLoading.value = false;
 }
-
+//-------------------------------------------------
 async function addPost() {
   $q.loading.show();
 
@@ -270,7 +270,7 @@ async function addPost() {
   formData.append("file", post.photo, `${post.id}.png`);
 
   try {
-    console.log("API URL:", process.env.API);
+    console.log("API URL:", process.env.API); // url backend
 
     const idToken = await user.getIdToken();
     await axios.post(`${process.env.API}/api/create-post`, formData, {
