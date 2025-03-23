@@ -13,6 +13,10 @@ const cors = require("cors");
 const connectDB = require("./db/mongooseConfig");
 require("dotenv").config();
 
+const speech = require("@google-cloud/speech");
+const client = new speech.SpeechClient();
+const { SpeechClient } = require("@google-cloud/speech");
+
 //---------------------------------------------------------------
 connectDB(); // Ensure the database is connected
 //----------------------------------------------------------------
@@ -456,6 +460,25 @@ app.post("/createPost", async (request, response) => {
 
   request.pipe(busboy);
 });
+
+// const speech = require("@google-cloud/speech");
+// const client = new speech.SpeechClient();
+
+// const speech = require("@google-cloud/speech");
+
+// const client = new speech.SpeechClient();
+
+(async () => {
+  const [response] = await client.recognize({
+    config: {
+      encoding: "LINEAR16",
+      languageCode: "en-US",
+      sampleRateHertz: 16000,
+    },
+    audio: { uri: "gs://your-bucket-name/audio-file.wav" },
+  });
+  console.log("Transcription:", response.results[0].alternatives[0].transcript);
+})();
 
 /*
   listen - start the server

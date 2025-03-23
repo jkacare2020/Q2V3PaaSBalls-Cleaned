@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
-const gptModelSchema = new mongoose.Schema({
-  userId: { type: String, required: true }, // Firebase UID
-  originalImageUrl: { type: String, required: true }, // URL to the original image in Firebase Storage
-  processedData: { type: mongoose.Schema.Types.Mixed, required: true }, // Data from GPT model
+const AIModelSchema = new mongoose.Schema({
+  modelName: { type: String, required: true },
+  version: { type: String, required: true },
+  description: String,
+  createdBy: { type: String, required: true }, // Owner's UID
+  storagePath: { type: String, required: true }, // Path in Firestore or S3
   createdAt: { type: Date, default: Date.now },
 });
-
-module.exports = mongoose.model("GptModel", gptModelSchema);

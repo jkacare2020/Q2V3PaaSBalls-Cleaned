@@ -132,6 +132,8 @@ onMounted(async () => {
     if (userDoc.exists()) {
       Object.assign(userProfile, userDoc.data());
       console.log("User profile loaded:", userProfile);
+      console.log("user phone #", userProfile.phoneNo);
+      console.log("ednpoint backend", process.env.API);
 
       // Use phoneNo to fetch transaction history
       const response = await axios.get(

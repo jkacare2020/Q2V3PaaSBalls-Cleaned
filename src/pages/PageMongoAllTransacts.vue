@@ -33,7 +33,7 @@
         <th class="text-left">Email</th>
         <th class="text-left">TranAmount</th>
         <th class="text-left">TranStatus</th>
-        <th class="text-left">Request Date</th>
+        <th class="text-left">RequestDate</th>
         <th class="text-left">Edit</th>
         <th class="text-left">Delete</th>
       </tr>
@@ -128,13 +128,13 @@ async function fetchAvatar(userId) {
   }
 }
 
-// Fetch transactions
+// Fetch all transactions
 async function fetchTransactions() {
   try {
     const idToken = await storeAuth.user?.getIdToken();
 
     const response = await axios.get(
-      `${process.env.API}/api/mongo-AllTransacts`,
+      `${process.env.API}/api/mongo-AllTransacts`, // to transactRoutes
       {
         headers: { Authorization: `Bearer ${idToken}` },
       }
@@ -159,13 +159,29 @@ async function fetchTransactions() {
       });
     }
   } catch (error) {
-    console.error("Error fetching transactions:", error);
+    console.error(
+      "Error fetching transactions:",
+      error.response || error.message
+    );
+
+    const status = error.response?.status;
+    let message = "Failed to fetch transactions.";
+
+    if (status === 401) {
+      message = "Unauthorized access. Please log in again.";
+    } else if (status === 403) {
+      message = "Access denied. Admin privileges required.";
+    } else if (status === 500) {
+      message = "Server error. Please try again later.";
+    }
+
     $q.notify({
       color: "negative",
-      message: "Failed to fetch transactions.",
+      message,
       icon: "error",
       position: "center",
     });
+
     isLoading.value = false; // Stop loading spinner
   }
 }

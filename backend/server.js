@@ -7,7 +7,6 @@ const os = require("os");
 const fs = require("fs");
 const { v4: UUID } = require("uuid"); // Updated to use `uuid` package
 const webpush = require("web-push");
-
 const cors = require("cors");
 // const mongoose = require("mongoose");
 const connectDB = require("./db/mongooseConfig");
@@ -43,7 +42,7 @@ app.use(
     allowedHeaders: "Content-Type, Authorization",
   })
 );
-//----------------------MongoDB---------------
+//----------------------MongoDB------------------------------
 app.get("/mongo-users", async (req, res) => {
   const authHeader = req.headers.authorization;
 

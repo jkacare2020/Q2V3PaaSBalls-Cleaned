@@ -13,12 +13,16 @@ const path = require("path");
 
 module.exports = configure(function (/* ctx */) {
   // Hardcoded values as a fallback for testing purposes
-  let VUE_APP_API_LOCAL = "http://localhost:3000";
+  // let VUE_APP_API_LOCAL = "http://localhost:3000";
   let VUE_APP_API_PRODUCTION =
     "https://quasargram-jason-backend-2024-98f0d3ac8c4a.herokuapp.com";
 
   console.log("Current Environment:", process.env.NODE_ENV);
-  console.log("Hardcoded API Local:", VUE_APP_API_LOCAL);
+  // console.log("Hardcoded API Local:", VUE_APP_API_LOCAL);
+  console.log(
+    "API URL:",
+    process.env.VUE_APP_API_LOCAL || "http://localhost:3000"
+  );
   console.log("Hardcoded API Production:", VUE_APP_API_PRODUCTION);
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
@@ -28,7 +32,8 @@ module.exports = configure(function (/* ctx */) {
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
     boot: [
-      "router", // Make sure the name matches the filename without extension
+      "router",
+      "apiFastAPI", // Make sure the name matches the filename without extension
       // other boot files if any
     ],
 
@@ -65,7 +70,10 @@ module.exports = configure(function (/* ctx */) {
 
       env: {
         // Choose the correct API based on the environment
-        API: VUE_APP_API_LOCAL,
+        API: process.env.VUE_APP_API_LOCAL || "http://localhost:3000",
+        VUE_APP_FASTAPI_URL:
+          process.env.VUE_APP_FASTAPI_URL || "http://127.0.0.1:8000",
+
         // process.env.NODE_ENV === "production"
         //   ? process.env.VUE_APP_API_PRODUCTION // Production API for production build
         //   : process.env.VUE_APP_API_LOCAL, // Local API for development

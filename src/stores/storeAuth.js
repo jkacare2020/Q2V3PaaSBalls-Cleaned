@@ -39,6 +39,7 @@ export const useStoreAuth = defineStore("storeAuth", {
         });
       });
     },
+    //----------------------------------------------------
     async loginUser({ email, password }) {
       try {
         const userCredential = await signInWithEmailAndPassword(
@@ -64,6 +65,8 @@ export const useStoreAuth = defineStore("storeAuth", {
         throw new Error("Failed to log out.");
       }
     },
+
+    //--------------------------------------------------------------
     async registerUser(credentials, additionalUserInfo) {
       try {
         const userCredential = await createUserWithEmailAndPassword(

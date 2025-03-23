@@ -1,8 +1,9 @@
 //----------------------------MongoDB Transactions Admin--------------------
 const Transact = require("../models/transacts/Transacts");
-const admin = require("firebase-admin");
-const db = admin.firestore(); // Initialize Firestore instance
+// const admin = require("firebase-admin");
 
+const admin = require("../config/firebaseAdmin"); // Adjust the path as needed
+const db = admin.firestore(); // Initialize Firestore instance
 // Check if a user is an admin
 async function isAdmin(userId) {
   try {
@@ -29,6 +30,7 @@ exports.getAllTransactions = async (req, res) => {
 
   const idToken = authHeader.split("Bearer ")[1];
   let userId;
+
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     userId = decodedToken.uid;
@@ -38,15 +40,13 @@ exports.getAllTransactions = async (req, res) => {
   }
 
   try {
-    // Optional admin role check
-    const userIsAdmin = await isAdmin(req.user.uid);
+    const userIsAdmin = await isAdmin(userId);
     if (!userIsAdmin) {
       return res
         .status(403)
         .json({ message: "Forbidden: Admin access required." });
     }
 
-    // Fetch all transactions
     const transacts = await Transact.find().sort({
       req_date: -1,
       transact_number: -1,
@@ -79,6 +79,7 @@ exports.getTransactions = async (req, res) => {
   }
 
   const userIsAdmin = await isAdmin(userId); // Check admin status
+
   let query = {};
 
   if (!userIsAdmin) {
@@ -89,6 +90,7 @@ exports.getTransactions = async (req, res) => {
     query.Phone_Number = new RegExp(
       `.*${normalizedPhone.split("").join(".*")}.*`
     );
+    query.owner = userId; // Restrict to transactions owned by the user
   } else if (phone) {
     const normalizedPhone = phone.replace(/\D/g, "");
     query.Phone_Number = new RegExp(
@@ -106,6 +108,36 @@ exports.getTransactions = async (req, res) => {
       return res.status(200).json(transacts);
     }
     res.json(transacts);
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    res.status(500).json({ message: "Error fetching transactions" });
+  }
+};
+
+// Controller for fetching transactions by Logged-in UID--
+exports.getMyTransactions = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized access" });
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+  let userId;
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    userId = decodedToken.uid;
+  } catch (error) {
+    console.error("Error verifying ID token:", error);
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+
+  try {
+    const transacts = await Transact.find({ owner: userId }).sort({
+      req_date: -1,
+      transact_number: -1,
+    });
+    res.status(200).json(transacts);
   } catch (error) {
     console.error("Error fetching transactions:", error);
     res.status(500).json({ message: "Error fetching transactions" });
@@ -155,6 +187,7 @@ exports.getTransactionHistoryByPhone = async (req, res) => {
 };
 
 // ---------------Create a new transaction -----
+// ---------------Create a new transaction -----
 exports.createNewTransaction = async (req, res) => {
   let {
     userId,
@@ -177,9 +210,28 @@ exports.createNewTransaction = async (req, res) => {
     _id = undefined;
   }
 
+  let uid; // Declare uid in the outer scope
+
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header missing or invalid." });
+    }
+
+    const token = authHeader.split("Bearer ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    uid = decodedToken.uid; // Assign the Firebase UID to the outer-scope variable
+  } catch (error) {
+    console.error("Error verifying ID token:", error.message);
+    return res.status(401).json({ error: "Invalid or expired token." });
+  }
+
   try {
     const transactionDate = timestamp || new Date();
     const newTransaction = new Transact({
+      owner: uid, // Use the uid declared in the outer scope
       userId,
       First_Name,
       Last_Name,
@@ -192,7 +244,7 @@ exports.createNewTransaction = async (req, res) => {
       transact_amount,
       date: transactionDate,
     });
-
+    console.log(newTransaction);
     await newTransaction.save();
     res.status(201).json({ success: true, transaction: newTransaction });
   } catch (error) {

@@ -10,6 +10,7 @@ const TransactSchema = new mongoose.Schema(
     transact_amount: { type: Number, required: true },
     req_date: { type: Date, default: Date.now },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    owner: { type: String, required: true },
     First_Name: { type: String, required: true },
     Last_Name: { type: String, required: true },
     Payer_address: String,

@@ -8,6 +8,7 @@ const {
   createNewTransaction,
   deleteTransaction,
   getAllTransactions,
+  getMyTransactions,
 } = require("../controllers/transactController");
 const authenticateAndAuthorize = require("../middlewares/authMiddleware");
 
@@ -37,22 +38,29 @@ router.get("/mongo-transacts", authenticateAndAuthorize(), getTransactions);
 // get transactions routes by user profile role admin-----------------------
 router.get(
   "/mongo-AllTransacts",
-  authenticateAndAuthorize(),
+  // authenticateAndAuthorize(), // isAdmin ? logged in ?---
   getAllTransactions
+);
+
+// get my transactions routes by user UID -----------------------
+router.get(
+  "/mongo-AllMyTransacts",
+  // authenticateAndAuthorize(), // isAdmin ? logged in ?---
+  getMyTransactions
 );
 
 //------------ Create new transaction --------------------------------------
 // Get transaction history for a user
 router.get(
   "/transactions/history/:phoneNo",
-  authenticateAndAuthorize(),
+  // authenticateAndAuthorize(),
   getTransactionHistoryByPhone
 );
 
 // Create a new transaction
 router.post(
   "/transactions/new",
-  authenticateAndAuthorize(),
+  // authenticateAndAuthorize(),
   createNewTransaction
 );
 
