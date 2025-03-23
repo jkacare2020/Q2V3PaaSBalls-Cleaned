@@ -19,7 +19,7 @@ const serviceAccount = {
 };
 
 if (process.env.NODE_ENV !== "production") {
-  console.log("Service Account Config:", serviceAccount);
+  // console.log("Service Account Config:", serviceAccount);
 }
 
 try {
