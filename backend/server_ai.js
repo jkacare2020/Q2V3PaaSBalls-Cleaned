@@ -31,6 +31,8 @@ app.use(
         // "https://guasar-jason2024.web.app",
         "http://localhost:9000",
         // Add production URLs here
+        "http://localhost:9200", // <-- ADD THIS LINE
+        "http://localhost:9201", // ✅ Add this too
       ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);

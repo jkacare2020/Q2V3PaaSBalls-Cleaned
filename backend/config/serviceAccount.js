@@ -24,8 +24,8 @@ const serviceAccount = {
   client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL,
   universe_domain: "googleapis.com",
 };
-console.log(
-  "Private Key Loaded:",
-  process.env.FIREBASE_PRIVATE_KEY ? "Yes" : "No"
-);
+// console.log(
+//   "Private Key Loaded:",
+//   process.env.FIREBASE_PRIVATE_KEY ? "Yes" : "No"
+// );
 module.exports = serviceAccount;
