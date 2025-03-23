@@ -37,3 +37,5 @@ yarn-error.log*
 /backend/config/q2v3paasapp-e45772d64356.json
 
 .env
+
+backend/.env
