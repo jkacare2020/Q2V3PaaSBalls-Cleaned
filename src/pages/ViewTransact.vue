@@ -4,6 +4,14 @@
       <q-card-section>
         <q-form @submit.prevent="updateTransact">
           <q-input
+            v-model="transactInfo.transact_number"
+            label="Transaction Number"
+            outlined
+            dense
+            class="q-mb-md"
+            type="number"
+          />
+          <q-input
             v-model="transactInfo.First_Name"
             label="Customer First Name"
             outlined
@@ -83,12 +91,12 @@
             class="q-mb-md"
           />
           <q-input
-            v-model="transactInfo.transact_number"
-            label="Transaction Number"
+            v-model="transactInfo.tran_status"
+            label="Transaction Status"
             outlined
             dense
             class="q-mb-md"
-            type="number"
+            type="text"
           />
 
           <q-btn
@@ -137,6 +145,7 @@ const transactInfo = reactive({
   transact_amount: 0.0,
   transact_number: 0,
   description: "",
+  tran_status: "",
 });
 
 watch(

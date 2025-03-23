@@ -71,6 +71,40 @@
               <q-item-section>
                 <q-input
                   v-if="storeAuth.user"
+                  v-model="editableUser.companyName"
+                  outlined
+                  dense
+                  label="Company Name"
+                  required
+                  :readonly="!isAdmin"
+                />
+                <!-- Set field as readonly if not admin -->
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section side>
+                <q-icon name="business" />
+              </q-item-section>
+              <q-item-section>
+                <q-input
+                  v-if="storeAuth.user"
+                  v-model="editableUser.displayName"
+                  outlined
+                  dense
+                  label="Display Name"
+                  required
+                  :readonly="!isAdmin"
+                />
+                <!-- Set field as readonly if not admin -->
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section side>
+                <q-icon name="business" />
+              </q-item-section>
+              <q-item-section>
+                <q-input
+                  v-if="storeAuth.user"
                   v-model="editableUser.role"
                   outlined
                   dense
@@ -137,6 +171,16 @@ const formatPhone = () => {
 
 // ---------------------------Fetch user data on component mount -----------------------------
 onMounted(async () => {
+  // Wait for the storeAuth to initialize
+  await storeAuth.init();
+
+  // After initialization, check if userId is available
+  if (route.params.id) {
+    userId = route.params.id; // Admin editing another user's profile
+  } else {
+    userId = storeAuth.user?.uid; // Regular user editing their own profile
+  }
+
   if (userId) {
     try {
       console.log("Fetching user data for:", userId);
@@ -164,7 +208,9 @@ const saveProfile = async () => {
       firstName: editableUser.value.firstName,
       lastName: editableUser.value.lastName,
       phoneNo: editableUser.value.phoneNo,
-      companyName: editableUser.value.role,
+      companyName: editableUser.value.companyName,
+      displayName: editableUser.value.displayName,
+      role: editableUser.value.role,
       email: editableUser.value.email,
     });
     console.log("Profile updated successfully");

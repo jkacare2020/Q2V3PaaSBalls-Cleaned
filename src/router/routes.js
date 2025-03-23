@@ -1,4 +1,5 @@
 import { useStoreUsers } from "src/stores/storeUsers";
+import ResumeUpload from "src/pages/feature/py_PageResumeUpload.vue"; // ✅ Import the Resume Upload Page
 
 const routes = [
   {
@@ -53,12 +54,18 @@ const routes = [
         meta: { requiresAuth: true },
         name: "audioPost",
       },
-
       { path: "/photos", component: () => import("pages/PageHome.vue") },
       { path: "/videos", component: () => import("pages/PageVideoView.vue") },
+      { path: "/audios", component: () => import("pages/PageAudio.vue") },
+
       {
-        path: "/audios",
-        component: () => import("pages/PageAudio.vue"),
+        path: "/chatBot",
+        component: () => import("pages/feature/PageChatBotABMode.vue"),
+      },
+      {
+        path: "/ChatbotHistory",
+        component: () => import("pages/feature/PageChatbotHistory.vue"),
+        meta: { requiresAuth: true },
       },
       {
         path: "/users",
@@ -90,11 +97,15 @@ const routes = [
         meta: { requiresAuth: true },
       },
       {
+        path: "/mongo-mytransacts",
+        component: () => import("pages/PageMongoMyTransacts.vue"),
+        meta: { requiresAuth: true },
+      },
+      {
         path: "/mongo-AllTransacts",
         component: () => import("pages/PageMongoAllTransacts.vue"),
         meta: { requiresAuth: true },
       },
-
       {
         path: "/view-transaction/:transactId",
         component: () => import("pages/ViewTransact.vue"),
@@ -107,12 +118,86 @@ const routes = [
         component: () => import("pages/RetieveTranHistory.vue"),
         meta: { requiresAuth: true },
       },
-      // Route for creating a new transaction
       {
         path: "/CartPage",
         name: "CartPage",
         component: () => import("pages/NewTransactionCart.vue"),
         meta: { requiresAuth: true },
+      },
+      {
+        path: "/tenants",
+        component: () => import("pages/feature/PageTenantList.vue"),
+      },
+      {
+        path: "/tenants/add",
+        component: () => import("pages/feature/PageTenantAdd.vue"),
+      },
+      {
+        path: "/tenants/edit/:id",
+        component: () => import("pages/feature/PageTenantEdit.vue"),
+      },
+      {
+        path: "/py_loginPage",
+        component: () => import("pages/feature/py_LoginPage.vue"),
+      },
+      {
+        path: "/py_registerPage",
+        component: () => import("pages/feature/py_RegisterPage.vue"),
+      },
+      {
+        path: "/py_PageTodos",
+        component: () => import("pages/feature/py_TodosPage.vue"),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "/py_PageUsers",
+        component: () => import("pages/feature/py_PageUsers.vue"),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "/add-todo",
+        component: () => import("pages/feature/py_AddTodosPage.vue"),
+      },
+      {
+        path: "/edit-todo/:id",
+        component: () => import("pages/feature/py_EditTodosPage.vue"),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "/hr-agent",
+        component: () => import("pages/feature/py_PageHRChat.vue"),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "/hr-chat",
+        component: () => import("pages/py_PageHRChat.vue"),
+      },
+      {
+        path: "/resume-history",
+        component: () => import("pages/feature/py_PageResumeHistory.vue"),
+      },
+      {
+        path: "/job-description",
+        component: () => import("pages/feature/py_PageJobDescription.vue"),
+      },
+      {
+        path: "/public/job-opening",
+        component: () => import("pages/feature/py_PublicJobBoard.vue"),
+      },
+      {
+        path: "/resume-upload",
+        component: () => import("pages/feature/py_PageResumeUpload.vue"), // ✅ Lazy-loaded component
+        props: (route) => ({
+          jobId: route.query.jobId,
+          employerId: route.query.employerId,
+          employerPhone: route.query.employerPhone,
+        }),
+      },
+
+      {
+        path: "/resume-screened",
+        component: () => import("pages/feature/py_PageAI-screenedResumes.vue"),
+        meta: { requiresAuth: true }, // Only allow authenticated users
       },
     ],
   },

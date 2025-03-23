@@ -1,4 +1,7 @@
 const admin = require("firebase-admin");
+require("dotenv").config({
+  path: `../../.env.${process.env.NODE_ENV || "development"}`,
+});
 
 const serviceAccount = {
   type: "service_account",
@@ -15,7 +18,9 @@ const serviceAccount = {
   client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL,
 };
 
-console.log("Service Account Config:", serviceAccount);
+if (process.env.NODE_ENV !== "production") {
+  console.log("Service Account Config:", serviceAccount);
+}
 
 try {
   // Initialize Firebase Admin SDK

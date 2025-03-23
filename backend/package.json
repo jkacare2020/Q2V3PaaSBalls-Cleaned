@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon server.js",
+    "startAI": "nodemon server_ai.js",
     "deploy": "heroku builds:create -a quasargram-jason-backend-2024",
     "web-push": "web-push"
   },
@@ -20,7 +21,11 @@
     "express": "^4.21.1",
     "firebase-admin": "^13.0.1",
     "mongoose": "^8.8.3",
+    "openai": "^4.77.3",
     "uuid": "^11.0.3",
     "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }

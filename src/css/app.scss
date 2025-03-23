@@ -121,9 +121,38 @@ input::-webkit-inner-spin-button {
   }
 }
 
-// Global green cursor
-// body {
-//   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='green' /></svg>")
-//       16 16,
-//     auto;
-// }
+Global green cursor body {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='green' /></svg>")
+      16 16,
+    auto;
+}
+
+// Specific override for dark mode
+.body--dark {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='green' /></svg>")
+      16 16,
+    auto;
+}
+
+.q-drawer {
+  .q-item,
+  .q-expansion-item {
+    color: white !important; // ✅ Ensure text is white
+  }
+
+  .q-item--clickable,
+  .q-item.q-router-link--exact-active {
+    color: white !important; // ✅ Active menu links also white
+  }
+
+  .q-expansion-item__content {
+    .q-item {
+      color: white !important; // ✅ Submenu items
+    }
+  }
+
+  // Fix for hover effect
+  .q-item:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+}

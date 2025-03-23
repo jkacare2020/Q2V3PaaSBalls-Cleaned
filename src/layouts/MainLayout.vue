@@ -53,82 +53,38 @@
       </q-toolbar>
     </q-header>
 
-    <!-- ------------ Drawer  ------------------ -->
+    <!-- ------------Left side Drawer  ------------------ -->
+    <!-- Left-side Navigation Drawer -->
     <q-drawer
       v-model="leftDrawerOpen"
       class="bg-primary"
       :width="250"
-      :breakpoint="767"
       show-if-above
       bordered
     >
       <q-list>
-        <q-item-label class="text-white" header>Navigation</q-item-label>
+        <q-item-label header class="text-white">Navigation</q-item-label>
 
-        <NavLink
-          v-for="link in navLinks"
-          :key="link.title"
-          :title="link.title"
-          :icon="link.icon"
-          :link="link.link"
-          @closeDrawer="leftDrawerOpen = false"
-          :active-class="'active-link'"
-        />
-
-        <!-- Transacts Submenu -->
-        <q-expansion-item
-          icon="folder"
-          class="text-white"
-          label="Transactions"
-          expand-separator
-          dense
-        >
-          <q-item clickable v-ripple @click="navigateToViewEditTransactions">
-            <q-item-section avatar>
-              <q-icon name="table_chart" />
-            </q-item-section>
-            <q-item-section>View / Edit</q-item-section>
-          </q-item>
-
-          <q-item clickable v-ripple @click="navigateToNewTransaction">
-            <q-item-section avatar>
-              <q-icon name="add" />
-            </q-item-section>
-            <q-item-section>Create New</q-item-section>
-          </q-item>
-        </q-expansion-item>
-
-        <!-- Users link: Ensure proper styling for interactive elements -->
-        <q-item
-          v-if="isAdmin"
-          clickable
-          class="text-white q-item--clickable"
-          @click="goToPage('users')"
-          :class="{ 'q-router-link--exact-active': isActive('users') }"
-          :active-class="'q-router-link--exact-active'"
-        >
-          <q-item-section avatar>
-            <q-icon name="people" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="text-white">Users</q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-item
-          v-if="$q.platform.is.electron"
-          @click="quitApp"
-          clickable
-          class="text-white absolute-bottom"
-          tag="a"
-        >
-          <q-item-section avatar>
-            <q-icon name="power_settings_new" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Quit</q-item-label>
-          </q-item-section>
-        </q-item>
+        <template v-for="category in navLinks" :key="category.category">
+          <q-expansion-item
+            :icon="category.icon"
+            :label="category.category"
+            expand-separator
+          >
+            <q-item
+              v-for="link in category.links"
+              :key="link.title"
+              clickable
+              v-ripple
+              @click="$router.push(link.link)"
+            >
+              <q-item-section avatar>
+                <q-icon :name="link.icon" />
+              </q-item-section>
+              <q-item-section>{{ link.title }}</q-item-section>
+            </q-item>
+          </q-expansion-item>
+        </template>
       </q-list>
     </q-drawer>
 
@@ -145,7 +101,7 @@ import { useStoreAuth } from "src/stores/storeAuth";
 import { useStoreUsers } from "src/stores/storeUsers";
 import { useRouter, useRoute } from "vue-router";
 import { useLightOrDark } from "src/use/useLightOrDark";
-import NavLink from "components/Nav/NavLink.vue";
+// import NavLink from "components/Nav/NavLink.vue";
 
 const storeUsers = useStoreUsers();
 const storeAuth = useStoreAuth();
@@ -178,17 +134,83 @@ function toggleDropdown() {
 }
 
 const navLinks = [
-  { title: "Entries", icon: "savings", link: "/" },
-  { title: "Settings", icon: "settings", link: "/settings" },
-  { title: "Camera", icon: "eva-camera", link: "/camera" },
-  { title: "VideoCamera", icon: "eva-video-outline", link: "/videoCamera" },
-  { title: "Videos", icon: "eva-film-outline", link: "/videos" },
-  { title: "Audios", icon: "eva-headphones-outline", link: "/audios" },
-  { title: "Photos", icon: "image", link: "/photos" },
   {
-    title: "All-Transacts",
-    icon: "point_of_sale",
-    link: "/mongo-AllTransacts",
+    category: "General",
+    links: [
+      { title: "Entries", icon: "savings", link: "/" },
+      { title: "Settings", icon: "settings", link: "/settings" },
+    ],
+  },
+  {
+    category: "User Authentication",
+    links: [
+      { title: "Python Login", icon: "login", link: "/py_loginPage" },
+      {
+        title: "Python Register",
+        icon: "person_add",
+        link: "/py_registerPage",
+      },
+    ],
+  },
+  {
+    category: "HR Agent",
+    links: [
+      { title: "HR Dashboard", icon: "work", link: "/hr-agent" },
+      {
+        title: "Job Descriptions",
+        icon: "description",
+        link: "/job-description",
+      },
+      {
+        title: "Job Opening",
+        icon: "description",
+        link: "/public/job-opening",
+      },
+      { title: "Job Matching", icon: "sync", link: "/job-matching" },
+      { title: "Resume History", icon: "history", link: "/resume-history" }, // ✅ Ensure this is correct
+    ],
+  },
+  {
+    category: "Media",
+    links: [
+      { title: "Camera", icon: "eva-camera", link: "/camera" },
+      {
+        title: "Video Camera",
+        icon: "eva-video-outline",
+        link: "/videoCamera",
+      },
+      { title: "Videos", icon: "eva-film-outline", link: "/videos" },
+      { title: "Audios", icon: "eva-headphones-outline", link: "/audios" },
+      {
+        title: "Audio Files",
+        icon: "eva-headphones-outline",
+        link: "/audio-posts",
+      },
+      { title: "Photos", icon: "image", link: "/photos" },
+    ],
+  },
+  {
+    category: "Social & Chat",
+    links: [
+      { title: "ChatBot", icon: "message", link: "/chatBot" },
+      { title: "Tenant", icon: "message", link: "/tenants" },
+    ],
+  },
+  {
+    category: "Transactions",
+    links: [
+      {
+        title: "All Transactions",
+        icon: "point_of_sale",
+        link: "/mongo-AllTransacts",
+      },
+      {
+        title: "View My Transactions",
+        icon: "table_chart",
+        link: "/mongo-mytransacts",
+      },
+      { title: "Create Transaction", icon: "add", link: "/new-transaction" },
+    ],
   },
 ];
 
@@ -211,6 +233,11 @@ function goToPage(page) {
 
 function navigateToViewEditTransactions() {
   router.push("/mongo-transacts");
+  leftDrawerOpen.value = false; // Close the drawer after navigation
+}
+
+function navigateToViewMyTransactions() {
+  router.push("/mongo-mytransacts");
   leftDrawerOpen.value = false; // Close the drawer after navigation
 }
 

@@ -283,7 +283,7 @@ async function addPost() {
     });
 
     // Redirect to the photo page
-    router.push("/photo");
+    router.push("/photos");
 
     $q.loading.hide();
   } catch (err) {

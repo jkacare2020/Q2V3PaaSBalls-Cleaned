@@ -24,7 +24,7 @@ export const useStoreUsers = defineStore("storeUsers", {
       const userDocRef = doc(db, "users", storeAuth.user.uid);
       await this.getUser(userDocRef);
     },
-
+    //--------------------------------------------------------------
     async getUser(userDocRef) {
       this.userLoaded = false;
 
@@ -53,7 +53,7 @@ export const useStoreUsers = defineStore("storeUsers", {
         this.user = null;
         LocalStorage.remove("user");
       } finally {
-        this.userLoaded = true; // Mark user data as loaded
+        this.userLoaded = true; // Mark user data as loaded Tqtc37XTx9N1Yr1pUzeelmAdUmw1
       }
     },
 

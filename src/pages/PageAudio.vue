@@ -42,6 +42,8 @@
             color="red"
             icon="stop"
           />
+
+          <!--Start Transcription and Mic Input Section -->
           <q-btn
             label="Start Transcription"
             color="blue"
@@ -109,6 +111,8 @@ import axios from "axios";
 import { auth } from "src/firebase/init";
 import { useQuasar } from "quasar";
 
+const isLoading = ref(false);
+
 const $q = useQuasar();
 const audioBlob = ref(null);
 const audioUrl = ref(null);
@@ -116,6 +120,7 @@ const caption = ref("");
 const isRecording = ref(false);
 const isUploading = ref(false);
 const sttOutput = ref("");
+const textToSpeak = ref("");
 const text = ref("");
 
 // Handles file upload from local device
@@ -197,6 +202,61 @@ const startTranscription = () => {
   };
 
   recognition.start();
+};
+
+//--------------------------- Text to Speach ---------------------
+
+const convertToSpeech = () => {
+  if (!text.value.trim()) {
+    $q.notify({
+      color: "negative",
+      message: "Please enter some text for TTS.",
+      icon: "error",
+    });
+    return;
+  }
+
+  if (!window.speechSynthesis) {
+    $q.notify({
+      color: "negative",
+      message: "Speech Synthesis is not supported in this browser.",
+      icon: "error",
+    });
+    return;
+  }
+
+  isLoading.value = true;
+
+  const utterance = new SpeechSynthesisUtterance(text.value);
+  utterance.lang = "en-US"; // Customize language if needed
+  utterance.rate = 1; // Speed of speech (default: 1, range: 0.1 to 10)
+  utterance.pitch = 1; // Pitch of speech (default: 1, range: 0 to 2)
+
+  // Event listeners for debugging or additional actions
+  utterance.onstart = () => {
+    console.log("Speech synthesis started.");
+  };
+  utterance.onend = () => {
+    console.log("Speech synthesis ended.");
+    isLoading.value = false;
+    $q.notify({
+      color: "positive",
+      message: "Speech synthesis completed.",
+      icon: "check",
+    });
+  };
+  utterance.onerror = (event) => {
+    console.error("Speech synthesis error:", event.error);
+    isLoading.value = false;
+    $q.notify({
+      color: "negative",
+      message: "An error occurred during TTS processing.",
+      icon: "error",
+    });
+  };
+
+  // Speak the text
+  window.speechSynthesis.speak(utterance);
 };
 
 // Plays the recorded audio

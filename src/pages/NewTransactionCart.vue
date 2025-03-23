@@ -69,6 +69,12 @@ import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import axios from "axios";
 import { useQuasar } from "quasar";
+import { getAuth } from "firebase/auth";
+import { useRouter } from "vue-router";
+const router = useRouter();
+
+const auth = getAuth();
+
 const $q = useQuasar();
 const route = useRoute();
 // const transactionData = ref({});
@@ -98,12 +104,23 @@ onMounted(() => {
   transactionData.value.req_date = formatDate(new Date());
 });
 
+const isSubmitting = ref(false);
+
 async function submitTransaction() {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
   try {
+    // Retrieve the Firebase token
+    const token = await auth.currentUser.getIdToken();
+
     await axios.post(
       `${process.env.API}/api/transactions/new`,
-      transactionData.value
+      transactionData.value,
+      {
+        headers: { Authorization: `Bearer ${token}` }, // Include Authorization header
+      }
     );
+
     $q.notify({
       color: "positive",
       message: "Transaction submitted successfully!",
@@ -111,8 +128,17 @@ async function submitTransaction() {
       position: "center",
     });
     console.log("Transaction submitted successfully!");
+    router.push("/mongo-mytransacts");
   } catch (error) {
     console.error("Error submitting transaction:", error);
+    $q.notify({
+      color: "negative",
+      message: "Failed to submit transaction.",
+      icon: "error",
+      position: "center",
+    });
+  } finally {
+    isSubmitting.value = false;
   }
 }
 </script>

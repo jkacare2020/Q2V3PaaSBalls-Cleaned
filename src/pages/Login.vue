@@ -82,6 +82,17 @@ async function login() {
     });
   }
 }
+
+// Go to profile page of the logged-in user
+function goToSignup() {
+  if (!storeAuth.user) {
+    router.push("/signup"); // Redirects to the User Profile page
+    // dropdownOpen.value = false; // Ensure dropdown closes
+  } else {
+    console.error("User is logged in");
+    router.push("/profile"); // Redirect to login if the user is not logged in
+  }
+}
 </script>
 
 <style scoped>

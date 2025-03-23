@@ -3,7 +3,8 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const connectDB = require("./config/mongooseConfig"); // Adjust the path as needed
+// const connectDB = require("./config/mongooseConfig"); // Adjust the path as needed
+const connectDB = require("./db/mongooseConfig");
 const admin = require("./config/firebaseAdmin"); // Initialized Firebase Admin
 const userRoutes = require("./routes/userRoutes"); // Import user routes
 const transactRoutes = require("./routes/transactRoutes"); // Import user routes
@@ -12,6 +13,7 @@ const postRoutes = require("./routes/postRoutes");
 const videoRoutes = require("./routes/videoRoutes");
 const audioRoutes = require("./routes/audioRoutes");
 const chatBotRoutes = require("./routes/chatBotRoutes");
+const tenantRoutes = require("./routes/tenantRoutes");
 
 dotenv.config();
 
@@ -63,7 +65,8 @@ app.use("/api", transactRoutes); // Uncomment if you have transact routes
 app.use("/api", postRoutes);
 app.use("/api", videoRoutes);
 app.use("/api", audioRoutes); // Mount STT routes under /api
-app.use("/api/chatbot", chatBotRoutes);
+app.use("/api", chatBotRoutes);
+app.use("/api", tenantRoutes);
 // app.use("/api/image-process", imageProcessingRoutes); // Uncomment if you have image processing routes
 
 // Define other routes here if needed, e.g., app.get("/posts", ...), app.post("/createPost", ...), etc.

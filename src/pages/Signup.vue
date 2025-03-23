@@ -52,6 +52,12 @@
             label="Display Name"
             :rules="[(value) => !!value || 'Display name is required']"
           />
+          <q-input
+            v-model="credentials.companyName"
+            filled
+            label="Company Name"
+            :rules="[(value) => !!value || 'Display name is required']"
+          />
 
           <q-btn
             label="Sign Up"
@@ -84,6 +90,7 @@ const credentials = ref({
   lastName: "",
   phoneNo: "",
   displayName: "",
+  companyName: "",
   email: "",
 });
 
@@ -102,6 +109,7 @@ const registerUser = async () => {
       phoneNo: credentials.value.phoneNo,
       displayName: credentials.value.displayName,
       email: credentials.value.email,
+      companyName: credentials.value.companyName,
     });
     // Navigate to home page or dashboard after successful registration
     $q.notify({
