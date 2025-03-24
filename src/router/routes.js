@@ -170,7 +170,7 @@ const routes = [
       },
       {
         path: "/hr-chat",
-        component: () => import("pages/py_PageHRChat.vue"),
+        component: () => import("pages/feature/py_PageHRChat.vue"),
       },
       {
         path: "/resume-history",
