@@ -1,13 +1,7 @@
 <template>
   <q-page class="constrain-more q-pa-md">
     <div class="camera-frame q-pa-md">
-      <video
-        v-show="!imageCaptured"
-        ref="video"
-        class="full-width"
-        autoplay
-        playsinline
-      />
+      <video v-show="!imageCaptured" ref="video" class="full-width" autoplay />
       <canvas
         v-show="imageCaptured"
         ref="canvas"
@@ -27,6 +21,7 @@
       />
       <q-file
         v-else
+        v-model="imageUpload"
         @input="captureImageFallback"
         label="Choose an image"
         accept="image/*"
@@ -36,7 +31,6 @@
           <q-icon name="eva-attach-outline" />
         </template>
       </q-file>
-
       <div class="row justify-center q-ma-md">
         <q-input
           v-model="post.caption"
@@ -67,9 +61,8 @@
       </div>
       <div class="row justify-center q-mt-lg">
         <q-btn
-          @click="addPost"
+          @click="addPost()"
           :disable="!post.caption || !post.photo"
-          class="q-mb-lg"
           color="primary"
           label="Post Image"
           rounded
@@ -297,9 +290,32 @@ function addPostError() {
 }
 </script>
 
-<style scoped>
-.camera-frame {
-  border: 2px solid var(--q-color-grey-10);
-  border-radius: 10px;
-}
+<style lang="sass">
+.camera-frame
+  border: 2px solid $grey-10
+  border-radius: 10px
+
+  // app global css in Sass form
+.text-grand-hotel
+  font-family: 'Grand Hotel', 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif
+
+.small-screen-only
+  @media (max-width: $breakpoint-xs-max)
+    display: block
+  @media (min-width: $breakpoint-sm-min)
+    display: none
+
+.large-screen-only
+  @media (max-width: $breakpoint-xs-max)
+    display: none
+  @media (min-width: $breakpoint-sm-min)
+    display: block
+
+.constrain
+  max-width: 975px
+  margin: 0 auto
+
+.constrain-more
+  max-width: 600px
+  margin: 0 auto
 </style>

@@ -1,107 +1,114 @@
 <template>
   <q-page class="q-pa-md">
     <!-- Text-to-Speech (TTS) Section -->
-    <q-card class="q-ma-md">
-      <q-card-section>
-        <q-card-title>Text-to-Speech (TTS)</q-card-title>
-        <q-input
-          v-model="text"
-          label="Enter Text for TTS"
-          type="textarea"
-          rows="5"
-          outlined
-          class="q-mt-md"
-        />
-        <q-btn
-          label="Convert to Speech"
-          color="primary"
-          :loading="isLoading"
-          @click="convertToSpeech"
-          class="q-mt-md"
-        />
-      </q-card-section>
-      <q-card-section v-if="audioUrl" class="q-mt-md">
-        <audio :src="audioUrl" controls autoplay class="full-width"></audio>
-      </q-card-section>
-    </q-card>
+    <div class="audio-frame q-pa-md">
+      <q-card class="q-ma-md">
+        <q-card-section>
+          <q-card-title>Text-to-Speech (TTS)</q-card-title>
+          <q-input
+            v-model="text"
+            label="Enter Text for TTS"
+            type="textarea"
+            rows="5"
+            outlined
+            class="q-mt-md"
+          />
+          <q-btn
+            label="Convert to Speech"
+            color="primary"
+            :loading="isLoading"
+            @click="convertToSpeech"
+            class="q-mt-md"
+          />
+        </q-card-section>
+        <q-card-section v-if="audioUrl" class="q-mt-md">
+          <audio :src="audioUrl" controls autoplay class="full-width"></audio>
+        </q-card-section>
+      </q-card>
+    </div>
 
     <!-- Mic Control and Transcription Section -->
-    <q-card class="q-ma-md">
-      <q-card-section>
-        <q-card-title>Speech-to-Text (STT)</q-card-title>
-        <div class="row items-center q-gutter-md q-mt-md">
-          <q-btn
-            @click="startRecording"
-            label="Start Recording"
-            color="green"
-            icon="mic"
-          />
-          <q-btn
-            @click="stopRecording"
-            label="Stop Recording"
-            color="red"
-            icon="stop"
-          />
+    <div class="audio-frame q-pa-md q-mt-md">
+      <q-card class="q-ma-md">
+        <q-card-section>
+          <q-card-title>Speech-to-Text (STT)</q-card-title>
+          <div class="row items-center q-gutter-md q-mt-md">
+            <q-btn
+              @click="startRecording"
+              label="Start Recording"
+              color="green"
+              icon="mic"
+            />
+            <q-btn
+              @click="stopRecording"
+              label="Stop Recording"
+              color="red"
+              icon="stop"
+            />
 
-          <!--Start Transcription and Mic Input Section -->
-          <q-btn
-            label="Start Transcription"
-            color="blue"
-            icon="mic"
-            @click="startTranscription"
-          />
-        </div>
-      </q-card-section>
-      <q-card-section class="q-mt-md">
-        <q-card-title>Transcription Output</q-card-title>
-        <div class="text-body1 text-grey-8">{{ sttOutput }}</div>
-      </q-card-section>
-    </q-card>
+            <!--Start Transcription and Mic Input Section -->
+            <q-btn
+              label="Start Transcription"
+              color="blue"
+              icon="mic"
+              @click="startTranscription"
+            />
+          </div>
+        </q-card-section>
+        <q-card-section class="q-mt-md">
+          <q-card-title>Transcription Output</q-card-title>
+          <div class="text-body1 text-grey-8">{{ sttOutput }}</div>
+        </q-card-section>
+      </q-card>
+    </div>
 
     <!-- Playback, Upload, and File Input Section -->
-    <q-card class="q-ma-md">
-      <q-card-section>
-        <q-card-title>Playback and Upload</q-card-title>
-        <div class="row items-center q-gutter-md q-mt-md">
-          <q-btn
-            @click="playRecording"
-            label="Play Recording"
-            color="primary"
-            icon="play_arrow"
-            :disable="!audioUrl"
-          />
-          <q-btn
-            @click="uploadAudio"
-            label="Upload Audio"
-            color="teal"
-            icon="cloud_upload"
-            :disable="!audioBlob"
-          />
-        </div>
-        <div class="row justify-center q-ma-md">
-          <q-file
-            label="Choose an audio file"
-            accept="audio/*"
+    <div class="audio-frame q-pa-md q-mt-md">
+      <q-card class="q-ma-md">
+        <q-card-section>
+          <q-card-title>Playback and Upload</q-card-title>
+          <div class="row items-center q-gutter-md q-mt-md">
+            <q-btn
+              @click="playRecording"
+              label="Play Recording"
+              color="primary"
+              icon="play_arrow"
+              :disable="!audioUrl"
+            />
+            <q-btn
+              @click="uploadAudio"
+              label="Upload Audio"
+              color="teal"
+              icon="cloud_upload"
+              :disable="!audioBlob"
+            />
+          </div>
+          <div class="row justify-center q-ma-md">
+            <q-file
+              label="Choose an audio file"
+              accept="audio/*"
+              outlined
+              @input="handleFileUpload"
+            >
+              <template v-slot:prepend>
+                <q-icon name="eva-attach-outline" />
+              </template>
+            </q-file>
+          </div>
+          <q-input
+            v-if="audioBlob"
+            v-model="caption"
+            label="Add a caption"
+            class="q-mb-md"
             outlined
-            @input="handleFileUpload"
-          >
-            <template v-slot:prepend>
-              <q-icon name="eva-attach-outline" />
-            </template>
-          </q-file>
-        </div>
-        <q-input
-          v-if="audioBlob"
-          v-model="caption"
-          label="Add a caption"
-          class="q-mb-md"
-          outlined
-        />
-      </q-card-section>
-      <q-card-section v-if="audioUrl" class="q-mt-md">
-        <audio :src="audioUrl" controls autoplay class="full-width"></audio>
-      </q-card-section>
-    </q-card>
+          />
+        </q-card-section>
+
+        <q-card-section v-if="audioUrl" class="q-mt-md">
+          <audio :src="audioUrl" controls autoplay class="full-width"></audio>
+        </q-card-section>
+      </q-card>
+    </div>
   </q-page>
 </template>
 
@@ -379,3 +386,32 @@ const uploadAudio = async () => {
   }
 };
 </script>
+<style lang="sass">
+.audio-frame
+  border: 2px solid $grey-10
+  border-radius: 10px
+
+  // app global css in Sass form
+.text-grand-hotel
+  font-family: 'Grand Hotel', 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif
+
+.small-screen-only
+  @media (max-width: $breakpoint-xs-max)
+    display: block
+  @media (min-width: $breakpoint-sm-min)
+    display: none
+
+.large-screen-only
+  @media (max-width: $breakpoint-xs-max)
+    display: none
+  @media (min-width: $breakpoint-sm-min)
+    display: block
+
+.constrain
+  max-width: 975px
+  margin: 0 auto
+
+.constrain-more
+  max-width: 600px
+  margin: 0 auto
+</style>

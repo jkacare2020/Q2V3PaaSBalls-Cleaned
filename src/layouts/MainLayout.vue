@@ -94,18 +94,42 @@
             :label="category.category"
             expand-separator
           >
-            <q-item
-              v-for="link in category.links"
-              :key="link.title"
-              clickable
-              v-ripple
-              @click="$router.push(link.link)"
-            >
-              <q-item-section avatar>
-                <q-icon :name="link.icon" />
-              </q-item-section>
-              <q-item-section>{{ link.title }}</q-item-section>
-            </q-item>
+            <!-- Handle each link or submenu -->
+            <template v-for="link in category.links" :key="link.title">
+              <!-- Check for sub-menu (children) -->
+              <q-expansion-item
+                v-if="link.children"
+                :icon="link.icon"
+                :label="link.title"
+                expand-separator
+              >
+                <q-item
+                  v-for="child in link.children"
+                  :key="child.title"
+                  clickable
+                  v-ripple
+                  @click="$router.push(child.link)"
+                >
+                  <q-item-section avatar>
+                    <q-icon :name="child.icon" />
+                  </q-item-section>
+                  <q-item-section>{{ child.title }}</q-item-section>
+                </q-item>
+              </q-expansion-item>
+
+              <!-- Single link (no children) -->
+              <q-item
+                v-else
+                clickable
+                v-ripple
+                @click="$router.push(link.link)"
+              >
+                <q-item-section avatar>
+                  <q-icon :name="link.icon" />
+                </q-item-section>
+                <q-item-section>{{ link.title }}</q-item-section>
+              </q-item>
+            </template>
           </q-expansion-item>
         </template>
       </q-list>
@@ -159,42 +183,56 @@ function toggleDropdown() {
 const navLinks = [
   {
     category: "General",
+    icon: "apps",
     links: [
-      { title: "Entries", icon: "savings", link: "/" },
+      { title: "$ Entries", icon: "savings", link: "/" },
       { title: "Settings", icon: "settings", link: "/settings" },
     ],
   },
+  // {
+  //   category: "User Authentication",
+  //   links: [
+  //     { title: "Python Login", icon: "login", link: "/py_loginPage" },
+  //     {
+  //       title: "Python Register",
+  //       icon: "person_add",
+  //       link: "/py_registerPage",
+  //     },
+  //   ],
+  // },
   {
-    category: "User Authentication",
+    category: "AI HR Agent",
+    icon: "work",
     links: [
-      { title: "Python Login", icon: "login", link: "/py_loginPage" },
       {
-        title: "Python Register",
-        icon: "person_add",
-        link: "/py_registerPage",
+        title: "Authentication",
+        icon: "vpn_key",
+        children: [
+          { title: "HR User Login", icon: "login", link: "/py_loginPage" },
+          {
+            title: "HR user Register",
+            icon: "person_add",
+            link: "/py_registerPage",
+          },
+        ],
       },
-    ],
-  },
-  {
-    category: "HR Agent",
-    links: [
       { title: "HR Dashboard", icon: "work", link: "/hr-agent" },
       {
         title: "Job Descriptions",
-        icon: "description",
+        icon: "edit_note",
         link: "/job-description",
       },
       {
         title: "Job Opening",
-        icon: "description",
+        icon: "badge",
         link: "/public/job-opening",
       },
-      { title: "Job Matching", icon: "sync", link: "/job-matching" },
-      { title: "Resume History", icon: "history", link: "/resume-history" }, // ✅ Ensure this is correct
     ],
   },
+
   {
-    category: "Media",
+    category: "Media Hub",
+    icon: "perm_media",
     links: [
       { title: "Camera", icon: "eva-camera", link: "/camera" },
       {
@@ -202,11 +240,12 @@ const navLinks = [
         icon: "eva-video-outline",
         link: "/videoCamera",
       },
-      { title: "Videos", icon: "eva-film-outline", link: "/videos" },
-      { title: "Audios", icon: "eva-headphones-outline", link: "/audios" },
+      { title: "TTS/STT", icon: "eva-mic-outline", link: "/audios" },
+      { title: "Video", icon: "eva-film-outline", link: "/videos" },
+
       {
         title: "Audio Files",
-        icon: "eva-headphones-outline",
+        icon: "graphic_eq",
         link: "/audio-posts",
       },
       { title: "Photos", icon: "image", link: "/photos" },
@@ -214,13 +253,15 @@ const navLinks = [
   },
   {
     category: "Social & Chat",
+    icon: "connect_without_contact",
     links: [
-      { title: "ChatBot", icon: "message", link: "/chatBot" },
-      { title: "Tenant", icon: "message", link: "/tenants" },
+      { title: "ChatBot", icon: "smart_toy", link: "/chatBot" },
+      { title: "Tenant", icon: "support_agent", link: "/tenants" },
     ],
   },
   {
     category: "Transactions",
+    icon: "receipt_long",
     links: [
       {
         title: "All Transactions",

@@ -285,7 +285,10 @@ const sendMessage = async () => {
     await logChatMessage(userMessage.value, botResponse); // ✅ Correctly pass botResponse
   } catch (error) {
     console.error("🔥 Error sending message:", error);
-    chatMessages.value.push({ role: "bot", text: "Error processing message." });
+    chatMessages.value.push({
+      role: "bot",
+      text: "Error processing message, HR Authentication Failure",
+    });
   } finally {
     userMessage.value = "";
   }
