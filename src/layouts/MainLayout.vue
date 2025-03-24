@@ -1,6 +1,29 @@
 <template>
   <q-layout view="hHh lpR lFf">
     <q-header :elevated="useLightOrDark(true, false)">
+      <q-banner v-if="showAppInstallBanner" class="bubble-banner">
+        <div>
+          <b>Install PaaS-Balls as a native app?</b>
+        </div>
+        <div class="bubble-banner-buttons">
+          <q-btn flat dense label="Yes" @click="installApp" color="white" />
+          <q-btn
+            flat
+            dense
+            label="Later"
+            @click="showAppInstallBanner = false"
+            color="white"
+          />
+          <q-btn
+            flat
+            dense
+            label="Never"
+            @click="neverShowAppInstallBanner"
+            color="white"
+          />
+        </div>
+      </q-banner>
+
       <q-toolbar>
         <q-btn
           flat
@@ -95,13 +118,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useStoreAuth } from "src/stores/storeAuth";
 import { useStoreUsers } from "src/stores/storeUsers";
 import { useRouter, useRoute } from "vue-router";
 import { useLightOrDark } from "src/use/useLightOrDark";
-// import NavLink from "components/Nav/NavLink.vue";
+import { LocalStorage } from "quasar";
 
 const storeUsers = useStoreUsers();
 const storeAuth = useStoreAuth();
@@ -290,4 +313,56 @@ function quitApp() {
 function isActive(page) {
   return router.currentRoute.value.path === `/${page}`;
 }
+
+const showAppInstallBanner = ref(false);
+let deferredPrompt = null;
+
+// Handle "Install" button click
+const installApp = () => {
+  showAppInstallBanner.value = false;
+
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === "accepted") {
+        console.log("User accepted the install prompt");
+        neverShowAppInstallBanner();
+      } else {
+        console.log("User dismissed the install prompt");
+      }
+    });
+  }
+};
+
+// Handle "Never" button click
+const neverShowAppInstallBanner = () => {
+  showAppInstallBanner.value = false;
+  LocalStorage.set("neverShowAppInstallBanner", true);
+};
+
+// Detect install prompt
+onMounted(() => {
+  console.log("👀 Waiting for beforeinstallprompt...");
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    console.log("✅ beforeinstallprompt fired!");
+
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Only show banner if user hasn't chosen "Never"
+    if (!LocalStorage.getItem("neverShowAppInstallBanner")) {
+      showAppInstallBanner.value = true;
+    }
+  });
+
+  // Optional: detect successful install
+  window.addEventListener("appinstalled", () => {
+    console.log("🎉 App was installed");
+    $q.notify({
+      type: "positive",
+      message: "PaaS-Balls installed successfully!",
+    });
+  });
+});
 </script>

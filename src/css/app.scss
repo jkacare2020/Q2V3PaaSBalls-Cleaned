@@ -156,3 +156,61 @@ Global green cursor body {
     background-color: rgba(255, 255, 255, 0.1) !important;
   }
 }
+.bubble-banner {
+  position: relative;
+  max-width: 350px;
+  border-radius: 16px;
+  padding: 1rem;
+  margin: 1rem auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background-color: #ffffff; // Default light background
+  color: #212121; // Dark text for readability
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 20px;
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: #ffffff transparent transparent transparent;
+  }
+
+  // Dark Mode Override
+  .body--dark & {
+    background-color: #027be3;
+    color: #ffffff;
+
+    &::after {
+      border-color: #027be3 transparent transparent transparent;
+    }
+  }
+}
+
+.bubble-banner-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1rem;
+
+  .q-btn {
+    color: inherit;
+    font-weight: bold;
+  }
+}
+.bubble-banner-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1rem;
+
+  .q-btn {
+    font-weight: bold;
+
+    // Light mode: dark text
+    color: #212121 !important;
+
+    // Dark mode override: white text
+    .body--dark & {
+      color: #ffffff !important;
+    }
+  }
+}
