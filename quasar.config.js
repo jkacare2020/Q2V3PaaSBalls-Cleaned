@@ -14,8 +14,7 @@ const path = require("path");
 module.exports = configure(function (/* ctx */) {
   // Hardcoded values as a fallback for testing purposes
   // let VUE_APP_API_LOCAL = "http://localhost:3000";
-  let VUE_APP_API_PRODUCTION =
-    "https://quasargram-jason-backend-2024-98f0d3ac8c4a.herokuapp.com";
+  let VUE_APP_API_PRODUCTION = process.env.VUE_APP_API_PRODUCTION;
 
   console.log("Current Environment:", process.env.NODE_ENV);
   // console.log("Hardcoded API Local:", VUE_APP_API_LOCAL);
