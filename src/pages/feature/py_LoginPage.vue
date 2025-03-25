@@ -2,7 +2,7 @@
   <q-page class="flex flex-center">
     <q-card class="q-pa-lg shadow-2" style="width: 350px">
       <q-card-section>
-        <div class="text-h6">FastAPI Authentication</div>
+        <div class="text-h6">HR User Authentication</div>
       </q-card-section>
 
       <q-card-section v-if="!isAuthenticated">
