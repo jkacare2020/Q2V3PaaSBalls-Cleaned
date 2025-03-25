@@ -7,7 +7,7 @@
       <q-input
         v-model="addEntryForm.name"
         ref="nameRef"
-        placeholder="Name"
+        placeholder="Item  Name"
         :bg-color="useLightOrDark('white', 'black')"
         v-select-all
         outlined
@@ -17,7 +17,10 @@
     <div class="col">
       <q-input
         v-model.number="addEntryForm.amount"
-        :rules="[val => (typeof val === 'number' || val === null) || 'Enter a valid number']"
+        :rules="[
+          (val) =>
+            typeof val === 'number' || val === null || 'Enter a valid number',
+        ]"
         input-class="text-right"
         placeholder="Amount"
         :bg-color="useLightOrDark('white', 'black')"
@@ -29,66 +32,56 @@
       />
     </div>
     <div class="col col-auto">
-      <q-btn
-        color="primary"
-        icon="add"
-        type="submit"
-        round
-      />
+      <q-btn color="primary" icon="add" type="submit" round />
     </div>
   </q-form>
 </template>
 
 <script setup>
-
-  /*
+/*
     imports
   */
-  
-    import { ref, reactive } from 'vue'
-    import { useQuasar } from 'quasar'
-    import { useStoreEntries } from 'src/stores/storeEntries'
-    import { useLightOrDark } from 'src/use/useLightOrDark'
-    import vSelectAll from 'src/directives/directiveSelectAll'
 
+import { ref, reactive } from "vue";
+import { useQuasar } from "quasar";
+import { useStoreEntries } from "src/stores/storeEntries";
+import { useLightOrDark } from "src/use/useLightOrDark";
+import vSelectAll from "src/directives/directiveSelectAll";
 
-  /*
+/*
     quasar
   */
-  
-    const $q = useQuasar()
 
+const $q = useQuasar();
 
-  /*
+/*
     stores
   */
-  
-    const storeEntries = useStoreEntries()
 
+const storeEntries = useStoreEntries();
 
-  /*
+/*
     add entry
   */
 
-    const nameRef = ref(null)
+const nameRef = ref(null);
 
-    const addEntryFormDefault = {
-      name: '',
-      amount: null
-    }
+const addEntryFormDefault = {
+  name: "",
+  amount: null,
+};
 
-    const addEntryForm = reactive({
-      ...addEntryFormDefault
-    })
+const addEntryForm = reactive({
+  ...addEntryFormDefault,
+});
 
-    const addEntryFormReset = () => {
-      Object.assign(addEntryForm, addEntryFormDefault)
-      if (!$q.platform.is.capacitor) nameRef.value.focus()
-    }
-  
-  const addEntryFormSubmit = () => {
-    storeEntries.addEntry(addEntryForm)
-    addEntryFormReset()
-  }
+const addEntryFormReset = () => {
+  Object.assign(addEntryForm, addEntryFormDefault);
+  if (!$q.platform.is.capacitor) nameRef.value.focus();
+};
 
+const addEntryFormSubmit = () => {
+  storeEntries.addEntry(addEntryForm);
+  addEntryFormReset();
+};
 </script>
