@@ -11,8 +11,6 @@
 const { configure } = require("quasar/wrappers");
 const path = require("path");
 
-const { configure } = require("quasar/wrappers");
-
 module.exports = configure(function () {
   console.log("Current Environment:", process.env.NODE_ENV);
   console.log(
