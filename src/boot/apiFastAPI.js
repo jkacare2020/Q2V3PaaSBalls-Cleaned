@@ -8,6 +8,8 @@ const apiFastAPI = axios.create({
   baseURL: process.env.VUE_APP_FASTAPI_URL || "http://127.0.0.1:8000",
 });
 
+//----VUE_APP_FASTAPI_URL=https://q2v3paasballs-cleaned.onrender.com..//
+
 export default boot(({ app }) => {
   app.config.globalProperties.$apiFastAPI = apiFastAPI;
 });
