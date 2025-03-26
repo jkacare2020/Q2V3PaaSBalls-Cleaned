@@ -11,25 +11,26 @@
 const { configure } = require("quasar/wrappers");
 const path = require("path");
 
-module.exports = configure(function (/* ctx */) {
-  // Hardcoded values as a fallback for testing purposes
-  // let VUE_APP_API_LOCAL = "http://localhost:3000";
-  let VUE_APP_API_PRODUCTION = process.env.VUE_APP_API_PRODUCTION;
+const { configure } = require("quasar/wrappers");
 
+module.exports = configure(function () {
   console.log("Current Environment:", process.env.NODE_ENV);
-  // console.log("Hardcoded API Local:", VUE_APP_API_LOCAL);
   console.log(
     "API URL:",
     process.env.VUE_APP_API_LOCAL || "http://localhost:3000"
   );
-  console.log("Hardcoded API Production:", VUE_APP_API_PRODUCTION);
-  return {
-    // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
-    // preFetch: true,
+  console.log("API Local:", process.env.VUE_APP_API_LOCAL);
+  console.log("API Production:", process.env.VUE_APP_API_PRODUCTION);
 
-    // app boot file (/src/boot)
-    // --> boot files are part of "main.js"
-    // https://v2.quasar.dev/quasar-cli-vite/boot-files
+  return {
+    build: {
+      env: {
+        VUE_APP_API_LOCAL: process.env.VUE_APP_API_LOCAL,
+        VUE_APP_API_PRODUCTION: process.env.VUE_APP_API_PRODUCTION,
+        VUE_APP_FASTAPI_URL: process.env.VUE_APP_FASTAPI_URL,
+      },
+    },
+
     boot: [
       "router",
       "apiFastAPI", // Make sure the name matches the filename without extension
