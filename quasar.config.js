@@ -69,8 +69,12 @@ module.exports = configure(function (/* ctx */) {
 
       env: {
         // Choose the correct API based on the environment
-        API: process.env.VUE_APP_API_LOCAL || "http://localhost:3000",
+        // API: process.env.VUE_APP_API_LOCAL || "http://localhost:3000",
         // VUE_APP_FASTAPI_URL:
+        VUE_APP_API_LOCAL:
+          process.env.VUE_APP_API_LOCAL || "http://localhost:3000",
+        VUE_APP_API_PRODUCTION:
+          process.env.VUE_APP_API_PRODUCTION || "https://fallback-api.com",
 
         VUE_APP_FASTAPI_URL:
           process.env.NODE_ENV === "production"
