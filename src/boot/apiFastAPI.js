@@ -1,8 +1,9 @@
 import { boot } from "quasar/wrappers";
 import axios from "axios";
 
+// ✅ Use environment variable instead of hardcoded localhost
 const apiFastAPI = axios.create({
-  baseURL: "http://127.0.0.1:8000", // Adjust as needed
+  baseURL: process.env.VUE_APP_FASTAPI_URL || "http://127.0.0.1:8000",
 });
 
 export default boot(({ app }) => {

@@ -70,12 +70,13 @@ module.exports = configure(function (/* ctx */) {
       env: {
         // Choose the correct API based on the environment
         API: process.env.VUE_APP_API_LOCAL || "http://localhost:3000",
+        // VUE_APP_FASTAPI_URL:
+        //   process.env.VUE_APP_FASTAPI_URL || "http://127.0.0.1:8000",
         VUE_APP_FASTAPI_URL:
-          process.env.VUE_APP_FASTAPI_URL || "http://127.0.0.1:8000",
-
-        // process.env.NODE_ENV === "production"
-        //   ? process.env.VUE_APP_API_PRODUCTION // Production API for production build
-        //   : process.env.VUE_APP_API_LOCAL, // Local API for development
+          process.env.NODE_ENV === "production"
+            ? process.env.VUE_APP_FASTAPI_URL ||
+              "https://q2v3paasapp.onrender.com"
+            : process.env.VUE_APP_API_LOCAL || "http://127.0.0.1:8000",
 
         // Firebase keys
         VUE_APP_FIREBASE_API_KEY: process.env.VUE_APP_FIREBASE_API_KEY,
