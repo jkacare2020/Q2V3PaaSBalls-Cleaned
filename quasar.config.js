@@ -71,7 +71,7 @@ module.exports = configure(function (/* ctx */) {
         // Choose the correct API based on the environment
         API: process.env.VUE_APP_API_LOCAL || "http://localhost:3000",
         // VUE_APP_FASTAPI_URL:
-        //   process.env.VUE_APP_FASTAPI_URL || "http://127.0.0.1:8000",
+
         VUE_APP_FASTAPI_URL:
           process.env.NODE_ENV === "production"
             ? process.env.VUE_APP_FASTAPI_URL ||
