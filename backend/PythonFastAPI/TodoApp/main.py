@@ -2,9 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .models import Base
 from .database import engine
-
-
-
+from dotenv import load_dotenv
+load_dotenv()  # ✅ This loads environment variables from .env
 
 # ✅ Import ALL routers (INCLUDING job_description)
 from .routers import auth, todos, admin, users, hr_ai, job_description, resume_upload,hr_resume, hr_screened_resumes    # ✅ Add job_description

@@ -16,7 +16,7 @@ router = APIRouter(
     tags=['auth']
 )
 
-SECRET_KEY = os.getenv("SECRET_KEY", "197b2c37c391bed93fe80344fe73b806947a65e36206e05a1a23c2fa12702fe3")
+SECRET_KEY = os.getenv("SECRET_KEY", "default_value")
 ALGORITHM = 'HS256'
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
