@@ -109,6 +109,7 @@
                   clickable
                   v-ripple
                   @click="$router.push(child.link)"
+                  class="q-ml-lg"
                 >
                   <q-item-section avatar>
                     <q-icon :name="child.icon" />
@@ -123,6 +124,7 @@
                 clickable
                 v-ripple
                 @click="$router.push(link.link)"
+                class="q-ml-lg"
               >
                 <q-item-section avatar>
                   <q-icon :name="link.icon" />

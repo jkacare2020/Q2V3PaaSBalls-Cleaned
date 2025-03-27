@@ -79,7 +79,7 @@ import { uid, useQuasar } from "quasar";
 import { auth } from "src/firebase/init";
 import axios from "axios";
 import { useRouter } from "vue-router";
-
+import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
 const router = useRouter();
 const $q = useQuasar();
 
@@ -263,10 +263,10 @@ async function addPost() {
   formData.append("file", post.photo, `${post.id}.png`);
 
   try {
-    console.log("API URL:", process.env.API); // url backend
+    console.log("API URL:", nodeApiBaseURL); // url backend
 
     const idToken = await user.getIdToken();
-    await axios.post(`${process.env.API}/api/create-post`, formData, {
+    await apiNode.post(`/api/create-post`, formData, {
       headers: { Authorization: `Bearer ${idToken}` },
     });
     $q.localStorage.set("postCreated", true);

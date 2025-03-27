@@ -166,6 +166,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
 import defaultAvatar from "src/assets/avatar.jpg"; // Import default avatar
 import { useStoreAuth } from "src/stores/storeAuth";
+import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
 
 const storeAuth = useStoreAuth();
 
@@ -196,8 +197,8 @@ const getPosts = () => {
   auth.currentUser
     .getIdToken()
     .then((idToken) => {
-      axios
-        .get(`${process.env.API}/api/posts`, {
+      apiNode
+        .get(`/api/posts`, {
           headers: {
             Authorization: `Bearer ${idToken}`,
           },
@@ -225,8 +226,8 @@ const getPosts = () => {
 const deletePost = (postId) => {
   console.log("deletePost function called with postId:", postId);
   auth.currentUser.getIdToken().then((idToken) => {
-    axios
-      .delete(`${process.env.API}/api/posts/${postId}`, {
+    apiNode
+      .delete(`/api/posts/${postId}`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },

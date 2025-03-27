@@ -102,6 +102,7 @@ import defaultAvatar from "src/assets/avatar.jpg";
 import { useRouter } from "vue-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { useQuasar } from "quasar";
+import { apiNode } from "boot/apiNode";
 
 const $q = useQuasar();
 const router = useRouter();
@@ -133,12 +134,9 @@ async function fetchTransactions() {
   try {
     const idToken = await storeAuth.user?.getIdToken();
 
-    const response = await axios.get(
-      `${process.env.API}/api/mongo-AllTransacts`, // to transactRoutes
-      {
-        headers: { Authorization: `Bearer ${idToken}` },
-      }
-    );
+    const response = await apiNode.get("/api/mongo-AllTransacts", {
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
 
     if (response.data && response.data.length > 0) {
       transacts.value = response.data;
@@ -222,10 +220,9 @@ async function openEditForm(transactId) {
   isLoading.value = true; // Show loading spinner
 
   try {
-    const response = await axios.get(
-      `${process.env.API}/api/transactions/${transactId}`,
-      { headers: { Authorization: `Bearer ${idToken}` } }
-    );
+    const response = await apiNode.get(`/api/transactions/${transactId}`, {
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
     console.log("PageMongoTran Fetched transaction data:", response.data);
     router.push(`/view-transaction/${transactId}`);
   } catch (error) {
@@ -264,14 +261,11 @@ async function openDeleteForm(transactId) {
       })
       .onOk();
 
-    const response = await axios.delete(
-      `${process.env.API}/api/transactions/${transactId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${idToken}`, // Include token in request headers
-        },
-      }
-    );
+    const response = await apiNode.delete(`/api/transactions/${transactId}`, {
+      headers: {
+        Authorization: `Bearer ${idToken}`, // Include token in request headers
+      },
+    });
 
     console.log("Transaction deleted successfully:", response.data);
 

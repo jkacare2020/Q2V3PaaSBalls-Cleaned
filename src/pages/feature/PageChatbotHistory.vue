@@ -50,6 +50,7 @@ import { auth } from "src/firebase/init"; // Ensure correct import for Firebase 
 import Papa from "papaparse";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { apiNode } from "boot/apiNode";
 
 // ✅ Define table columns
 const columns = [
@@ -110,12 +111,9 @@ const fetchChatHistory = async () => {
     const token = await getValidToken();
     if (!token) throw new Error("No access token found");
 
-    const response = await axios.get(
-      `http://localhost:3000/api/chatbot/history`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const response = await apiNode.get("/api/chatbot/history", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     let data = response.data;
     console.log("🔥 RAW API Response:", data);

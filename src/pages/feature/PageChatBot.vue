@@ -39,6 +39,7 @@
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
+import { apiNode } from "boot/apiNode";
 
 const userMessage = ref("");
 const chatMessages = ref([]);
@@ -50,12 +51,9 @@ const sendMessage = async () => {
   chatMessages.value.push({ role: "user", text: userMessage.value });
 
   try {
-    const response = await axios.post(
-      `${process.env.API}/api/chatbot/sendMessage`,
-      {
-        userMessage: userMessage.value, // Match backend expectation
-      }
-    );
+    const response = await apiNode.post("/api/chatbot/sendMessage", {
+      userMessage: userMessage.value, // Match backend expectation
+    });
 
     // Access the correct field from backend response
     chatMessages.value.push({

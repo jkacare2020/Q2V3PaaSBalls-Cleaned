@@ -63,7 +63,7 @@
 import { ref } from "vue";
 import axios from "axios";
 import { useQuasar } from "quasar";
-
+import { apiNode } from "boot/apiNode";
 const $q = useQuasar();
 const userMessage = ref("");
 const chatMessages = ref([]);
@@ -76,12 +76,9 @@ const sendMessage = async () => {
   chatMessages.value.push({ role: "user", text: userMessage.value });
 
   try {
-    const response = await axios.post(
-      `${process.env.API}/api/chatbot/sendMessage`,
-      {
-        userMessage: userMessage.value,
-      }
-    );
+    const response = await apiNode.post(`/api/chatbot/sendMessage`, {
+      userMessage: userMessage.value,
+    });
 
     const botResponse = response.data.botResponse;
     chatMessages.value.push({ role: "bot", text: botResponse });

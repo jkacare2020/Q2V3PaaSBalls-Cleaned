@@ -126,6 +126,7 @@ import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import axios from "axios";
+import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
 
 import { watch } from "vue";
 
@@ -185,12 +186,9 @@ onMounted(() => {
 async function fetchTransactInfo() {
   try {
     console.log("ViewTransact Fetching transaction info for ID:", transactId);
-    const response = await axios.get(
-      `${process.env.API}/api/transactions/${transactId}`,
-      {
-        headers: { Authorization: `Bearer ${localStorage.getItem("idToken")}` },
-      }
-    );
+    const response = await apiNode.get(`/api/transactions/${transactId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("idToken")}` },
+    });
     console.log("Transaction data fetched successfully:", response.data);
 
     Object.assign(transactInfo, response.data);
@@ -208,8 +206,8 @@ async function fetchTransactInfo() {
 async function updateTransact() {
   try {
     console.log("ViewTransact UPDATING transaction info for ID:", transactId);
-    await axios.put(
-      `${process.env.API}/api/transactions/${transactId}`,
+    await apiNode.put(
+      `/api/transactions/${transactId}`,
       { ...transactInfo },
       {
         headers: { Authorization: `Bearer ${localStorage.getItem("idToken")}` },

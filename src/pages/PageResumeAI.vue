@@ -38,6 +38,7 @@
 import { ref } from "vue";
 import axios from "axios";
 import { useQuasar } from "quasar";
+import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
 
 const $q = useQuasar();
 const resumeFile = ref(null);
@@ -53,13 +54,9 @@ const analyzeResume = async () => {
   formData.append("file", resumeFile.value);
 
   try {
-    const response = await axios.post(
-      `${process.env.API}/resume/upload`,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+    const response = await apiNode.post(`/resume/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
     analysisResult.value = response.data.analysis;
   } catch (error) {

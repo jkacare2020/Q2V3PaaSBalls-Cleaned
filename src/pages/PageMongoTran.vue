@@ -125,6 +125,7 @@ import defaultAvatar from "src/assets/avatar.jpg"; // Import default avatar
 import { useRouter } from "vue-router";
 import { auth } from "src/firebase/init"; // Adjust the path as needed
 import { useQuasar } from "quasar";
+import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
 const $q = useQuasar();
 
 const router = useRouter();
@@ -187,8 +188,8 @@ async function fetchTransactions() {
       const idToken = await storeAuth.user.getIdToken();
 
       // Make the request with the Authorization header
-      const response = await axios.get(
-        `${process.env.API}/api/mongo-transacts?phone=${normalizedPhone}`,
+      const response = await apiNode.get(
+        `/api/mongo-transacts?phone=${normalizedPhone}`,
         {
           headers: {
             Authorization: `Bearer ${idToken}`, // Include token in Authorization header
@@ -196,7 +197,7 @@ async function fetchTransactions() {
         }
       );
 
-      console.log("Transact Backend URL:", process.env.API);
+      console.log("Transact Backend URL:", nodeApiBaseURL);
 
       // Handle response data
       if (response.data && response.data.length > 0) {
@@ -254,10 +255,9 @@ async function openEditForm(transactId) {
   isLoading.value = true; // Show loading spinner
 
   try {
-    const response = await axios.get(
-      `${process.env.API}/api/transactions/${transactId}`,
-      { headers: { Authorization: `Bearer ${idToken}` } }
-    );
+    const response = await apiNode.get(`api/transactions/${transactId}`, {
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
     console.log("PageMongoTran Fetched transaction data:", response.data);
     router.push(`/view-transaction/${transactId}`);
   } catch (error) {
@@ -302,14 +302,11 @@ async function openDeleteForm(transactId) {
     // }
 
     // Make the delete request
-    const response = await axios.delete(
-      `${process.env.API}/api/transactions/${transactId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${idToken}`, // Include token in request headers
-        },
-      }
-    );
+    const response = await apiNode.delete(`/api/transactions/${transactId}`, {
+      headers: {
+        Authorization: `Bearer ${idToken}`, // Include token in request headers
+      },
+    });
 
     console.log("Transaction deleted successfully:", response.data);
 

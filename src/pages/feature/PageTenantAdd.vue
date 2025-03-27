@@ -33,7 +33,7 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router"; // Use Vue Router hooks
 import axios from "axios";
 import { getAuth } from "firebase/auth";
-
+import { apiNode } from "boot/apiNode";
 const auth = getAuth();
 
 // const route = useRoute(); // Access the route parameters
@@ -54,8 +54,8 @@ const addTenant = async () => {
     const token = await auth.currentUser.getIdToken();
 
     // Send the request with the token in the Authorization header
-    await axios.post(
-      `${process.env.API}/api/tenants/add`,
+    await apiNode.post(
+      "/api/tenants/add",
       tenant.value, // Tenant data
       {
         headers: {
