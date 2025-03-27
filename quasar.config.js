@@ -79,8 +79,8 @@ module.exports = configure(function () {
         VUE_APP_FASTAPI_URL:
           process.env.NODE_ENV === "production"
             ? process.env.VUE_APP_FASTAPI_URL ||
-              "https://q2v3paasapp.onrender.com"
-            : process.env.VUE_APP_API_LOCAL || "http://127.0.0.1:8000",
+              "https://q2v3paasballs-cleaned.onrender.com"
+            : "http://127.0.0.1:8000", // ✅ Force correct dev default
 
         // Firebase keys
         VUE_APP_FIREBASE_API_KEY: process.env.VUE_APP_FIREBASE_API_KEY,
