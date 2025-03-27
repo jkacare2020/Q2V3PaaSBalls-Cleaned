@@ -36,6 +36,7 @@
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
+import { apiNode } from "boot/apiNode";
 
 const router = useRouter(); // Access the Vue Router instance
 
@@ -77,7 +78,7 @@ const columns = [
 
 const fetchTenants = async () => {
   try {
-    const response = await axios.get(`${process.env.API}/api/tenants`);
+    const response = await apiNode.get(`/api/tenants`);
     tenants.value = response.data;
   } catch (error) {
     console.error("Error fetching tenants:", error);
@@ -99,7 +100,7 @@ const editTenant = (tenant) => {
 
 const deleteTenant = async (tenant) => {
   try {
-    await axios.delete(`${process.env.API}/api/tenants/${tenant._id}`);
+    await apiNode.delete(`/api/tenants/${tenant._id}`);
     fetchTenants();
   } catch (error) {
     console.error("Error deleting tenant:", error);

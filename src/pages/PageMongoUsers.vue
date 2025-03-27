@@ -36,6 +36,7 @@ import axios from "axios";
 import { auth, db } from "src/firebase/init"; // Ensure db is correctly imported for Firestore checks
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
 
 export default {
   data() {
@@ -64,9 +65,9 @@ export default {
 
         console.log(
           "Fetching users from:",
-          `${process.env.API}/api/mongo-users`
+          `${nodeApiBaseURL}/api/mongo-users`
         );
-        const response = await axios.get(`${process.env.API}/api/mongo-users`, {
+        const response = await apiNode.get(`/api/mongo-users`, {
           headers: { Authorization: `Bearer ${idToken}` },
         });
         this.users = response.data;

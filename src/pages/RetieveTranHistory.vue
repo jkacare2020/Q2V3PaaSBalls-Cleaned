@@ -60,7 +60,7 @@ import { db, auth } from "src/firebase/init";
 import { useStoreAuth } from "src/stores/storeAuth";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "vue-router";
-
+import { apiNode } from "boot/apiNode";
 const router = useRouter();
 
 onAuthStateChanged(auth, (user) => {
@@ -133,11 +133,11 @@ onMounted(async () => {
       Object.assign(userProfile, userDoc.data());
       console.log("User profile loaded:", userProfile);
       console.log("user phone #", userProfile.phoneNo);
-      console.log("ednpoint backend", process.env.API);
+      console.log("ednpoint backend", process.env.VUE_APP_API_LOCAL);
 
       // Use phoneNo to fetch transaction history
-      const response = await axios.get(
-        `${process.env.API}/api/transactions/history/${userProfile.phoneNo}`
+      const response = await apiNode.get(
+        `/api/transactions/history/${userProfile.phoneNo}`
       );
       if (response.data.lastTransaction) {
         Object.assign(transactionForm, response.data.lastTransaction);

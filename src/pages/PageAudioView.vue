@@ -119,6 +119,7 @@ import { auth } from "src/firebase/init";
 import axios from "axios";
 import defaultAvatar from "src/assets/avatar.jpg";
 import { useStoreAuth } from "src/stores/storeAuth";
+import { apiNode } from "boot/apiNode";
 
 const storeAuth = useStoreAuth();
 const audios = ref([]);
@@ -140,8 +141,8 @@ const getAudios = () => {
   auth.currentUser
     .getIdToken()
     .then((idToken) => {
-      axios
-        .get(`${process.env.API}/api/audios`, {
+      apiNode
+        .get(`/api/audios`, {
           headers: {
             Authorization: `Bearer ${idToken}`,
           },
@@ -179,7 +180,7 @@ const deleteAudio = async (audioId) => {
   try {
     const idToken = await auth.currentUser.getIdToken();
 
-    await axios.delete(`${process.env.API}/api/audios/${audioId}`, {
+    await apiNode.delete(`/api/audios/${audioId}`, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },

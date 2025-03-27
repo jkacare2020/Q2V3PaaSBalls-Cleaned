@@ -21,6 +21,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router"; // Use Vue Router hooks
 import axios from "axios";
+import { apiNode } from "boot/apiNode";
 
 const tenant = ref({});
 const route = useRoute(); // Access the route parameters
@@ -28,8 +29,8 @@ const router = useRouter(); // Navigate to other pages
 
 const fetchTenant = async () => {
   try {
-    const response = await axios.get(
-      `${process.env.API}/api/tenants/${route.params.id}` // Fetch tenant by ID
+    const response = await apiNode.get(
+      `/api/tenants/${route.params.id}` // Fetch tenant by ID
     );
     tenant.value = response.data;
   } catch (error) {
@@ -39,8 +40,8 @@ const fetchTenant = async () => {
 
 const editTenant = async () => {
   try {
-    await axios.put(
-      `${process.env.API}/api/tenants/${route.params.id}`, // Update tenant by ID
+    await apiNode.put(
+      `/api/tenants/${route.params.id}`, // Update tenant by ID
       tenant.value
     );
     router.push("/tenants"); // Navigate back to the tenant list

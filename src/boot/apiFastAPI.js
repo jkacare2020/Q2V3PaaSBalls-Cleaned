@@ -1,20 +1,3 @@
-// import { boot } from "quasar/wrappers";
-// import axios from "axios";
-
-// console.log(
-//   "🔗 FastAPI base URL:",
-//   "https://q2v3paasballs-cleaned.onrender.com"
-// );
-
-// const apiFastAPI = axios.create({
-//   baseURL: "https://q2v3paasballs-cleaned.onrender.com",
-// });
-
-// export default boot(({ app }) => {
-//   app.config.globalProperties.$apiFastAPI = apiFastAPI;
-// });
-
-// export { apiFastAPI };
 import { boot } from "quasar/wrappers";
 import axios from "axios";
 

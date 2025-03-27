@@ -114,6 +114,7 @@ import { collection, query, getDocs, doc, getDoc } from "firebase/firestore";
 import axios from "axios";
 import defaultAvatar from "src/assets/avatar.jpg";
 import { useStoreAuth } from "src/stores/storeAuth";
+import { apiNode, nodeApiBaseURL } from "boot/apiNode";
 
 const storeAuth = useStoreAuth();
 const videos = ref([]);
@@ -136,8 +137,8 @@ const getVideos = () => {
   auth.currentUser
     .getIdToken()
     .then((idToken) => {
-      axios
-        .get(`${process.env.API}/api/videos`, {
+      apiNode
+        .get(`/api/videos`, {
           headers: {
             Authorization: `Bearer ${idToken}`,
           },
@@ -165,8 +166,8 @@ const getVideos = () => {
 const deleteVideo = (videoId) => {
   console.log("Delete this Video triggered", videoId);
   auth.currentUser.getIdToken().then((idToken) => {
-    axios
-      .delete(`${process.env.API}/api/videos/${videoId}`, {
+    apiNode
+      .delete(`/api/videos/${videoId}`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },

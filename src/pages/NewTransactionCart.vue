@@ -71,6 +71,7 @@ import axios from "axios";
 import { useQuasar } from "quasar";
 import { getAuth } from "firebase/auth";
 import { useRouter } from "vue-router";
+import { apiNode } from "boot/apiNode";
 const router = useRouter();
 
 const auth = getAuth();
@@ -113,13 +114,9 @@ async function submitTransaction() {
     // Retrieve the Firebase token
     const token = await auth.currentUser.getIdToken();
 
-    await axios.post(
-      `${process.env.API}/api/transactions/new`,
-      transactionData.value,
-      {
-        headers: { Authorization: `Bearer ${token}` }, // Include Authorization header
-      }
-    );
+    await apiNode.post("/api/transactions/new", transactionData.value, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     $q.notify({
       color: "positive",

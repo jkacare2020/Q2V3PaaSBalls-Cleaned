@@ -117,6 +117,7 @@ import { ref } from "vue";
 import axios from "axios";
 import { auth } from "src/firebase/init";
 import { useQuasar } from "quasar";
+import { apiNode } from "boot/apiNode";
 
 const isLoading = ref(false);
 
@@ -321,10 +322,7 @@ const uploadAudio = async () => {
 
       try {
         console.log("Sending payload to backend:", payload); // Log the payload
-        const response = await axios.post(
-          `${process.env.API}/api/audios/upload`,
-          payload
-        );
+        const response = await apiNode.post(`/api/audios/upload`, payload);
 
         if (response.data.audioUrl) {
           console.log("Backend response received:", response.data); // Log the backend response

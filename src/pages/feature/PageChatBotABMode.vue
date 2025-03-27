@@ -99,6 +99,7 @@ import axios from "axios";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { auth } from "src/firebase/init";
+import { apiNode } from "boot/apiNode"; // Make sure this is imported at the top
 
 const router = useRouter();
 const $q = useQuasar();
@@ -149,8 +150,8 @@ const sendMessage = async () => {
     const token = await getValidToken();
     if (!token) throw new Error("No Firebase token available");
 
-    const response = await axios.post(
-      `${process.env.API}/api/chatbot/sendMessage`,
+    const response = await apiNode.post(
+      "/api/chatbot/sendMessage",
       { userMessage: userMessage.value },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -251,8 +252,8 @@ const startVoiceInput = () => {
       const token = await getValidToken();
       if (!token) throw new Error("No Firebase token available");
 
-      const response = await axios.post(
-        `${process.env.API}/api/chatbot/sendMessage`,
+      const response = await apiNode.post(
+        "/api/chatbot/sendMessage",
         { userMessage: transcript },
         { headers: { Authorization: `Bearer ${token}` } }
       );

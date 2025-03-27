@@ -97,6 +97,7 @@ import { uid, useQuasar } from "quasar";
 import axios from "axios";
 import { auth } from "src/firebase/init";
 import { useRouter } from "vue-router";
+import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
 
 const router = useRouter();
 const $q = useQuasar();
@@ -196,7 +197,7 @@ async function uploadVideo() {
   try {
     $q.loading.show();
     const idToken = await user.getIdToken();
-    await axios.post(`${process.env.API}/api/create-video-post`, formData, {
+    await apiNode.post(`/api/create-video-post`, formData, {
       headers: { Authorization: `Bearer ${idToken}` },
     });
     $q.notify({ type: "positive", message: "Video uploaded successfully!" });
