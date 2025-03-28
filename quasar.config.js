@@ -64,23 +64,21 @@ module.exports = configure(function () {
       },
 
       env: {
-        VUE_APP_API_LOCAL:
-          process.env.VUE_APP_API_LOCAL || "http://localhost:3000",
-        VUE_APP_API_PRODUCTION:
-          process.env.VUE_APP_API_PRODUCTION || "https://fallback-api.com",
+        // Node.js (Express) API endpoints
+        VITE_API_LOCAL: process.env.VITE_API_LOCAL,
+        VITE_API_PRODUCTION: process.env.VITE_API_PRODUCTION,
 
-        VUE_APP_API_URL:
+        VITE_API_URL:
           process.env.NODE_ENV === "production"
-            ? process.env.VUE_APP_API_PRODUCTION || "https://fallback-api.com"
-            : process.env.VUE_APP_API_LOCAL || "http://localhost:3000",
-
-        VUE_APP_FASTAPI_URL:
+            ? process.env.VITE_API_PRODUCTION || "https://fallback-api.com"
+            : process.env.VITE_API_LOCAL || "http://localhost:3000",
+        // FastAPI endpoints
+        VITE_FASTAPI_URL:
           process.env.NODE_ENV === "production"
-            ? process.env.VUE_APP_FASTAPI_URL ||
-              "https://q2v3paasballs-cleaned.onrender.com"
-            : "http://127.0.0.1:8000", // ✅ Force correct dev default
+            ? process.env.VITE_FASTAPI_URL || "https://fallback-api.com"
+            : "http://127.0.0.1:8000",
 
-        // Firebase keys
+        // Firebase keys (still use VUE_APP_ because Firebase SDK may expect them
         VUE_APP_FIREBASE_API_KEY: process.env.VUE_APP_FIREBASE_API_KEY,
         VUE_APP_FIREBASE_AUTH_DOMAIN: process.env.VUE_APP_FIREBASE_AUTH_DOMAIN,
         VUE_APP_FIREBASE_PROJECT_ID: process.env.VUE_APP_FIREBASE_PROJECT_ID,
