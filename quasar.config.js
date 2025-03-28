@@ -16,27 +16,21 @@ module.exports = configure(function () {
   console.log("Current Environment:", process.env.NODE_ENV);
   console.log(
     "API URL:",
-    process.env.VUE_APP_API_LOCAL || "http://localhost:3000"
+    process.env.VITE_API_LOCAL || "http://localhost:3000"
   );
-  console.log("API Local:", process.env.VUE_APP_API_LOCAL);
-  console.log("API Production:", process.env.VUE_APP_API_PRODUCTION);
+  console.log("API Local:", process.env.VITE_API_LOCAL);
+  console.log("API Production:", process.env.VITE_API_PRODUCTION);
 
   return {
     build: {
       env: {
-        VUE_APP_API_LOCAL: process.env.VUE_APP_API_LOCAL,
-        VUE_APP_API_PRODUCTION: process.env.VUE_APP_API_PRODUCTION,
-        VUE_APP_FASTAPI_URL: process.env.VUE_APP_FASTAPI_URL,
+        VITE_API_LOCAL: process.env.VITE_API_LOCAL,
+        VITE_API_PRODUCTION: process.env.VITE_API_PRODUCTION,
+        VITE_FASTAPI_URL: process.env.VITE_FASTAPI_URL,
       },
     },
 
-    boot: [
-      "router",
-      "apiFastAPI",
-      "apiNode",
-      // Make sure the name matches the filename without extension
-      // other boot files if any
-    ],
+    boot: ["router", "apiFastAPI", "apiNode"],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ["app.scss"],
