@@ -61,6 +61,8 @@ import { useStoreAuth } from "src/stores/storeAuth";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "vue-router";
 import { apiNode } from "boot/apiNode";
+import { nodeApiBaseURL } from "boot/apiNode"; // ✅ Add at top
+
 const router = useRouter();
 
 onAuthStateChanged(auth, (user) => {
@@ -133,7 +135,7 @@ onMounted(async () => {
       Object.assign(userProfile, userDoc.data());
       console.log("User profile loaded:", userProfile);
       console.log("user phone #", userProfile.phoneNo);
-      console.log("ednpoint backend", process.env.VUE_APP_API_LOCAL);
+      console.log("✅ Backend API Base URL:", nodeApiBaseURL);
 
       // Use phoneNo to fetch transaction history
       const response = await apiNode.get(
