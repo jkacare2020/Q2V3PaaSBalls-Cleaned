@@ -45,3 +45,6 @@ backend/.env
 .env.local
 
 .env.production
+
+.firebase/
+
