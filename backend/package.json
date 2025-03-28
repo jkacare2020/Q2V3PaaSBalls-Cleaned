@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js",
-    "startAI": "nodemon server_ai.js",
-    "deploy": "heroku builds:create -a quasargram-jason-backend-2024",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "deploy": "heroku builds:create -a q2v3paasapp2025",
     "web-push": "web-push"
   },
   "keywords": [],
