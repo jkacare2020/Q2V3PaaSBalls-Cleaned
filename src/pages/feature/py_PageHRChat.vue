@@ -199,7 +199,7 @@ import { ref } from "vue";
 import axios from "axios";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
-
+import { apiFastAPI } from "boot/apiFastAPI";
 const router = useRouter();
 const $q = useQuasar();
 const autoGrading = ref(true); // ✅ Default: Auto Grading is enabled
@@ -239,22 +239,17 @@ async function logChatMessage(query, response) {
   }
 
   try {
-    const res = await axios.post(
-      "http://127.0.0.1:8000/ai/hr/logs",
-      null, // ✅ Set body to null since we're using query params
-      {
-        params: {
-          query: query,
-          response: JSON.stringify(response), // ✅ Ensure response is a string!
-          source: "fastapi",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
+    const res = await apiFastAPI.post("/ai/hr/logs", null, {
+      params: {
+        query: query,
+        response: JSON.stringify(response),
+        source: "fastapi",
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
     console.log("✅ Chat Log Saved:", res.data);
   } catch (error) {
     console.error("❌ Error logging chat:", error);

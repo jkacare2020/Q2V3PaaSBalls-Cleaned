@@ -86,7 +86,7 @@ import { ref } from "vue";
 import axios from "axios";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
-
+import { apiFastAPI } from "boot/apiFastAPI";
 const router = useRouter();
 const $q = useQuasar();
 
@@ -107,11 +107,8 @@ const getFastAPIToken = () => localStorage.getItem("access_token");
 async function logChatMessage(query, response) {
   console.log("🔥 Logging Chat Message...");
 
-  const userId = localStorage.getItem("user_id"); // Check if stored
+  const userId = localStorage.getItem("user_id");
   const token = localStorage.getItem("access_token");
-
-  console.log("🆔 User ID from LocalStorage:", userId);
-  console.log("🔑 JWT Token:", token);
 
   if (!userId || !token) {
     console.error("❌ Missing user ID or token!");
@@ -119,14 +116,15 @@ async function logChatMessage(query, response) {
   }
 
   try {
-    const res = await axios.post("http://127.0.0.1:8000/ai/hr/logs", null, {
+    const res = await apiFastAPI.post("/ai/hr/logs", null, {
       params: {
         query: query,
-        response: response,
+        response: JSON.stringify(response),
         source: "fastapi",
       },
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     });
 
