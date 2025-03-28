@@ -5,7 +5,7 @@ import axios from "axios";
 const nodeApiBaseURL =
   process.env.NODE_ENV === "production"
     ? process.env.VITE_API_PRODUCTION ||
-      "https://quasargram-jason-backend-2024-98f0d3ac8c4a.herokuapp.com"
+      "https://q2v3paasapp2025-42f2077366f9.herokuapp.com"
     : process.env.VITE_API_LOCAL || "http://localhost:3000";
 
 console.log("🧠 Node API base URL:", nodeApiBaseURL);
