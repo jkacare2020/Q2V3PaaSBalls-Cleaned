@@ -104,6 +104,7 @@ module.exports = configure(function () {
       // },
 
       vueRouterMode: "hash", // available values: 'hash', 'history'
+      version: "1.0.1", // Change version each time you deploy
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,

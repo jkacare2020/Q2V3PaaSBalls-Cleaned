@@ -35,6 +35,7 @@ app.use(
         "https://q2v3paasapp.web.app",
       ];
       if (!origin || allowedOrigins.includes(origin)) {
+        console.warn("❌ Blocked by CORS:", origin);
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -44,6 +45,7 @@ app.use(
     allowedHeaders: "Content-Type, Authorization",
   })
 );
+app.options("*", cors());
 // Example: Check Firebase connectivity
 admin
   .auth()
