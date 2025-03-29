@@ -1,16 +1,4 @@
-// const admin = require("firebase-admin");
-// const path = require("path");
-
-// const serviceAccount = require(path.join(__dirname, "serviceAccountKey.json")); // Adjust path as needed
-
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-//   storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-// });
-
-// module.exports = admin;
-
-//-------------------------------------
+//----serviceAccount.js---------------------------------
 const serviceAccount = {
   type: "service_account",
   project_id: process.env.FIREBASE_PROJECT_ID,
