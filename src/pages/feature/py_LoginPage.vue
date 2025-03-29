@@ -28,6 +28,8 @@ import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { apiFastAPI } from "boot/apiFastAPI";
+import { jwtDecode } from "jwt-decode";
+// ✅ Import decoder
 
 const router = useRouter();
 const $q = useQuasar();
@@ -49,10 +51,18 @@ const login = async () => {
     const response = await apiFastAPI.post("/auth/token", payload, {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
-    const userId = response.data.user_id; // ✅ Extract user_id from response
+
     const token = response.data.access_token;
+    const decoded = jwtDecode(token); // ✅ Decode the JWT
+    const userId = decoded.id; // ✅ Grab `id` from the payload
+    const role = decoded.role; // (optional) Get role if needed
+
     localStorage.setItem("access_token", token);
+
     localStorage.setItem("user_id", userId); //✅Local Save Extract user_id from response
+
+    localStorage.setItem("user_role", role); // Optional
+
     console.log("🔑 Stored Token:", token);
     console.log("🆔 Stored User ID:", userId);
     $q.notify({ type: "positive", message: "Login successful!" });

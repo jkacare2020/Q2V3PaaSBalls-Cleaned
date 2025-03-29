@@ -10,7 +10,10 @@
 
 const { configure } = require("quasar/wrappers");
 const path = require("path");
-require("dotenv").config({ path: ".env.production" }); // manually load production env
+require("dotenv").config(); // Base .env
+require("dotenv").config({
+  path: `.env.${process.env.NODE_ENV || "development"}`, // Env-specific
+});
 
 module.exports = configure(function () {
   console.log("Current Environment:", process.env.NODE_ENV);
@@ -20,6 +23,7 @@ module.exports = configure(function () {
   );
   console.log("API Local:", process.env.VITE_API_LOCAL);
   console.log("API Production:", process.env.VITE_API_PRODUCTION);
+  console.log("🧪 Using FASTAPI_URL:", process.env.VITE_FASTAPI_URL);
 
   return {
     build: {
@@ -72,11 +76,9 @@ module.exports = configure(function () {
           process.env.NODE_ENV === "production"
             ? process.env.VITE_API_PRODUCTION || "https://fallback-api.com"
             : process.env.VITE_API_LOCAL || "http://localhost:3000",
+
         // FastAPI endpoints
-        VITE_FASTAPI_URL:
-          process.env.NODE_ENV === "production"
-            ? process.env.VITE_FASTAPI_URL || "https://fallback-api.com"
-            : "http://127.0.0.1:8000",
+        VITE_FASTAPI_URL: process.env.VITE_FASTAPI_URL,
 
         // Firebase keys (still use VUE_APP_ because Firebase SDK may expect them
         VUE_APP_FIREBASE_API_KEY: process.env.VUE_APP_FIREBASE_API_KEY,

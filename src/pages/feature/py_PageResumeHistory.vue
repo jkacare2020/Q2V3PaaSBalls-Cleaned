@@ -108,7 +108,7 @@ const loading = ref(false);
 const analysisDialog = ref(false);
 const selectedAnalysis = ref(null);
 const errorMessage = ref("");
-const FASTAPI_URL = process.env.VUE_APP_FASTAPI_URL;
+const FASTAPI_URL = import.meta.env.VITE_FASTAPI_URL || "http://127.0.0.1:8000";
 
 const columns = [
   { name: "_id", label: "ID", field: "_id", align: "left" },

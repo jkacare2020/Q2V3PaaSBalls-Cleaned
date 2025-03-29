@@ -38,7 +38,7 @@ import { useQuasar } from "quasar";
 // ✅ Get props from route query
 const route = useRoute();
 const $q = useQuasar();
-const API_URL = process.env.VUE_APP_FASTAPI_URL;
+const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 // ✅ Correctly define props using ref()
 const jobId = ref(route.query.jobId || "");

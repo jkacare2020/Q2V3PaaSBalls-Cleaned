@@ -195,11 +195,11 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import axios from "axios";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
-import { apiFastAPI } from "boot/apiFastAPI";
+
 const router = useRouter();
 const $q = useQuasar();
 const autoGrading = ref(true); // ✅ Default: Auto Grading is enabled
@@ -211,7 +211,12 @@ const uploadProgress = ref(0); // ✅ Upload progress (0-100%)
 const analysisProgress = ref(0); // ✅ Analysis progress (0-100%)
 const isUploading = ref(false); // ✅ Track uploading state
 const isAnalyzing = ref(false); // ✅ Track analysis state
-const FASTAPI_URL = process.env.VUE_APP_FASTAPI_URL;
+// const FASTAPI_URL = process.env.VUE_APP_FASTAPI_URL;
+const FASTAPI_URL = import.meta.env.VITE_FASTAPI_URL || "http://127.0.0.1:8000";
+
+onMounted(() => {
+  console.log("🧪 FASTAPI_URL:", FASTAPI_URL);
+});
 
 const MAX_FILE_SIZE = 10485760; // 10 MB (for example)
 function onFileRejected(rejectedEntries) {
@@ -239,17 +244,22 @@ async function logChatMessage(query, response) {
   }
 
   try {
-    const res = await apiFastAPI.post("/ai/hr/logs", null, {
-      params: {
-        query: query,
-        response: JSON.stringify(response),
-        source: "fastapi",
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const res = await axios.post(
+      `${FASTAPI_URL}/ai/hr/logs`,
+      null, // ✅ Set body to null since we're using query params
+      {
+        params: {
+          query: query,
+          response: JSON.stringify(response), // ✅ Ensure response is a string!
+          source: "fastapi",
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
     console.log("✅ Chat Log Saved:", res.data);
   } catch (error) {
     console.error("❌ Error logging chat:", error);
@@ -382,7 +392,7 @@ const analyzeResume = async () => {
     resumeAnalyzed.value = false;
   }
 };
-
+//------------------------------------------------------------
 const autoGradeResume = async (resumeId) => {
   try {
     const token = getFastAPIToken();
@@ -409,7 +419,7 @@ const autoGradeResume = async (resumeId) => {
     $q.notify({ type: "negative", message: "Grading failed" });
   }
 };
-
+//--------------------------------------------------------
 const gradeResume = async () => {
   if (!analyzedResumeId.value) {
     $q.notify({ type: "negative", message: "No resume ID found!" });

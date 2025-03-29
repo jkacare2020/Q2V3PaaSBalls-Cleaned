@@ -115,6 +115,16 @@
 
           <!-- ✅ Input for Location -->
           <q-input v-model="jobData.location" label="Location" outlined dense />
+
+          <!-- ✅ Add File Upload Field for PDF/DOCX -->
+          <q-file
+            filled
+            label="Upload PDF/DOCX Job Description"
+            v-model="jobData.attachment"
+            accept=".pdf,.doc,.docx"
+            dense
+            outlined
+          />
         </q-card-section>
 
         <q-card-actions align="right">
@@ -140,7 +150,8 @@ const jobDescriptions = ref([]);
 const jobModal = ref(false);
 const isEditing = ref(false);
 const loading = ref(false);
-const API_URL = process.env.VUE_APP_FASTAPI_URL;
+// const API_URL = process.env.VUE_APP_FASTAPI_URL;
+const API_URL = import.meta.env.VITE_FASTAPI_URL || "http://127.0.0.1:8000";
 
 // ✅ Job Data with Employer Phone
 const jobData = ref({
@@ -197,50 +208,33 @@ const fetchJobDescriptions = async () => {
 };
 
 // ✅ Open Job Modal
-const openJobModal = () => {
-  jobData.value = {
-    title: "",
-    company: "",
-    description: "",
-    requiredSkillsString: "",
-    experienceLevel: "Junior",
-    salaryRange: "",
-    location: "",
-    phone_number: "", // ✅ Reset phone number
-  };
-  isEditing.value = false;
-  jobModal.value = true;
-};
-
-// ✅ Save Job with Employer Info
 const saveJob = async () => {
   try {
     const token = getFastAPIToken();
     if (!token) throw new Error("🚨 No token found!");
 
     const formattedSkills = jobData.value.requiredSkillsString
-      ? jobData.value.requiredSkillsString
-          .split(",")
-          .map((skill) => skill.trim())
+      ? jobData.value.requiredSkillsString.split(",").map((s) => s.trim())
       : [];
 
-    const jobPayload = {
-      title: jobData.value.title,
-      company: jobData.value.company,
-      description: jobData.value.description,
-      requiredSkills: formattedSkills,
-      experienceLevel: jobData.value.experienceLevel,
-      salaryRange: jobData.value.salaryRange,
-      location: jobData.value.location,
-      phone_number: jobData.value.phone_number, // ✅ Include employer phone
-    };
+    const formData = new FormData();
+    formData.append("title", jobData.value.title);
+    formData.append("company", jobData.value.company);
+    formData.append("description", jobData.value.description);
+    formData.append("phone_number", jobData.value.phone_number);
+    formData.append("experienceLevel", jobData.value.experienceLevel);
+    formData.append("salaryRange", jobData.value.salaryRange);
+    formData.append("location", jobData.value.location);
+    formData.append("requiredSkills", formattedSkills.join(","));
 
-    console.log("📤 Sending Job Payload:", jobPayload);
+    if (jobData.value.attachment) {
+      formData.append("attachment", jobData.value.attachment);
+    }
 
-    await axios.post(`${API_URL}/ai/hr/job-descriptions`, jobPayload, {
+    await axios.post(`${API_URL}/ai/hr/job-descriptions`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data",
       },
     });
 

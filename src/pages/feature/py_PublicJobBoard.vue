@@ -5,7 +5,7 @@
       <q-btn color="primary" @click="fetchJobDescriptions">Refresh</q-btn>
     </q-toolbar>
 
-    <!-- ✅ Move Modal Outside the Table -->
+    <!-- ✅ Modal for Full Job Details -->
     <q-dialog v-model="jobModal">
       <q-card style="width: 600px; max-width: 90vw">
         <q-card-section>
@@ -34,10 +34,12 @@
             </q-item>
             <q-item>
               <q-item-section>
-                <q-item-label
-                  ><strong>📝 Description:</strong>
-                  {{ jobData.description }}</q-item-label
-                >
+                <q-item-label class="q-pa-none">
+                  <strong>📝 Description:</strong>
+                  <div class="job-description-box">
+                    {{ jobData.description }}
+                  </div>
+                </q-item-label>
               </q-item-section>
             </q-item>
             <q-item>
@@ -86,7 +88,7 @@
       </q-card>
     </q-dialog>
 
-    <!-- Job Description Table -->
+    <!-- ✅ Job Description Table with Preview Text -->
     <q-table
       :rows="jobDescriptions"
       :columns="columns"
@@ -105,7 +107,13 @@
         <q-td>{{ row.company }}</q-td>
       </template>
 
-      <!----- Actions --->
+      <template v-slot:body-cell-description="{ row }">
+        <q-td :title="row.description">
+          {{ row.description.slice(0, 150) }}
+          <span v-if="row.description.length > 150">...</span>
+        </q-td>
+      </template>
+
       <template v-slot:body-cell-viewDetails="{ row }">
         <q-td class="text-center">
           <q-btn
@@ -171,7 +179,10 @@ const columns = [
     label: "Description",
     field: "description",
     align: "left",
+    style: "max-width: 200px",
+    classes: "description-preview-cell",
   },
+
   {
     name: "experienceLevel",
     label: "Experience",
@@ -181,14 +192,14 @@ const columns = [
   { name: "salaryRange", label: "Salary", field: "salaryRange", align: "left" },
   {
     name: "viewDetails",
-    label: "View Job",
+    label: "View",
     field: "viewDetails",
     align: "center",
-    style: "width: 100px",
+    style: "width: 80px",
   },
   {
     name: "uploadResume",
-    label: "Upload Resume",
+    label: "Upload",
     field: "uploadResume",
     align: "center",
     style: "width: 100px",
@@ -209,7 +220,7 @@ const jobData = ref({
 });
 
 const loading = ref(false);
-const API_URL = process.env.VUE_APP_FASTAPI_URL;
+const API_URL = import.meta.env.VITE_FASTAPI_URL || "http://127.0.0.1:8000";
 
 // ✅ Function to Retrieve Token
 const getFastAPIToken = () => localStorage.getItem("access_token");
@@ -250,3 +261,11 @@ const editJob = (job) => {
 
 onMounted(fetchJobDescriptions);
 </script>
+
+<style scoped>
+.description-preview-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</style>
