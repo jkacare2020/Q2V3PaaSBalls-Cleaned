@@ -28,23 +28,25 @@ app.use(
   cors({
     origin: function (origin, callback) {
       const allowedOrigins = [
-        // "https://guasar-jason2024.web.app",
         "http://localhost:9000",
-        "http://localhost:9200", // <-- ADD THIS LINE
-        "http://localhost:9201", // ✅ Add this too
+        "http://localhost:9200",
+        "http://localhost:9201",
         "https://q2v3paasapp.web.app",
       ];
       if (!origin || allowedOrigins.includes(origin)) {
-        console.warn("❌ Blocked by CORS:", origin);
+        console.log("✅ CORS allowed for origin:", origin);
         callback(null, true);
       } else {
+        console.warn("❌ CORS blocked for origin:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
     methods: "GET,POST,PUT,DELETE",
     allowedHeaders: "Content-Type, Authorization",
+    credentials: true,
   })
 );
+
 app.options("*", cors());
 // Example: Check Firebase connectivity
 admin
