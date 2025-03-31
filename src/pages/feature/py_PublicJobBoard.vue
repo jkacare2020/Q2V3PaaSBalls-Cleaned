@@ -1,5 +1,19 @@
 <template>
   <q-page class="q-pa-md">
+    <q-input
+      v-model="search"
+      label="Search jobs ..."
+      dense
+      outlined
+      debounce="300"
+      class="q-mb-md"
+      clearable
+    >
+      <template v-slot:append>
+        <q-icon name="search" />
+      </template>
+    </q-input>
+
     <q-toolbar>
       <q-toolbar-title>Job Opening</q-toolbar-title>
       <q-btn color="primary" @click="fetchJobDescriptions">Refresh</q-btn>
@@ -92,6 +106,7 @@
     <q-table
       :rows="jobDescriptions"
       :columns="columns"
+      :filter="search"
       row-key="_id"
       flat
       bordered
@@ -149,6 +164,9 @@
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
+import { search } from "app/backend/routes/userRoutes";
+
+// const search = ref("");
 
 const router = useRouter();
 

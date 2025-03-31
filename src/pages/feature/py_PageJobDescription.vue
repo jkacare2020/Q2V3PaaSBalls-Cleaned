@@ -1,15 +1,30 @@
 <template>
   <q-page class="q-pa-md">
+    <q-input
+      v-model="search"
+      label="Search jobs..."
+      dense
+      outlined
+      debounce="300"
+      class="q-mb-md"
+      clearable
+    >
+      <template v-slot:append>
+        <q-icon name="search" />
+      </template>
+    </q-input>
+
     <q-toolbar>
       <q-toolbar-title>Job Descriptions</q-toolbar-title>
       <q-btn color="primary" @click="fetchJobDescriptions">Refresh</q-btn>
-      <q-btn color="green" @click="openJobModal">Add Job</q-btn>
+      <q-btn color="green" class="q-ml-sm" @click="openJobModal">Add Job</q-btn>
     </q-toolbar>
 
     <!-- Job Description Table -->
     <q-table
       :rows="jobDescriptions"
       :columns="columns"
+      :filter="search"
       row-key="_id"
       flat
       bordered
@@ -150,7 +165,7 @@ const jobDescriptions = ref([]);
 const jobModal = ref(false);
 const isEditing = ref(false);
 const loading = ref(false);
-// const API_URL = process.env.VUE_APP_FASTAPI_URL;
+const search = ref(""); // ✅ Search input for table filtering
 const API_URL = import.meta.env.VITE_FASTAPI_URL || "http://127.0.0.1:8000";
 
 // ✅ Job Data with Employer Phone
