@@ -34,6 +34,8 @@ import { useRoute, useRouter } from "vue-router"; // Use Vue Router hooks
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 import { apiNode } from "boot/apiNode";
+import { useQuasar } from "quasar";
+const $q = useQuasar();
 const auth = getAuth();
 
 // const route = useRoute(); // Access the route parameters
@@ -50,24 +52,41 @@ const tenant = ref({
 
 const addTenant = async () => {
   try {
-    // Retrieve the Firebase token
     const token = await auth.currentUser.getIdToken();
 
-    // Send the request with the token in the Authorization header
-    await apiNode.post(
-      "/api/tenants/add",
-      tenant.value, // Tenant data
-      {
-        headers: {
-          Authorization: `Bearer ${token}`, // Pass the token here
-        },
-      }
-    );
+    await apiNode.post("/api/tenants/add", tenant.value, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    // Navigate to the tenants list after successful submission
     router.push("/tenants");
   } catch (error) {
     console.error("Error adding tenant:", error);
+
+    if (error.response && error.response.status === 400) {
+      const message = error.response.data?.message;
+
+      if (message === "Tenant already exists.") {
+        $q.notify({
+          type: "negative",
+          message: "A tenant is already registered with your account.",
+          position: "center", //
+        });
+      } else {
+        $q.notify({
+          type: "negative",
+          message: message || "Failed to add tenant.",
+          position: "center", //
+        });
+      }
+    } else {
+      $q.notify({
+        type: "negative",
+        message: "Server error. Please try again later.",
+        position: "center", //
+      });
+    }
   }
 };
 </script>

@@ -28,6 +28,29 @@
       </q-card-section>
     </q-card>
   </q-page>
+  <q-dialog v-model="isModalOpen" persistent>
+    <q-card style="min-width: 400px">
+      <q-card-section class="text-h6">User Details</q-card-section>
+
+      <q-card-section>
+        <div><strong>ID:</strong> {{ selectedUser.id }}</div>
+        <div><strong>Username:</strong> {{ selectedUser.username }}</div>
+        <div><strong>Email:</strong> {{ selectedUser.email }}</div>
+        <div><strong>First Name:</strong> {{ selectedUser.first_name }}</div>
+        <div><strong>Last Name:</strong> {{ selectedUser.last_name }}</div>
+        <div><strong>Role:</strong> {{ selectedUser.role }}</div>
+        <div><strong>Phone:</strong> {{ selectedUser.phone_number }}</div>
+        <div>
+          <strong>Status:</strong>
+          {{ selectedUser.is_active ? "Active" : "Inactive" }}
+        </div>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Close" color="primary" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup>
@@ -35,6 +58,9 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { apiFastAPI } from "boot/apiFastAPI";
 import { useQuasar } from "quasar";
+
+const isModalOpen = ref(false);
+const selectedUser = ref({});
 
 const router = useRouter();
 const $q = useQuasar();
@@ -93,7 +119,31 @@ const fetchUsers = async () => {
     }
   } catch (error) {
     console.error("🔥 Error fetching users:", error);
-    $q.notify({ type: "negative", message: "Failed to load users" });
+    $q.notify({
+      type: "negative",
+      message: "Failed to load users",
+      position: "center",
+    });
+  }
+};
+
+// Update this function to show modal instead of router push
+const viewUser = async (userId) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const response = await apiFastAPI.get(`/user/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    selectedUser.value = response.data;
+    isModalOpen.value = true;
+  } catch (err) {
+    console.error("Error loading user detail:", err);
+    $q.notify({
+      type: "negative",
+      message: "Could not load user details",
+      position: "center",
+    });
   }
 };
 

@@ -127,8 +127,17 @@
                 class="q-ml-lg"
               >
                 <q-item-section avatar>
-                  <q-icon :name="link.icon" />
+                  <template v-if="link.iconImg">
+                    <q-img
+                      :src="link.iconImg"
+                      style="width: 32px; height: 32px"
+                    />
+                  </template>
+                  <template v-else>
+                    <q-icon :name="link.icon" />
+                  </template>
                 </q-item-section>
+
                 <q-item-section>{{ link.title }}</q-item-section>
               </q-item>
             </template>
@@ -161,6 +170,7 @@ const $q = useQuasar();
 const leftDrawerOpen = ref(false);
 const dropdownOpen = ref(false); // Manage dropdown visibility
 const userAvatar = ref("src/assets/mind_3D_image.png");
+const Resume = ref("src/assets/icons8-resume-100.png");
 
 // Computed properties for checking logged-in status, admin role, and signup page
 const isLoggedIn = computed(() => !!storeAuth.user); // True if a user is logged in
@@ -191,17 +201,7 @@ const navLinks = [
       { title: "Settings", icon: "settings", link: "/settings" },
     ],
   },
-  // {
-  //   category: "User Authentication",
-  //   links: [
-  //     { title: "Python Login", icon: "login", link: "/py_loginPage" },
-  //     {
-  //       title: "Python Register",
-  //       icon: "person_add",
-  //       link: "/py_registerPage",
-  //     },
-  //   ],
-  // },
+
   {
     category: "AI HR Agent",
     icon: "work",
@@ -228,6 +228,11 @@ const navLinks = [
         title: "Job Opening",
         icon: "badge",
         link: "/public/job-opening",
+      },
+      {
+        title: "Resumes ",
+        iconImg: "/icons/icons8-resume-100.png",
+        link: "/resume-history",
       },
     ],
   },

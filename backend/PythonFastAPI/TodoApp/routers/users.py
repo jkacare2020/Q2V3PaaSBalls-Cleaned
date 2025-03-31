@@ -30,6 +30,10 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 class UserVerification(BaseModel):
     password: str
     new_password: str = Field(min_length=6)
+    
+    
+
+
 
 
 @router.get("/userMe", status_code=status.HTTP_200_OK)
@@ -53,7 +57,51 @@ async def get_user(user: user_dependency, db: db_dependency):
         "is_active": user_data.is_active,
         "phone_number": user_data.phone_number
     }
+    
 
+
+
+
+
+@router.get("/all", status_code=status.HTTP_200_OK)
+async def get_all_users(user: user_dependency, db: db_dependency):
+    """Retrieve all users (Admin only)"""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication Failed")
+
+    print(f"🔹 Authenticated User: {user}")  # ✅ Debugging
+
+    if user.get("user_role") != "admin":  # ✅ Ensure using 'user_role'
+        raise HTTPException(status_code=403, detail="Unauthorized Access")
+
+    users = db.query(Users).all()
+    return users
+
+
+    
+@router.get("/{user_id}", status_code=status.HTTP_200_OK)
+async def get_user_by_id(user_id: int, user: user_dependency, db: db_dependency):
+    """Admins can view any user. Regular users can only view themselves."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication Failed")
+
+    if user.get("role") != "admin" and user.get("id") != user_id:
+        raise HTTPException(status_code=403, detail="Access Denied")
+
+    user_data = db.query(Users).filter(Users.id == user_id).first()
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "id": user_data.id,
+        "username": user_data.username,
+        "email": user_data.email,
+        "first_name": user_data.first_name,
+        "last_name": user_data.last_name,
+        "role": user_data.role,
+        "is_active": user_data.is_active,
+        "phone_number": user_data.phone_number
+    }
 
 
 @router.put("/password", status_code=status.HTTP_204_NO_CONTENT)
@@ -80,25 +128,6 @@ async def change_phonenumber(user: user_dependency, db: db_dependency,
     db.add(user_model)
     db.commit()
     
-@router.get("/all", status_code=status.HTTP_200_OK)
-async def get_all_users(user: user_dependency, db: db_dependency):
-    """Retrieve all users (Admin only)"""
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication Failed")
-
-    print(f"🔹 Authenticated User: {user}")  # ✅ Debugging
-
-    if user.get("user_role") != "admin":  # ✅ Ensure using 'user_role'
-        raise HTTPException(status_code=403, detail="Unauthorized Access")
-
-    users = db.query(Users).all()
-    return users
-
-
-
-
-
-
 
 
 
