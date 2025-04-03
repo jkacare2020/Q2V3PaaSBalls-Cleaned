@@ -119,19 +119,19 @@ const columns = [
   {
     name: "name",
     label: "Candidate Name",
-    field: (row) => row.candidate_name || row.response?.full_name || "N/A",
+    field: (row) => row.full_name || row.response?.full_name || "N/A",
     align: "left",
   },
   {
     name: "email",
     label: "Email",
-    field: (row) => row.candidate_email || "N/A",
+    field: (row) => row.email || row.response?.email || "N/A",
     align: "left",
   },
   {
     name: "phone",
     label: "Phone",
-    field: (row) => row.candidate_phone || "N/A",
+    field: (row) => row.phone || row.response?.phone || "N/A",
     align: "left",
   },
   { name: "actions", label: "Actions", align: "right" },

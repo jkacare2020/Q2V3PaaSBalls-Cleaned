@@ -1,3 +1,4 @@
+#--hr_screened_resume.py
 from fastapi import APIRouter, Depends, HTTPException, Query
 from bson import ObjectId
 from .auth import get_current_user
@@ -51,11 +52,18 @@ async def get_screened_resumes(
         print("⚠️ No graded resumes found for this employer!")
         return {"screened_resumes": []}
 
-    # Convert ObjectId to string for frontend compatibility
+
+        
+        # ✅ Convert ObjectId and flatten fields
     for resume in screened_resumes:
         resume["_id"] = str(resume["_id"])
+        response = resume.get("response", {})
+        resume["full_name"] = response.get("full_name", "N/A")
+        resume["email"] = response.get("email", "N/A")
+        resume["phone"] = response.get("phone", "N/A")
 
-    print(f"✅ Returning {len(screened_resumes)} screened resumes for Employer ID {employer_id}")
+    print(f"✅ Returning {len(screened_resumes)} screened resumes for Employer ID {employer_id}")   
+
 
     return {"screened_resumes": screened_resumes}
 

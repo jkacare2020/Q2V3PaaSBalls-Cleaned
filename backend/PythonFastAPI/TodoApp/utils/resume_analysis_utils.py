@@ -58,6 +58,7 @@ async def analyze_resume_logic(
             model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": "You are an AI that reviews resumes. Return structured JSON data with these exact keys: 'full_name', 'email', 'phone', 'years_of_experience', 'matched_skills', 'certifications', 'projects', 'degree', 'overall_feedback'."},
+
                 {"role": "user", "content": f"Resume JSON analysis:\n{extracted_text}"}
             ]
         )
@@ -80,6 +81,18 @@ async def analyze_resume_logic(
         "employerId": employer_id
     }
     result = await chatbot_log_collection.insert_one(log_entry)
+    # Optional enhancement: add resumeId from uploaded resume if exists
+    if employer_id and job_id:
+      matched_resume = await db["resumes"].find_one({
+        "employerId": employer_id,
+        "jobId": job_id
+    })
+    if matched_resume:
+        await chatbot_log_collection.update_one(
+            {"_id": result.inserted_id},
+            {"$set": {"resumeId": str(matched_resume["_id"])}}
+        )
+
 
     # ✅ Auto-grading logic for employer
     resume_score = calculate_resume_score(analysis_json)
