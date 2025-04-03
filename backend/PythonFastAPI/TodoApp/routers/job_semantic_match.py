@@ -54,12 +54,12 @@ async def semantic_match_job(
             continue
 
         user_id = resume.get("userId")
-        user_info = None
-        if user_id:
-            try:
-                user_info = await user_collection.find_one({"_id": ObjectId(user_id)})
-            except Exception as e:
-                print(f"⚠️ Failed to fetch user info for userId={user_id}: {e}")
+    if user_id:
+        try:
+            _ = ObjectId(str(user_id))  # Only validating ObjectId, not using result
+        except (errors.InvalidId, TypeError) as e:
+            print(f"⚠️ Invalid user ID format: {user_id} — {e}")
+ 
 
         resume_embedding = model.encode(resume_text, convert_to_tensor=True)
         similarity = util.cos_sim(job_embedding, resume_embedding).item()
