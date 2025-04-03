@@ -58,3 +58,8 @@ backend/PythonFastAPI/todoApp/.venv/
 venv/
 */.venv/
 */venv
+__pycache__/
+*.pyc
+*.pyo
+*.dll
+*.lib
