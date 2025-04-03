@@ -18,11 +18,14 @@
         <!-- 🔹 Resume Upload -->
         <q-file v-model="resumeFile" label="Upload Resume" outlined dense />
 
+        <q-spinner v-if="loading" color="primary" size="md" class="q-mt-md" />
+
         <q-btn
           label="Submit"
           color="primary"
           @click="uploadResume"
           :disable="!resumeFile"
+          :loading="loading"
         />
       </q-card-section>
     </q-card>
@@ -31,12 +34,16 @@
 
 <script setup>
 import { ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRouter, useRoute } from "vue-router"; // ✅ Add useRouter
+
 import axios from "axios";
 import { useQuasar } from "quasar";
 
+const loading = ref(false);
+
 // ✅ Get props from route query
-const route = useRoute();
+const router = useRouter(); // ✅ for .push()
+const route = useRoute(); // ✅ for .query
 const $q = useQuasar();
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
@@ -60,6 +67,8 @@ const uploadResume = async () => {
   formData.append("jobId", jobId.value);
   formData.append("employerId", employerId.value);
 
+  loading.value = true;
+
   try {
     const token = getFastAPIToken();
     if (!token) throw new Error("🚨 No token found!");
@@ -70,17 +79,22 @@ const uploadResume = async () => {
       resumeFile: resumeFile.value.name,
     });
 
-    await axios.post(`${API_URL}/ai/hr/resume-upload`, formData, {
+    const res = await axios.post(`${API_URL}/ai/hr/resume-upload`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
       },
     });
-
+    console.log("✅ Resume upload response:", res.data);
+    // $q.notify({ type: "positive", message: "Resume uploaded successfully!" });
+    // ✅ Redirect
     $q.notify({ type: "positive", message: "Resume uploaded successfully!" });
+    router.push("/upload-success");
   } catch (error) {
     console.error("🔥 Error uploading resume:", error);
     $q.notify({ type: "negative", message: "Upload failed!" });
+  } finally {
+    loading.value = false;
   }
 };
 </script>

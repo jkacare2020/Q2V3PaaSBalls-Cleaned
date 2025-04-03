@@ -23,6 +23,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem
 import requests
 
+
 class ChatLog(BaseModel):
     query: str
     response: Dict[str, Any]  # ✅ Now expects a JSON object
@@ -44,7 +45,7 @@ openai_client = openai.Client(api_key=QW_OPENROUTER_API_KEY)  # ✅ Rename to av
 
 router = APIRouter(prefix="/ai/hr", tags=["AI HR Assistant"])
 
-# ✅ AI Chatbot Endpoint -----------------------------------
+# ✅ AI Chatbot Endpoint QWen-----------------------------------
 # OpenRouter.ai API endpoint
 QW_OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -100,7 +101,7 @@ def extract_text_from_image(file: BytesIO):
 # ✅ Resume Analysis Endpoint (Now Saves to MongoDB)
 
 
-import requests  # Make sure you import requests
+#-----------Qwen AI-------------------
 
 OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 

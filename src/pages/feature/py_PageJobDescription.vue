@@ -278,43 +278,6 @@ const saveJob = async () => {
   }
 };
 
-// const saveJob = async () => {
-//   try {
-//     const token = getFastAPIToken();
-//     if (!token) throw new Error("🚨 No token found!");
-
-//     const formattedSkills = jobData.value.requiredSkillsString
-//       ? jobData.value.requiredSkillsString.split(",").map((s) => s.trim())
-//       : [];
-
-//     const formData = new FormData();
-//     formData.append("title", jobData.value.title);
-//     formData.append("company", jobData.value.company);
-//     formData.append("description", jobData.value.description);
-//     formData.append("phone_number", jobData.value.phone_number);
-//     formData.append("experienceLevel", jobData.value.experienceLevel);
-//     formData.append("salaryRange", jobData.value.salaryRange);
-//     formData.append("location", jobData.value.location);
-//     formData.append("requiredSkills", formattedSkills.join(","));
-
-//     if (jobData.value.attachment) {
-//       formData.append("attachment", jobData.value.attachment);
-//     }
-
-//     await axios.post(`${API_URL}/ai/hr/job-descriptions`, formData, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "multipart/form-data",
-//       },
-//     });
-
-//     jobModal.value = false;
-//     fetchJobDescriptions();
-//   } catch (error) {
-//     console.error("🔥 Error saving job:", error);
-//   }
-// };
-
 // ✅ Edit Job
 const editJob = (job) => {
   jobData.value = { ...job };

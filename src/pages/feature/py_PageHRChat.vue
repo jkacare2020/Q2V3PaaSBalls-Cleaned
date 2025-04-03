@@ -1,3 +1,4 @@
+<!--This page connect to backend hr_ai.py--->
 <template>
   <q-page class="q-pa-md">
     <!-- Main Chat Interface -->
@@ -140,17 +141,16 @@
             </div>
 
             <!-- Action Button -->
-            <!-- Action Buttons -->
             <div class="row q-col-gutter-sm">
               <!-- Start Analysis Button -->
               <div class="col">
                 <q-btn
-                  label="Start Analysis"
+                  label="Convert Analysis Result to PDF "
                   color="primary"
                   class="full-width q-mt-md"
                   :loading="isUploading || isAnalyzing"
                   :disable="!resumeFile"
-                  @click="analyzeResume"
+                  @click="downloadPDF"
                 />
               </div>
             </div>
@@ -324,7 +324,7 @@ const analyzeResume = async () => {
     isAnalyzing.value = false;
 
     const response = await axios.post(
-      `${FASTAPI_URL}/ai/hr/analyze-resume`,
+      `${FASTAPI_URL}/ai/hr/analyze-resume`, //... hr_ai.py router
       formData,
       {
         headers: {
@@ -447,6 +447,49 @@ const gradeResume = async () => {
   } catch (error) {
     console.error("🔥 Error grading resume:", error);
     $q.notify({ type: "negative", message: "Failed to grade resume." });
+  }
+};
+
+// ✅ New Method for Downloading PDF
+const downloadPDF = async () => {
+  if (!analyzedResumeId.value) {
+    $q.notify({
+      type: "negative",
+      message: "No resume analysis ID found. Please run the analysis first.",
+    });
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const response = await axios.get(
+      `${FASTAPI_URL}/ai/hr/generate-resume-pdf`,
+      {
+        params: {
+          resume_id: analyzedResumeId.value,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      }
+    );
+
+    // ✅ Trigger file download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `resume_analysis_${analyzedResumeId.value}.pdf`
+    );
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.error("🔥 Error downloading PDF:", error);
+    $q.notify({ type: "negative", message: "Failed to download PDF" });
   }
 };
 </script>

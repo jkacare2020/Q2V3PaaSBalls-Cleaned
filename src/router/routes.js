@@ -199,11 +199,18 @@ const routes = [
         component: () => import("pages/feature/py_PageAI-screenedResumes.vue"),
         meta: { requiresAuth: true }, // Only allow authenticated users
       },
+      {
+        path: "/semantic-match",
+        component: () => import("pages/feature/py_PageJobMatcher.vue"),
+        meta: { requiresAuth: true }, // Optional: restrict to logged-in users
+      },
+      {
+        path: "/upload-success",
+        component: () => import("pages/feature/py_SuccessfulPage.vue"),
+      },
     ],
   },
 
-  // Always leave this as the last one,
-  // This handles routes that don't match any defined routes
   {
     path: "/:catchAll(.*)*",
     component: () => import("pages/ErrorNotFound.vue"),

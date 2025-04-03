@@ -203,7 +203,7 @@ const navLinks = [
   },
 
   {
-    category: "AI HR Agent",
+    category: "AI HR Assistant",
     icon: "work",
     links: [
       {
@@ -228,6 +228,16 @@ const navLinks = [
         title: "Job Opening",
         icon: "badge",
         link: "/public/job-opening",
+      },
+      {
+        title: "Screened Resumes",
+        icon: "fact_check", // or use iconImg if using custom image
+        link: "/resume-screened",
+      },
+      {
+        title: "Semantic R/J",
+        iconImg: "/icons/icons8-static-view-level1-100.png",
+        link: "/semantic-match",
       },
       {
         title: "Resumes ",

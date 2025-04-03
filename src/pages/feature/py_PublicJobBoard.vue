@@ -164,9 +164,8 @@
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
-import { search } from "app/backend/routes/userRoutes";
 
-// const search = ref("");
+const search = ref("");
 
 const router = useRouter();
 
@@ -179,7 +178,7 @@ const goToResumeUpload = (job) => {
   });
 
   router.push({
-    path: "/resume-upload",
+    path: "/resume-upload", // go to py_PageResumeUpload.vue
     query: {
       jobId: job._id,
       employerId: job.createdBy, // ✅ Correct field name

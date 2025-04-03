@@ -1,3 +1,4 @@
+##--hr_ai.py
 from bson import ObjectId  # Ensure ObjectId is imported properly
 import os
 from fastapi import APIRouter, HTTPException, Depends, Query, File, UploadFile
@@ -21,6 +22,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem
+from ..utils.resume_analysis_utils import analyze_resume_logic
+
 
 class ChatLog(BaseModel):
     query: str
@@ -185,7 +188,7 @@ async def analyze_resume(
             print(f"❌ OpenAI JSON Parsing Error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"OpenAI JSON parsing error: {str(e)}")
 
-        # Save analysis in MongoDB
+        # Save analysis in MongoDB chatbot_log collection
         log_entry = {
     "userId": user["id"],
     "sessionId": f"session-{user['id']}-{datetime.now(timezone.utc).timestamp()}",
@@ -196,6 +199,10 @@ async def analyze_resume(
         }
 
         result = await chatbot_log_collection.insert_one(log_entry)
+        print(f"📦 File content-type: {file.content_type}, Filename: {file.filename}")
+    
+        # result = await analyze_resume_logic(file, user)
+
 
         return {
             "analysis": analysis_json,
@@ -407,13 +414,28 @@ def generate_resume_pdf(analysis_data, resume_data):
         elements.append(Paragraph("None", styles["BodyText"]))
     elements.append(Spacer(1, 6))
 
+
     # ✅ Projects
     elements.append(Paragraph("<b>Projects:</b>", styles["BodyText"]))
-    elements.append(ListFlowable(
-        [ListItem(Paragraph(proj, styles["BodyText"])) for proj in analysis_data["projects"]],
-        bulletType="bullet"
-    ))
+    projects = analysis_data.get("projects", [])
+    project_items = []
+
+    for proj in projects:
+      if isinstance(proj, dict):
+        # Compose readable string from dict
+        name = proj.get("name", "Unnamed Project")
+        techs = ", ".join(proj.get("technologies", []))
+        desc = proj.get("description", "")
+        proj_text = f"<b>{name}</b><br/>Technologies: {techs}<br/>{desc}"
+    else:
+        # If it's a plain string (backward compatibility)
+        proj_text = str(proj)
+
+    project_items.append(ListItem(Paragraph(proj_text, styles["BodyText"])))
+
+    elements.append(ListFlowable(project_items, bulletType="bullet"))
     elements.append(Spacer(1, 6))
+
 
     # ✅ Degree Status
     elements.append(Paragraph(f"<b>Degree:</b> {'Yes' if analysis_data['degree'] else 'No'}", styles["BodyText"]))

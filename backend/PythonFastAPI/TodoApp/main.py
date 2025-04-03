@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()  # ✅ This loads environment variables from .env
 
 # ✅ Import ALL routers (INCLUDING job_description)
-from .routers import auth, todos, admin, users, hr_ai, job_description, resume_upload,hr_resume, hr_screened_resumes    # ✅ Add job_description
+from .routers import auth, todos, admin, users, hr_ai, job_description, resume_upload,hr_resume, hr_screened_resumes, job_semantic_match    # ✅ Add job_description
 
 app = FastAPI()
 
@@ -37,3 +37,4 @@ app.include_router(job_description.router)  # ✅ This was missing!
 app.include_router(resume_upload.router)
 app.include_router(hr_resume.router)
 app.include_router(hr_screened_resumes.router)  # ✅ Ensure this line exists!
+app.include_router(job_semantic_match.router)

@@ -5,6 +5,7 @@ from .auth import get_current_user
 from config import MONGO_URI
 from motor.motor_asyncio import AsyncIOMotorClient
 from .resume_processing import analyze_and_score_resume  # ✅ Import AI processing function
+from ..utils.resume_analysis_utils import analyze_resume_logic
 
 # ✅ Define FastAPI router
 router = APIRouter(prefix="/ai/hr", tags=["Resume Upload"])
@@ -38,11 +39,16 @@ async def upload_resume(
 
     # ✅ Call AI-powered analysis function
     try:
-        analysis_result = await analyze_and_score_resume(resume, resume_id, user)
+        
+        analysis_result = await analyze_resume_logic(resume, user, job_id=jobId, employer_id=employerId)
+
+
+        # analysis_result = await analyze_and_score_resume(resume, resume_id, user)
         return {
-            "message": "Resume uploaded and analyzed successfully",
-            "resume_id": resume_id,
-            "analysis_result": analysis_result
+           "message": "Resume uploaded and analyzed successfully",
+           "resume_id": resume_id,
+           "analysis_result_id": analysis_result["resume_id"],
+           "analysis": analysis_result["analysis"]
         }
     except Exception as e:
         return {
