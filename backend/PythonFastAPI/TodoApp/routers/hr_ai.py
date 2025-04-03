@@ -373,6 +373,16 @@ def generate_resume_pdf(analysis_data, resume_data):
     # ✅ Add Title
     elements.append(Paragraph("Resume Analysis Report", styles["Title"]))
     elements.append(Spacer(1, 12))
+    
+        # ✅ Add Candidate Contact Info
+    full_name = analysis_data.get("full_name", "N/A")
+    email = analysis_data.get("email", "N/A")
+    phone = analysis_data.get("phone", "N/A")
+
+    elements.append(Paragraph(f"<b>Candidate Name:</b> {full_name}", styles["BodyText"]))
+    elements.append(Paragraph(f"<b>Email:</b> {email}", styles["BodyText"]))
+    elements.append(Paragraph(f"<b>Phone:</b> {phone}", styles["BodyText"]))
+    elements.append(Spacer(1, 6))
 
     # ✅ Add Metadata Information
     elements.append(Paragraph(f"<b>Report ID:</b> {resume_data['_id']}", styles["BodyText"]))
