@@ -48,3 +48,13 @@ backend/.env
 
 .firebase/
 
+venv/
+backend/venv/
+backend/PythonFastAPI/venv/
+backend/PythonFastAPI/todoApp/.venv/
+
+# Common virtualenv folders
+.venv/
+venv/
+*/.venv/
+*/venv
