@@ -1,3 +1,4 @@
+# hr_resume.py --
 import os
 import json
 import openai
