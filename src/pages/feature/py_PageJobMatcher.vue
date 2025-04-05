@@ -52,10 +52,25 @@ const selectedJob = ref(null);
 const matches = ref([]);
 
 const columns = [
-  { name: "resume_id", label: "Resume ID", field: "resume_id", align: "left" },
-  { name: "name", label: "Name", field: "candidate_name", align: "left" },
-  { name: "email", label: "Email", field: "candidate_email", align: "left" },
-  { name: "phone", label: "Phone", field: "candidate_phone", align: "left" },
+  {
+    name: "name",
+    label: "Name",
+    field: (row) => row.response?.full_name || "N/A",
+    align: "left",
+  },
+  {
+    name: "email",
+    label: "Email",
+    field: (row) => row.response?.email || "N/A",
+    align: "left",
+  },
+  {
+    name: "phone",
+    label: "Phone",
+    field: (row) => row.response?.phone || "N/A",
+    align: "left",
+  },
+
   {
     name: "similarity_score",
     label: "Similarity",
@@ -72,7 +87,10 @@ const columns = [
   {
     name: "matched_skills",
     label: "Skills",
-    field: (row) => row.matched_skills.join(", "),
+    field: (row) =>
+      Array.isArray(row.response?.matched_skills)
+        ? row.response.matched_skills.join(", ")
+        : "N/A",
     align: "left",
   },
 ];
