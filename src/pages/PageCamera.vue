@@ -1,4 +1,5 @@
 <template>
+  <!--PageCamera.vue--->
   <q-page class="constrain-more q-pa-md">
     <div class="camera-frame q-pa-md">
       <video v-show="!imageCaptured" ref="video" class="full-width" autoplay />

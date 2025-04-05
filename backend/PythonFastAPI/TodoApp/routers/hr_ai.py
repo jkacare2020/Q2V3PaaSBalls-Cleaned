@@ -34,11 +34,16 @@ datetime.now(timezone.utc)
 
 # ✅ Load from .env
 MONGO_URI = os.getenv("MONGODB_URL", "mongodb://127.0.0.1:27017/Q2V3-API")  # ✅ Use .env variable
+
 print(f"✅ Using MongoDB URI: {MONGO_URI}")  # Debugging
 
 # ✅ Initialize MongoDB Client
 mongo_client = AsyncIOMotorClient(MONGO_URI)
-db = mongo_client.get_default_database()  # ✅ Auto-detect DB from URI
+
+# db = mongo_client.get_default_database()  # ✅ Auto-detect DB from URI
+
+db = mongo_client["Q2V3-API"]
+
 chatbot_log_collection = db["chatbotlogs"]  # ✅ Use correct collection name
 
 # ✅ OpenAI Client

@@ -1,3 +1,4 @@
+//--This is the chatBotController.js --------
 const { OpenAI } = require("openai");
 const ChatbotLog = require("../models/chatBot/chatbotLog"); // Import ChatbotLog model
 const mongoose = require("mongoose");

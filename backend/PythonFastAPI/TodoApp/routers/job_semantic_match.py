@@ -7,6 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from .auth import get_current_user
 from config import MONGO_URI
 from bson import ObjectId
+import json
 
 router = APIRouter(prefix="/semantic-match", tags=["Semantic Matching"])
 
@@ -44,7 +45,7 @@ async def semantic_match_job(
     if not resumes:
         return {"matches": []}
 
-    user_collection = db["users"]  # ✅ Make sure this is INSIDE the async function
+    # user_collection = db["users"]  # ✅ Make sure this is INSIDE the async function
 
     results = []
 
@@ -63,17 +64,15 @@ async def semantic_match_job(
 
         resume_embedding = model.encode(resume_text, convert_to_tensor=True)
         similarity = util.cos_sim(job_embedding, resume_embedding).item()
+        
+        # print("✅ Resume data:", json.dumps(resume, indent=2, default=str))
 
-        results.append({
-            "resume_id": str(resume["_id"]),
-            "similarity_score": round(similarity, 4),
-            "matched_skills": resume.get("response", {}).get("matched_skills", []),
-            "years_of_experience": resume.get("response", {}).get("years_of_experience", "N/A"),
-            "candidate_name": resume.get("response", {}).get("full_name", "N/A"),
-            "candidate_email": resume.get("response", {}).get("email", "N/A"),
-             "candidate_phone": resume.get("response", {}).get("phone", "N/A"),
-
-        })
+    results.append({
+    "resume_id": str(resume["_id"]),
+    "similarity_score": round(similarity, 4),
+    "resume_score": resume.get("resume_score"),
+    "response": resume.get("response", {}),
+})
 
     results.sort(key=lambda x: x["similarity_score"], reverse=True)
     return {"matches": results[:10]}

@@ -1,4 +1,5 @@
 <template>
+  <!-- py_PageAI-screenedResumes.vue -->
   <q-page class="q-pa-md">
     <q-card>
       <q-card-section class="bg-primary text-white">
@@ -155,8 +156,11 @@ const fetchScreenedResumes = async () => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    screenedResumes.value = response.data.screened_resumes;
-    activeTableData.value = screenedResumes.value;
+    // 🛡 Defensive check
+    const resumes = response.data.screened_resumes || [];
+
+    screenedResumes.value = resumes;
+    activeTableData.value = resumes;
     isMatchingMode.value = false;
 
     $q.notify({ type: "positive", message: "Screened resumes loaded" });
