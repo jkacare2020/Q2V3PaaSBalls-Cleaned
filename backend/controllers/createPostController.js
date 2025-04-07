@@ -4,6 +4,7 @@ const path = require("path");
 const os = require("os");
 const fs = require("fs");
 const admin = require("firebase-admin");
+const sharp = require("sharp"); // ✅ For backend image resizing
 
 const bucket = admin.storage().bucket();
 const dbFirestore = admin.firestore();
@@ -13,7 +14,7 @@ const dbFirestore = admin.firestore();
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
  */
-exports.createPost = (req, res) => {
+exports.createPost = async (req, res) => {
   console.log("Received a request to /createPost");
 
   const idToken = req.headers.authorization?.split(" ")[1];
@@ -22,90 +23,97 @@ exports.createPost = (req, res) => {
     return res.status(401).send("Unauthorized: Missing Firebase token");
   }
 
-  let userId;
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const userId = decodedToken.uid;
+    console.log("Authenticated userId:", userId);
 
-  // Verify Firebase ID token
-  admin
-    .auth()
-    .verifyIdToken(idToken)
-    .then((decodedToken) => {
-      userId = decodedToken.uid;
-      console.log("Authenticated userId:", userId);
+    const uuid = UUID();
+    const busboy = Busboy({ headers: req.headers });
+    let fields = {};
+    let fileData = {};
 
-      const uuid = UUID();
-      const busboy = Busboy({ headers: req.headers });
-      let fields = {};
-      let fileData = {};
+    busboy.on("file", (fieldname, file, info) => {
+      const { filename, mimetype } = info;
+      if (!filename) {
+        console.error("No file provided");
+        return;
+      }
 
-      busboy.on("file", (fieldname, file, info) => {
-        const { filename, mimetype } = info;
-        if (!filename) {
-          console.error("No file provided");
-          return;
+      const filepath = path.join(os.tmpdir(), filename);
+      file.pipe(fs.createWriteStream(filepath));
+      fileData = { filepath, mimetype, filename };
+    });
+
+    busboy.on("field", (fieldname, val) => {
+      fields[fieldname] = val;
+    });
+
+    busboy.on("finish", async () => {
+      if (!fileData.filepath) {
+        return res.status(400).send("No file uploaded");
+      }
+
+      try {
+        let finalPath = fileData.filepath;
+
+        if (fields.tags && fields.tags.includes("avatar")) {
+          const resizedPath = path.join(
+            os.tmpdir(),
+            `resized-${fileData.filename}`
+          );
+          await sharp(fileData.filepath).resize(256, 256).toFile(resizedPath);
+          finalPath = resizedPath;
         }
 
-        const filepath = path.join(os.tmpdir(), filename);
-        file.pipe(fs.createWriteStream(filepath));
-        fileData = { filepath, mimetype };
-      });
-
-      busboy.on("field", (fieldname, val) => {
-        fields[fieldname] = val;
-      });
-
-      busboy.on("finish", () => {
-        if (!fileData.filepath) {
-          return res.status(400).send("No file uploaded");
-        }
-
-        // Upload file to Firebase Storage
-        bucket.upload(
-          fileData.filepath,
-          {
-            uploadType: "media",
+        const [uploadedFile] = await bucket.upload(finalPath, {
+          uploadType: "media",
+          metadata: {
             metadata: {
-              metadata: {
-                contentType: fileData.mimetype,
-                firebaseStorageDownloadTokens: uuid,
-              },
+              contentType: fileData.mimetype,
+              firebaseStorageDownloadTokens: uuid,
             },
           },
-          (err, uploadedFile) => {
-            if (err) {
-              console.error("Error uploading file:", err);
-              return res.status(500).send("Error uploading file");
-            }
+        });
 
-            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`;
-            const postData = {
-              id: fields.id,
-              caption: fields.caption,
-              location: fields.location,
-              date: parseInt(fields.date),
-              imageUrl,
-              userId,
-            };
+        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`;
+        const postData = {
+          id: fields.id,
+          caption: fields.caption,
+          location: fields.location,
+          date: parseInt(fields.date),
+          imageUrl,
+          userId,
+          tags: fields.tags ? fields.tags.split(",") : [],
+        };
 
-            dbFirestore
-              .collection("posts")
-              .doc(fields.id)
-              .set(postData)
-              .then(() => {
-                console.log("Post added:", postData);
-                res.send("Post added: " + fields.id);
-              })
-              .catch((error) => {
-                console.error("Error creating document:", error);
-                res.status(500).send("Error adding post");
-              });
-          }
-        );
-      });
+        await dbFirestore.collection("posts").doc(fields.id).set(postData);
+        console.log("Post added:", postData);
 
-      req.pipe(busboy);
-    })
-    .catch((error) => {
-      console.error("Error verifying token:", error);
-      res.status(401).send("Unauthorized: Invalid Firebase token");
+        if (postData.tags.includes("avatar")) {
+          const avatarData = {
+            imageUrl,
+            uploadedAt: Date.now(),
+            userId,
+          };
+          await dbFirestore
+            .collection("users")
+            .doc(userId)
+            .collection("avatar")
+            .add(avatarData);
+          console.log("✅ Avatar metadata saved under /users/{userId}/avatar");
+        }
+
+        res.send("Post added: " + fields.id);
+      } catch (uploadErr) {
+        console.error("Image processing or upload error:", uploadErr);
+        res.status(500).send("Error processing image");
+      }
     });
+
+    req.pipe(busboy);
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    res.status(401).send("Unauthorized: Invalid Firebase token");
+  }
 };

@@ -47,6 +47,7 @@
         </div>
       </div>
     </transition>
+    <!-- left side post box -->
     <div class="row q-col-gutter-lg">
       <div class="col-12 col-sm-8">
         <template v-if="!loadingPosts && posts.length">
@@ -160,21 +161,19 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useQuasar } from "quasar";
-import { auth, storage, db } from "src/firebase/init"; // Correct import for Firebase auth instance
-import { collection, query, getDocs, doc, getDoc } from "firebase/firestore"; // Add missing Firestore functions
+import { auth, storage, db } from "src/firebase/init";
+import { collection, query, getDocs, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
-import defaultAvatar from "src/assets/avatar.jpg"; // Import default avatar
+import defaultAvatar from "src/assets/avatar.png";
 import { useStoreAuth } from "src/stores/storeAuth";
-import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
+import { apiNode, nodeApiBaseURL } from "boot/apiNode";
 
 const storeAuth = useStoreAuth();
 
-// Reactive state for avatar URL, username, and email
 const posts = ref([]);
 const loadingPosts = ref(false);
 const showNotificationsBanner = ref(false);
-// const displayName = ref("");
 const isAuthenticated = ref(false);
 const avatarUrl = ref(defaultAvatar);
 const username = ref(storeAuth.user?.displayName || "User Name");
@@ -185,7 +184,6 @@ const $q = useQuasar();
 const serviceWorkerSupported = computed(() => "serviceWorker" in navigator);
 const pushNotificationsSupported = computed(() => "PushManager" in window);
 
-// Fetch posts from the backend
 const getPosts = () => {
   if (!auth.currentUser) {
     console.warn("No authenticated user, skipping post retrieval.");
@@ -222,9 +220,7 @@ const getPosts = () => {
     });
 };
 
-// Delete a post
 const deletePost = (postId) => {
-  console.log("deletePost function called with postId:", postId);
   auth.currentUser.getIdToken().then((idToken) => {
     apiNode
       .delete(`/api/posts/${postId}`, {
@@ -233,7 +229,6 @@ const deletePost = (postId) => {
         },
       })
       .then((response) => {
-        console.log("Post deleted:", response);
         posts.value = posts.value.filter((post) => post.id !== postId);
       })
       .catch((err) => {
@@ -246,7 +241,6 @@ const deletePost = (postId) => {
   });
 };
 
-// Nice date formatting
 const niceDate = (value) => {
   return new Date(value).toLocaleString("en-US", {
     month: "long",
@@ -256,27 +250,22 @@ const niceDate = (value) => {
   });
 };
 
-// onMounted without async
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      console.log("User is authenticated, fetching posts.");
-      getPosts(); // Assuming you have a getPosts function defined elsewhere
-      fetchUserData(user.uid); // <-- This triggers the fetchUserData function
-    } else {
-      console.warn("User is not authenticated.");
+      getPosts();
+      fetchUserData(user.uid);
     }
   });
 });
-//----------storeAuth preserving the username and email after a page reload. ----
+
 onMounted(() => {
   if (storeAuth.user) {
     username.value = storeAuth.user.displayName;
     email.value = storeAuth.user.email;
   }
 });
-//----------------------------------------------------
-// Function to fetch user data from Firestore
+
 async function fetchUserData(uid) {
   try {
     const userDocRef = doc(db, "users", uid);
@@ -289,33 +278,21 @@ async function fetchUserData(uid) {
   } catch (error) {
     console.error("Error fetching user data: ", error);
   }
-}
 
-onMounted(async () => {
-  if (storeAuth.user) {
-    username.value = storeAuth.user.displayName;
-    email.value = storeAuth.user.email;
-    isAuthenticated.value = true;
-
-    // Fetch avatar from users collection's avatar subcollection
-    try {
-      const avatarCollectionRef = collection(
-        db,
-        `users/${storeAuth.user.uid}/avatar`
-      );
-      const avatarSnapshot = await getDocs(avatarCollectionRef);
-      if (!avatarSnapshot.empty) {
-        const avatarDoc = avatarSnapshot.docs[1]; // Assume there is only one avatar
-        avatarUrl.value = avatarDoc.data().imageUrl;
-      }
-    } catch (error) {
-      console.error("Error fetching avatar: ", error);
+  try {
+    const avatarCollectionRef = collection(db, `users/${uid}/avatar`);
+    const avatarSnapshot = await getDocs(avatarCollectionRef);
+    if (!avatarSnapshot.empty) {
+      const avatarDoc = avatarSnapshot.docs[0];
+      avatarUrl.value = avatarDoc.data().imageUrl || defaultAvatar;
     }
+  } catch (error) {
+    console.error("Error fetching avatar: ", error);
   }
-});
+}
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .delete-icon {
   position: absolute;
   top: 8px;
@@ -323,9 +300,15 @@ onMounted(async () => {
   z-index: 10;
   cursor: pointer;
   color: red;
+
+  &:hover {
+    color: blue !important;
+  }
 }
 
-.delete-icon:hover {
-  color: blue !important;
+.card-post {
+  .q-img {
+    min-height: 200px;
+  }
 }
 </style>

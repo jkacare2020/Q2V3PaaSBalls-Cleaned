@@ -60,6 +60,18 @@
           </template>
         </q-input>
       </div>
+      <div class="row justify-center q-ma-md">
+        <q-select
+          v-model="post.tags"
+          :options="['avatar', 'public', 'private', 'logo', 'certification']"
+          multiple
+          label="Tags"
+          outlined
+          dense
+          class="col col-sm-6"
+          use-chips
+        />
+      </div>
       <div class="row justify-center q-mt-lg">
         <q-btn
           @click="addPost()"
@@ -90,6 +102,7 @@ const post = reactive({
   location: "",
   photo: null,
   date: Date.now(),
+  tags: [], // ✅ Add this field
 });
 
 const video = ref(null);
@@ -242,7 +255,7 @@ function locationError() {
   });
   locationLoading.value = false;
 }
-//-------------------------------------------------
+//--------------------add image-----------------------------
 async function addPost() {
   $q.loading.show();
 
@@ -262,12 +275,14 @@ async function addPost() {
   formData.append("location", post.location);
   formData.append("date", post.date);
   formData.append("file", post.photo, `${post.id}.png`);
+  formData.append("tags", post.tags.join(",")); // ✅ Add this line
 
   try {
     console.log("API URL:", nodeApiBaseURL); // url backend
 
     const idToken = await user.getIdToken();
     await apiNode.post(`/api/create-post`, formData, {
+      // postRoutes.js /creat-post...> createPostcontroller.js
       headers: { Authorization: `Bearer ${idToken}` },
     });
     $q.localStorage.set("postCreated", true);

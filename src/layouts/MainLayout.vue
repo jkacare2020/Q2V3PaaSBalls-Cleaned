@@ -1,4 +1,5 @@
 <template>
+  <!--MainLayout.vue-->
   <q-layout view="hHh lpR lFf">
     <q-header :elevated="useLightOrDark(true, false)">
       <q-banner v-if="showAppInstallBanner" class="bubble-banner">
@@ -48,7 +49,8 @@
           <div v-if="isLoggedIn">
             <q-btn flat round @click.stop="toggleDropdown" class="q-ml-md">
               <q-avatar>
-                <img :src="userAvatar || 'default-avatar.png'" />
+                <!-- <img :src="userAvatar || 'default-avatar.png'" /> -->
+                <img :src="finalAvatarUrl" @error="onImageError" />
               </q-avatar>
             </q-btn>
             <q-menu v-model="dropdownOpen">
@@ -160,6 +162,8 @@ import { useStoreUsers } from "src/stores/storeUsers";
 import { useRouter, useRoute } from "vue-router";
 import { useLightOrDark } from "src/use/useLightOrDark";
 import { LocalStorage } from "quasar";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "src/firebase/init"; // ✅ Make sure it's the Firestore instance
 
 const storeUsers = useStoreUsers();
 const storeAuth = useStoreAuth();
@@ -169,13 +173,36 @@ const $q = useQuasar();
 
 const leftDrawerOpen = ref(false);
 const dropdownOpen = ref(false); // Manage dropdown visibility
-const userAvatar = ref("src/assets/mind_3D_image.png");
-const Resume = ref("src/assets/icons8-resume-100.png");
-
+const userAvatar = ref(""); // Avatar from Firestore
+const defaultAvatar = "src/assets/default-avatar.png"; // Local fallback
 // Computed properties for checking logged-in status, admin role, and signup page
 const isLoggedIn = computed(() => !!storeAuth.user); // True if a user is logged in
-const isAdmin = computed(() => storeUsers.user?.role === "admin"); // True if user is admin
 const isSignupPage = computed(() => route.path === "/signup"); // True if on signup page
+//const isAdmin = computed(() => storeUsers.user?.role === "admin"); // True if user is admin
+
+// Avatar fallback logic
+const finalAvatarUrl = computed(() => userAvatar.value || defaultAvatar);
+
+// 🚀 Load avatar from Firebase Firestore
+async function loadAvatar(uid) {
+  try {
+    console.log("👤 Loading avatar for:", uid);
+    const avatarCollectionRef = collection(db, `users/${uid}/avatar`);
+    const avatarSnapshot = await getDocs(avatarCollectionRef);
+
+    if (!avatarSnapshot.empty) {
+      const avatarDoc = avatarSnapshot.docs[0];
+      const avatarData = avatarDoc.data();
+      console.log("✅ Avatar found:", avatarData);
+
+      userAvatar.value = avatarData.imageUrl || "";
+    } else {
+      console.warn("⚠️ No avatar document found.");
+    }
+  } catch (err) {
+    console.error("❌ Error loading avatar from Firestore:", err);
+  }
+}
 
 // Watch for changes in the user data to trigger updates
 watch(
@@ -183,11 +210,21 @@ watch(
   async (newUser) => {
     if (newUser) {
       await storeUsers.init(); // Initialize the store and load user data
+      await loadAvatar(newUser.uid);
     }
   },
   { immediate: true }
 );
 
+// Extra safety: Try load on mount too
+onMounted(async () => {
+  if (storeAuth.user) {
+    await storeUsers.init();
+    await loadAvatar(storeAuth.user.uid);
+  }
+});
+
+//----------------------------------------------------
 function toggleDropdown() {
   dropdownOpen.value = !dropdownOpen.value;
 }
