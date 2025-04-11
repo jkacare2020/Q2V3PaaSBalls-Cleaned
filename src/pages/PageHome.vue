@@ -261,7 +261,7 @@
             class="col"
             @keyup.enter="sendComment"
           />
-          <q-btn round color="primary" icon="chat" @click="sendComment">
+          <q-btn round color="primary" icon="send" @click="sendComment">
             <q-badge
               v-if="hasUnreadComments"
               color="red"
