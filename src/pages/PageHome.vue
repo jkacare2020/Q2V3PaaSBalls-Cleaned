@@ -163,6 +163,20 @@
                 </q-item-label>
                 <q-item-label caption>{{ comment.text }}</q-item-label>
               </q-item-section>
+              <!-- 🗑️ Delete Button (only for own comment) -->
+              <q-item-section
+                side
+                v-if="comment.userId === storeAuth.user?.uid"
+              >
+                <q-btn
+                  flat
+                  dense
+                  icon="delete"
+                  size="sm"
+                  color="negative"
+                  @click="confirmDeleteComment(comment.id)"
+                />
+              </q-item-section>
             </q-item>
           </q-list>
 
@@ -282,6 +296,7 @@ import { auth, dbRealtime, db } from "src/firebase/init";
 import {
   onValue,
   ref as dbRef,
+  remove,
   set,
   onDisconnect,
   serverTimestamp,
@@ -302,28 +317,6 @@ import { useQuasar } from "quasar";
 const hasUnreadComments = computed(() => {
   return comments.value.length > 0 && !showCommentModal.value;
 });
-
-function openActionSheet() {
-  $q.bottomSheet({
-    title: "Choose an action",
-    actions: [
-      { label: "Open Comments", icon: "chat", id: "reply" },
-      { label: "Delete", icon: "delete", color: "negative", id: "delete" },
-      { label: "Cancel", icon: "close", id: "cancel" },
-    ],
-  }).onOk((action) => {
-    if (action.id === "reply") {
-      showCommentModal.value = true; // Opens <q-dialog>
-    } else if (action.id === "delete") {
-      $q.notify({ type: "warning", message: "Feature coming soon!" });
-    }
-  });
-}
-
-function handleCommentClick() {
-  console.log("FAB clicked");
-  openActionSheet(); // ✅ Always run for testing
-}
 
 const router = useRouter();
 
@@ -348,6 +341,64 @@ const $q = useQuasar();
 
 const serviceWorkerSupported = computed(() => "serviceWorker" in navigator);
 const pushNotificationsSupported = computed(() => "PushManager" in window);
+
+//---------------------Modal open ---------------
+function openActionSheet() {
+  $q.bottomSheet({
+    title: "Choose an action",
+    actions: [
+      { label: "Open Comments", icon: "chat", id: "reply" },
+      { label: "Delete", icon: "delete", color: "negative", id: "delete" },
+      { label: "Cancel", icon: "close", id: "cancel" },
+    ],
+  }).onOk((action) => {
+    if (action.id === "reply") {
+      showCommentModal.value = true; // Opens <q-dialog>
+    } else if (action.id === "delete") {
+      $q.notify({ type: "warning", message: "Feature coming soon!" });
+    }
+  });
+}
+
+function handleCommentClick() {
+  console.log("FAB clicked");
+  openActionSheet(); // ✅ Always run for testing
+}
+//--------------------Delete comment confirmation -----------
+function confirmDeleteComment(commentId) {
+  $q.dialog({
+    title: "Delete comment?",
+    message: "This action cannot be undone.",
+    cancel: true,
+    persistent: true,
+  }).onOk(() => {
+    deleteComment(commentId);
+  });
+}
+
+function deleteComment(commentId) {
+  const commentRef = dbRef(dbRealtime, `comments/global/${commentId}`);
+  remove(commentRef)
+    .then(() => {
+      $q.notify({
+        type: "positive",
+        message: "🗑️ Comment deleted",
+        timeout: 2000,
+        position: "top-right",
+        icon: "check_circle",
+      });
+    })
+    .catch((error) => {
+      $q.notify({
+        type: "negative",
+        message: "❌ Could not delete comment",
+        timeout: 2500,
+        position: "top-right",
+        icon: "error",
+      });
+      console.error("Failed to delete comment:", error);
+    });
+}
 
 //-----------------------------------------------------------------------
 function initPresenceTracking() {
