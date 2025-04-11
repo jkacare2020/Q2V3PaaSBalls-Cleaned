@@ -140,43 +140,174 @@
         </template>
       </div>
 
+      <!-- RIGHT: Presence + Comment input -->
       <div class="col-4 large-screen-only">
-        <q-item class="fixed">
-          <q-item-section avatar>
-            <q-avatar size="48px">
-              <img :src="avatarUrl" :alt="username" />
-            </q-avatar>
-          </q-item-section>
+        <q-card class="q-pa-md">
+          <!---------------------comments ------------------------>
+          <q-list bordered class="q-mb-md" v-if="comments.length">
+            <q-item v-for="(comment, idx) in comments" :key="comment.id || idx">
+              <q-item-section avatar>
+                <q-avatar size="32px">
+                  <img :src="comment.avatarUrl || defaultAvatar" />
+                  <q-badge
+                    rounded
+                    floating
+                    :color="comment.online ? 'green' : 'red'"
+                    class="presence-dot"
+                  />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-bold">
+                  {{ comment.userName || comment.displayName || "User" }}
+                </q-item-label>
+                <q-item-label caption>{{ comment.text }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
 
-          <q-item-section>
-            <q-item-label class="text-bold">{{ username }}</q-item-label>
-            <q-item-label caption> {{ email }} </q-item-label>
-          </q-item-section>
-        </q-item>
+          <div v-else class="text-caption q-mt-sm">❌ No comments yet.</div>
+          <!-- Comment input -->
+          <div class="q-mt-md">
+            <q-input
+              filled
+              v-model="commentText"
+              label="Leave a comment..."
+              dense
+              type="textarea"
+              autogrow
+              @keyup.enter="sendComment"
+            />
+            <q-btn
+              class="q-mt-sm"
+              label="Send"
+              color="primary"
+              @click="sendComment"
+              :disable="!commentText"
+            />
+          </div>
+        </q-card>
       </div>
     </div>
+
+    <!-- Floating icon for small screens -->
+    <q-page-sticky
+      position="bottom-right"
+      :offset="[18, 18]"
+      class="q-mb-md q-mr-md small-screen-only"
+    >
+      <q-btn round color="primary" icon="chat" @click="handleCommentClick" />
+    </q-page-sticky>
   </q-page>
+
+  <q-bottom-sheet v-model="showCommentModal" persistent>
+    <transition
+      appear
+      enter-active-class="animated fadeInUp"
+      leave-active-class="animated fadeOutDown"
+    >
+      <q-card v-if="showCommentModal" class="full-width column no-wrap">
+        <!-- <q-card class="full-width column no-wrap"> -->
+        <!-- Header -->
+        <q-bar class="bg-primary text-white">
+          <div class="text-h6">Comments</div>
+          <q-space />
+          <q-btn dense flat icon="close" @click="showCommentModal = false" />
+        </q-bar>
+
+        <!-- Modal Comment Feed -->
+        <q-scroll-area style="height: 60vh">
+          <q-list>
+            <q-item v-for="(comment, idx) in comments" :key="comment.id || idx">
+              <q-item-section avatar>
+                <q-avatar size="32px">
+                  <img :src="comment.avatarUrl || defaultAvatar" />
+                  <q-badge
+                    rounded
+                    floating
+                    :color="comment.online ? 'green' : 'red'"
+                    class="presence-dot"
+                  />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-bold">
+                  {{ comment.userName || comment.displayName || "User" }}
+                </q-item-label>
+                <q-item-label caption>{{ comment.text }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-scroll-area>
+        <!-- Modal Input Section -->
+        <q-separator />
+        <q-card-actions class="q-px-sm q-py-sm">
+          <q-input
+            ref="commentInputRef"
+            v-model="commentText"
+            placeholder="Leave a comment..."
+            dense
+            outlined
+            class="col"
+            @keyup.enter="sendComment"
+          />
+          <q-btn round color="primary" icon="chat" @click="handleCommentClick">
+            <q-badge
+              v-if="hasUnreadComments"
+              color="red"
+              floating
+              rounded
+              style="top: -6px; right: -6px"
+            />
+          </q-btn>
+        </q-card-actions>
+      </q-card>
+    </transition>
+  </q-bottom-sheet>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { useQuasar } from "quasar";
-import { auth, storage, db } from "src/firebase/init";
-import { collection, query, getDocs, doc, getDoc } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import axios from "axios";
-import defaultAvatar from "src/assets/avatar.png";
+import { auth, dbRealtime, db } from "src/firebase/init";
+import {
+  onValue,
+  ref as dbRef,
+  set,
+  onDisconnect,
+  serverTimestamp,
+} from "firebase/database";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { apiNode } from "boot/apiNode";
 import { useStoreAuth } from "src/stores/storeAuth";
-import { apiNode, nodeApiBaseURL } from "boot/apiNode";
+import { useQuasar } from "quasar";
+import { watch } from "vue";
+import { onAuthStateChanged } from "firebase/auth";
+import defaultAvatar from "src/assets/avatar.png";
+import { useRouter } from "vue-router";
+
+import { nextTick } from "vue";
+
+const hasUnreadComments = computed(() => {
+  return comments.value.length > 0 && !showCommentModal.value;
+});
+
+const router = useRouter();
 
 const storeAuth = useStoreAuth();
 
+const onlineUsers = ref([]);
+const comments = ref([]);
+const commentText = ref("");
+const postId = ref("global");
+const username = ref(storeAuth.user?.displayName || "User Name");
 const posts = ref([]);
 const loadingPosts = ref(false);
 const showNotificationsBanner = ref(false);
 const isAuthenticated = ref(false);
 const avatarUrl = ref(defaultAvatar);
-const username = ref(storeAuth.user?.displayName || "User Name");
+
+const allUserMap = ref({});
+
 const email = ref(storeAuth.user?.email || "user@example.com");
 
 const $q = useQuasar();
@@ -184,6 +315,31 @@ const $q = useQuasar();
 const serviceWorkerSupported = computed(() => "serviceWorker" in navigator);
 const pushNotificationsSupported = computed(() => "PushManager" in window);
 
+//-----------------------------------------------------------------------
+function initPresenceTracking() {
+  if (!auth.currentUser) {
+    console.warn("⚠️ No authenticated user for presence");
+    return;
+  }
+
+  const userId = auth.currentUser.uid;
+  const userStatusRef = dbRef(dbRealtime, `usersPresence/${userId}`);
+
+  // Set the user online
+  set(userStatusRef, {
+    online: true,
+    lastSeen: serverTimestamp(),
+  });
+
+  // Set the user offline when disconnected (auto-handled by Firebase)
+  onDisconnect(userStatusRef).set({
+    online: false,
+    lastSeen: serverTimestamp(),
+  });
+
+  console.log("🟢 Presence tracking initialized for:", userId);
+}
+//----------------------------------------------------------------------
 const getPosts = () => {
   if (!auth.currentUser) {
     console.warn("No authenticated user, skipping post retrieval.");
@@ -250,21 +406,63 @@ const niceDate = (value) => {
   });
 };
 
+function fetchComments(postId = "global") {
+  console.log("📡 Fetching comments from DB...");
+
+  const commentsRef = dbRef(dbRealtime, `comments/${postId}`);
+
+  onValue(commentsRef, (snapshot) => {
+    const data = snapshot.val();
+    console.log("🪵 Raw snapshot:", data);
+
+    if (data) {
+      const parsed = Object.entries(data).map(([key, value]) => ({
+        ...value,
+        id: key,
+      }));
+      comments.value = parsed.sort((a, b) => b.timestamp - a.timestamp);
+    } else {
+      comments.value = [];
+    }
+
+    console.log("🧾 Parsed comments:", comments.value);
+
+    // ✅ Auto-scroll to latest comment
+    nextTick(() => {
+      const scrollEl = document.querySelector(".q-scrollarea__container");
+      if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+    });
+  });
+}
+
 onMounted(() => {
+  if (auth.currentUser) {
+    initPresenceTracking();
+  }
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      getPosts();
+      console.log("👤 Auth state changed:", user.uid);
       fetchUserData(user.uid);
+      getPosts();
+      fetchComments(); // ✅ called from here
+      initPresenceTracking(); // 👈 make sure it's called here too
     }
   });
 });
 
-onMounted(() => {
-  if (storeAuth.user) {
-    username.value = storeAuth.user.displayName;
-    email.value = storeAuth.user.email;
-  }
-});
+// Watch for storeAuth.user to be ready
+watch(
+  () => storeAuth.user,
+  (newUser) => {
+    if (newUser) {
+      console.log("🟢 storeAuth.user is now available, calling fetchPresence");
+      username.value = newUser.displayName || "User";
+      email.value = newUser.email || "user@example.com";
+      fetchPresence();
+    }
+  },
+  { immediate: true }
+);
 
 async function fetchUserData(uid) {
   try {
@@ -290,6 +488,107 @@ async function fetchUserData(uid) {
     console.error("Error fetching avatar: ", error);
   }
 }
+//--------------------------------------------------------------
+async function fetchPresence() {
+  console.log("🚀 fetchPresence() called");
+
+  const usersPresenceRef = dbRef(dbRealtime, "usersPresence");
+
+  onValue(usersPresenceRef, async (snapshot) => {
+    const presenceData = snapshot.val() || {};
+    const newUserMap = {};
+
+    const all = await Promise.all(
+      Object.entries(presenceData).map(async ([userId, presence]) => {
+        const userDoc = await getDoc(doc(db, "users", userId));
+        const userData = userDoc.exists() ? userDoc.data() : {};
+
+        let avatarUrl = "";
+        try {
+          const avatarSnap = await getDocs(
+            collection(db, `users/${userId}/avatar`)
+          );
+          if (!avatarSnap.empty) {
+            avatarUrl = avatarSnap.docs[0].data().imageUrl;
+          }
+        } catch (err) {
+          console.warn(`⚠️ No avatar found for ${userId}`);
+        }
+
+        newUserMap[userId] = {
+          userId,
+          displayName: userData.displayName || "User",
+          userName: userData.userName || "",
+          email: userData.email || "",
+          avatarUrl: avatarUrl,
+          online: presence.online === true,
+        };
+      })
+    );
+
+    allUserMap.value = newUserMap;
+    console.log("✅ allUserMap updated with presence:", newUserMap);
+  });
+}
+
+async function sendComment() {
+  const user = storeAuth.user; // ✅ Define this!
+  if (!storeAuth.user || !commentText.value) return;
+
+  // Check if the logged-in user has a username
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+  const userData = userDoc.exists() ? userDoc.data() : {};
+
+  if (!userData.userName) {
+    $q.notify({
+      type: "warning",
+      message: "Please set a username before commenting.",
+      icon: "warning",
+      position: "top",
+    });
+
+    setTimeout(() => {
+      router.push("/profile"); // or your profile/edit page route
+    }, 1500);
+    return; // 🚫 Prevent comment from being sent
+  }
+
+  const token = await auth.currentUser.getIdToken();
+
+  await apiNode.post(
+    "/api/comments/add",
+    {
+      postId: postId.value,
+      text: commentText.value,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  commentText.value = "";
+}
+
+const userMap = computed(() => {
+  const map = {};
+  for (const user of onlineUsers.value) {
+    map[user.userId] = user;
+  }
+  return map;
+});
+
+const showCommentModal = ref(false);
+
+function handleCommentClick() {
+  if ($q.screen.lt.md) {
+    showCommentModal.value = true;
+  } else {
+    console.warn(
+      "🖥️  Large screen: Modal not needed. Comments shown in sidebar."
+    );
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -310,5 +609,13 @@ async function fetchUserData(uid) {
   .q-img {
     min-height: 200px;
   }
+}
+.presence-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
 }
 </style>

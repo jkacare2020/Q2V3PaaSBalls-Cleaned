@@ -29,6 +29,8 @@
 </template>
 
 <script setup>
+import { auth, dbRealtime } from "src/firebase/init";
+import { ref as dbRef, set, onDisconnect } from "firebase/database";
 import { ref } from "vue";
 import { useStoreAuth } from "../stores/storeAuth";
 import { useRouter } from "vue-router";
@@ -64,6 +66,21 @@ function getFriendlyErrorMessage(errorCode) {
 async function login() {
   try {
     await storeAuth.loginUser({ email: email.value, password: password.value });
+
+    // ✅ Mark user online in Realtime Database
+    const userId = storeAuth.user.uid;
+    const userPresenceRef = dbRef(dbRealtime, `usersPresence/${userId}`);
+    await set(userPresenceRef, {
+      online: true,
+      lastSeen: Date.now(),
+    });
+
+    // ✅ Setup disconnect logic to mark offline
+    onDisconnect(userPresenceRef).set({
+      online: false,
+      lastSeen: Date.now(),
+    });
+
     router.push("/"); // Redirect after successful login
     $q.notify({
       color: "positive",

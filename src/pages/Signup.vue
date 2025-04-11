@@ -1,4 +1,5 @@
 <template>
+  <!--Signup.vue--->
   <q-page class="q-pa-md">
     <q-card class="q-pa-md q-mx-auto" style="max-width: 400px">
       <q-card-section>
@@ -58,6 +59,12 @@
             label="Company Name"
             :rules="[(value) => !!value || 'Display name is required']"
           />
+          <q-input
+            v-model="credentials.userName"
+            filled
+            label="Username"
+            :rules="[(value) => !!value || 'Username is required']"
+          />
 
           <q-btn
             label="Sign Up"
@@ -78,6 +85,8 @@ import { useStoreAuth } from "src/stores/storeAuth";
 import { useRouter } from "vue-router";
 import { usePhoneFormat } from "src/use/formatPhone";
 import { useQuasar } from "quasar"; // Import Quasar Notify
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "src/firebase/init";
 
 const authStore = useStoreAuth();
 const router = useRouter();
@@ -90,8 +99,8 @@ const credentials = ref({
   lastName: "",
   phoneNo: "",
   displayName: "",
+  userName: "", // ✅ New field
   companyName: "",
-  email: "",
 });
 
 const { formattedPhone, normalizePhone } = usePhoneFormat();
@@ -110,13 +119,14 @@ const registerUser = async () => {
       displayName: credentials.value.displayName,
       email: credentials.value.email,
       companyName: credentials.value.companyName,
+      userName: credentials.value.userName,
     });
     // Navigate to home page or dashboard after successful registration
     $q.notify({
       type: "positive",
       message: "Registration successful!",
-      position: "top",
       icon: "check_circle",
+      position: "top",
     });
     router.push("/");
   } catch (error) {

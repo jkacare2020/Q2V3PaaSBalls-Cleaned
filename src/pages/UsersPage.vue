@@ -30,7 +30,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import { auth, db } from "src/firebase/init"; // Ensure db is correctly imported for Firestore checks
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";

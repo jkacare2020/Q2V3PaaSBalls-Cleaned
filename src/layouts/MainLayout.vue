@@ -163,7 +163,8 @@ import { useRouter, useRoute } from "vue-router";
 import { useLightOrDark } from "src/use/useLightOrDark";
 import { LocalStorage } from "quasar";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "src/firebase/init"; // ✅ Make sure it's the Firestore instance
+import { db, auth, dbRealtime } from "src/firebase/init"; // ✅ Make sure it's the Firestore instance
+import { ref as dbRef, set } from "firebase/database";
 
 const storeUsers = useStoreUsers();
 const storeAuth = useStoreAuth();
@@ -338,31 +339,31 @@ function toggleLeftDrawer() {
 }
 
 // Navigation function to go to different pages
-function goToPage(page) {
-  leftDrawerOpen.value = false; // Close drawer when navigating
-  switch (page) {
-    case "users":
-      router.push("/users"); // Admin users list page
-      break;
-    default:
-      break;
-  }
-}
+// function goToPage(page) {
+//   leftDrawerOpen.value = false; // Close drawer when navigating
+//   switch (page) {
+//     case "users":
+//       router.push("/users"); // Admin users list page
+//       break;
+//     default:
+//       break;
+//   }
+// }
 
-function navigateToViewEditTransactions() {
-  router.push("/mongo-transacts");
-  leftDrawerOpen.value = false; // Close the drawer after navigation
-}
+// function navigateToViewEditTransactions() {
+//   router.push("/mongo-transacts");
+//   leftDrawerOpen.value = false; // Close the drawer after navigation
+// }
 
-function navigateToViewMyTransactions() {
-  router.push("/mongo-mytransacts");
-  leftDrawerOpen.value = false; // Close the drawer after navigation
-}
+// function navigateToViewMyTransactions() {
+//   router.push("/mongo-mytransacts");
+//   leftDrawerOpen.value = false; // Close the drawer after navigation
+// }
 
-function navigateToNewTransaction() {
-  router.push("/new-transaction"); // Add the route for creating a new transaction
-  leftDrawerOpen.value = false;
-}
+// function navigateToNewTransaction() {
+//   router.push("/new-transaction"); // Add the route for creating a new transaction
+//   leftDrawerOpen.value = false;
+// }
 
 // Go to profile page of the logged-in user
 function goToProfile() {
@@ -376,17 +377,35 @@ function goToProfile() {
 }
 
 // Logout function
-function logout() {
-  storeAuth.logoutUser();
-  storeUsers.clearUsers(); // Clear user data from storeUsers and LocalStorage
-  dropdownOpen.value = false; // Close the dropdown
+async function logout() {
+  const user = auth.currentUser; // ✅ must use BEFORE logout
+
+  if (user && user.uid) {
+    const userPresenceRef = dbRef(dbRealtime, `usersPresence/${user.uid}`);
+    try {
+      await set(userPresenceRef, {
+        online: false,
+        lastSeen: Date.now(),
+      });
+      console.log("✅ User marked offline in Realtime DB.");
+    } catch (err) {
+      console.warn("⚠️ Failed to update presence status:", err);
+    }
+  }
+
+  // ⚠️ Only logout AFTER presence is updated
+  await storeAuth.logoutUser(); // 🔒 logs user out
+  storeUsers.clearUsers();
+  dropdownOpen.value = false;
+
   $q.notify({
     type: "negative",
     message: "Logged out successfully",
     timeout: 1500,
   });
+
   setTimeout(() => {
-    router.push("/login"); // Redirect to login page
+    router.push("/login");
   }, 1500);
 }
 

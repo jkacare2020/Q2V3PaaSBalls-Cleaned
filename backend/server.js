@@ -15,6 +15,13 @@ const audioRoutes = require("./routes/audioRoutes");
 const chatBotRoutes = require("./routes/chatBotRoutes");
 const tenantRoutes = require("./routes/tenantRoutes");
 
+const authenticateAndAuthorize = require("./middlewares/authMiddleware");
+
+const updatePresence = require("./middlewares/setPresence");
+
+const commentsRoutes = require("./routes/commentsRoutes");
+const userPresenceRoutes = require("./routes/userPresenceRoutes");
+
 dotenv.config();
 
 // Connect to MongoDB
@@ -59,6 +66,13 @@ admin
     console.error("Error connecting Firebase Admin:", error);
   });
 
+// 🔒 First: Firebase authentication middleware
+// ✅ Then apply it globally like this, for example:
+app.use("/api", authenticateAndAuthorize());
+
+// 🟢 Second: Presence updater middleware
+app.use(updatePresence);
+
 // Middleware to parse JSON bodies (if needed)
 // app.use(express.json());
 // Increase the payload size limit (e.g., 10MB)
@@ -69,6 +83,8 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use("/api", userRoutes); // Mount user routes under /api
 app.use("/api", transactRoutes); // Uncomment if you have transact routes
 app.use("/api", postRoutes);
+app.use("/api/comments", commentsRoutes);
+app.use("/api/presence", userPresenceRoutes); // optional
 app.use("/api", videoRoutes);
 app.use("/api", audioRoutes); // Mount STT routes under /api
 app.use("/api", chatBotRoutes);

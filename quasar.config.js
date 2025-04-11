@@ -138,6 +138,11 @@ module.exports = configure(function () {
     framework: {
       config: {},
 
+      css: [
+        "app.scss",
+        "@quasar/extras/animate.css", // ✅ ADD THIS
+      ],
+
       // iconSet: 'material-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
 

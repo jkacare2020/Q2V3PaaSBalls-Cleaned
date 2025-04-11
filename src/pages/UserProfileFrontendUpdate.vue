@@ -105,7 +105,6 @@
                   dense
                   label="UserName"
                   required
-                  :readonly="!isAdmin"
                 />
                 <!-- Set field as readonly if not admin -->
               </q-item-section>
