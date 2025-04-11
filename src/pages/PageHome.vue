@@ -200,14 +200,23 @@
     </q-page-sticky>
   </q-page>
 
-  <q-bottom-sheet v-model="showCommentModal" persistent>
+  <q-dialog
+    v-model="showCommentModal"
+    persistent
+    full-width
+    full-height
+    class="drawer-style"
+  >
     <transition
       appear
       enter-active-class="animated fadeInUp"
       leave-active-class="animated fadeOutDown"
     >
-      <q-card v-if="showCommentModal" class="full-width column no-wrap">
-        <!-- <q-card class="full-width column no-wrap"> -->
+      <q-card
+        v-if="showCommentModal"
+        class="full-width column no-wrap"
+        style="border-top-left-radius: 20px; border-top-right-radius: 20px"
+      >
         <!-- Header -->
         <q-bar class="bg-primary text-white">
           <div class="text-h6">Comments</div>
@@ -239,6 +248,7 @@
             </q-item>
           </q-list>
         </q-scroll-area>
+
         <!-- Modal Input Section -->
         <q-separator />
         <q-card-actions class="q-px-sm q-py-sm">
@@ -251,7 +261,7 @@
             class="col"
             @keyup.enter="sendComment"
           />
-          <q-btn round color="primary" icon="chat" @click="handleCommentClick">
+          <q-btn round color="primary" icon="chat" @click="sendComment">
             <q-badge
               v-if="hasUnreadComments"
               color="red"
@@ -263,7 +273,7 @@
         </q-card-actions>
       </q-card>
     </transition>
-  </q-bottom-sheet>
+  </q-dialog>
 </template>
 
 <script setup>
@@ -279,7 +289,7 @@ import {
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { apiNode } from "boot/apiNode";
 import { useStoreAuth } from "src/stores/storeAuth";
-import { useQuasar } from "quasar";
+
 import { watch } from "vue";
 import { onAuthStateChanged } from "firebase/auth";
 import defaultAvatar from "src/assets/avatar.png";
@@ -287,9 +297,33 @@ import { useRouter } from "vue-router";
 
 import { nextTick } from "vue";
 
+import { useQuasar } from "quasar";
+
 const hasUnreadComments = computed(() => {
   return comments.value.length > 0 && !showCommentModal.value;
 });
+
+function openActionSheet() {
+  $q.bottomSheet({
+    title: "Choose an action",
+    actions: [
+      { label: "Open Comments", icon: "chat", id: "reply" },
+      { label: "Delete", icon: "delete", color: "negative", id: "delete" },
+      { label: "Cancel", icon: "close", id: "cancel" },
+    ],
+  }).onOk((action) => {
+    if (action.id === "reply") {
+      showCommentModal.value = true; // Opens <q-dialog>
+    } else if (action.id === "delete") {
+      $q.notify({ type: "warning", message: "Feature coming soon!" });
+    }
+  });
+}
+
+function handleCommentClick() {
+  console.log("FAB clicked");
+  openActionSheet(); // ✅ Always run for testing
+}
 
 const router = useRouter();
 
@@ -580,15 +614,9 @@ const userMap = computed(() => {
 
 const showCommentModal = ref(false);
 
-function handleCommentClick() {
-  if ($q.screen.lt.md) {
-    showCommentModal.value = true;
-  } else {
-    console.warn(
-      "🖥️  Large screen: Modal not needed. Comments shown in sidebar."
-    );
-  }
-}
+// function handleCommentClick() {
+//   showCommentModal.value = true; // ✅ Force it to open regardless of screen size
+// }
 </script>
 
 <style scoped lang="scss">
@@ -617,5 +645,8 @@ function handleCommentClick() {
   width: 12px;
   height: 12px;
   border: 2px solid white;
+}
+.q-dialog__inner--top {
+  align-items: flex-end;
 }
 </style>

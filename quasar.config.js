@@ -142,6 +142,12 @@ module.exports = configure(function () {
         "app.scss",
         "@quasar/extras/animate.css", // ✅ ADD THIS
       ],
+      components: [
+        "QPage",
+        "QBtn",
+        "QCard",
+        "QInput", // etc...
+      ],
 
       // iconSet: 'material-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
@@ -154,7 +160,7 @@ module.exports = configure(function () {
       // directives: [],
 
       // Quasar plugins
-      plugins: ["Dialog", "Notify", "Loading", "LocalStorage"],
+      plugins: ["Dialog", "Notify", "Loading", "LocalStorage", "BottomSheet"],
     },
 
     // animations: 'all', // --- includes all animations
