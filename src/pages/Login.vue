@@ -35,6 +35,7 @@ import { ref } from "vue";
 import { useStoreAuth } from "../stores/storeAuth";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
+import { apiNode } from "boot/apiNode";
 
 const email = ref("");
 const password = ref("");
@@ -74,6 +75,15 @@ async function login() {
       online: true,
       lastSeen: Date.now(),
     });
+    await apiNode.post(
+      "/api/comments/markOnline",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${await auth.currentUser.getIdToken()}`,
+        },
+      }
+    );
 
     // ✅ Setup disconnect logic to mark offline
     onDisconnect(userPresenceRef).set({

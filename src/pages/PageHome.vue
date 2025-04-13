@@ -102,6 +102,36 @@
               <div class="text-caption text-grey">
                 {{ niceDate(post.date) }}
               </div>
+              <q-badge
+                v-if="post.tags?.includes('public')"
+                label="Public"
+                color="green"
+                class="q-mt-sm"
+                rounded
+              />
+              <q-badge
+                v-else
+                label="Private"
+                color="grey"
+                class="q-mt-sm"
+                rounded
+              />
+              <q-card-actions align="right">
+                <q-select
+                  v-model="post.visibilityTag"
+                  :options="['public', 'private']"
+                  label="Visibility"
+                  dense
+                  emit-value
+                  map-options
+                  outlined
+                  style="max-width: 140px"
+                  @update:model-value="
+                    (value) => updateVisibility(post.id, value)
+                  "
+                  :disable="post.userId !== storeAuth.user?.uid"
+                />
+              </q-card-actions>
             </q-card-section>
           </q-card>
         </template>
@@ -146,6 +176,7 @@
           <!---------------------comments ------------------------>
           <q-list bordered class="q-mb-md" v-if="comments.length">
             <q-item v-for="(comment, idx) in comments" :key="comment.id || idx">
+              <!-- Avatar and online status -->
               <q-item-section avatar>
                 <q-avatar size="32px">
                   <img :src="comment.avatarUrl || defaultAvatar" />
@@ -157,25 +188,96 @@
                   />
                 </q-avatar>
               </q-item-section>
+
+              <!-- Main text -->
               <q-item-section>
                 <q-item-label class="text-bold">
                   {{ comment.userName || comment.displayName || "User" }}
                 </q-item-label>
-                <q-item-label caption>{{ comment.text }}</q-item-label>
+
+                <!-- 👇 Inline Edit Mode -->
+                <div v-if="editingCommentId === comment.id">
+                  <q-input
+                    v-model="editedText"
+                    dense
+                    outlined
+                    autogrow
+                    autofocus
+                    @keyup.enter="submitEditedComment(comment.id)"
+                  />
+                  <div class="q-mt-xs">
+                    <q-btn
+                      flat
+                      dense
+                      color="primary"
+                      label="Save"
+                      @click="submitEditedComment(comment.id)"
+                    />
+                    <q-btn
+                      flat
+                      dense
+                      color="grey"
+                      label="Cancel"
+                      @click="editingCommentId = null"
+                    />
+                  </div>
+                </div>
+
+                <!-- 👇 Normal Display Mode -->
+                <div v-else>
+                  <q-item-label caption>{{ comment.text }}</q-item-label>
+                  <q-item-label caption class="text-grey-6">
+                    {{ new Date(comment.timestamp).toLocaleString() }}
+                    <span v-if="comment.edited">(edited)</span>
+                  </q-item-label>
+                </div>
               </q-item-section>
-              <!-- 🗑️ Delete Button (only for own comment) -->
+
+              <!-- ⋯ Action menu -->
               <q-item-section
                 side
                 v-if="comment.userId === storeAuth.user?.uid"
               >
-                <q-btn
-                  flat
-                  dense
-                  icon="delete"
-                  size="sm"
-                  color="negative"
-                  @click="confirmDeleteComment(comment.id)"
-                />
+                <q-btn round dense flat icon="more_vert" color="primary">
+                  <q-menu>
+                    <q-list style="min-width: 120px">
+                      <q-item
+                        clickable
+                        v-close-popup
+                        @click="startEditingComment(comment)"
+                      >
+                        <q-item-section avatar
+                          ><q-icon name="edit"
+                        /></q-item-section>
+                        <q-item-section>Edit</q-item-section>
+                      </q-item>
+
+                      <q-item
+                        clickable
+                        v-close-popup
+                        @click="confirmDeleteComment(comment.id)"
+                      >
+                        <q-item-section avatar
+                          ><q-icon name="delete"
+                        /></q-item-section>
+                        <q-item-section>Delete</q-item-section>
+                      </q-item>
+
+                      <q-item
+                        clickable
+                        v-close-popup
+                        @click="toggleCommentOffline(comment)"
+                      >
+                        <q-item-section avatar>
+                          <q-icon name="visibility_off" />
+                        </q-item-section>
+                        <q-item-section>
+                          {{ comment.online ? "Set Offline" : "Go Online" }}
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-menu>
+                </q-btn>
               </q-item-section>
             </q-item>
           </q-list>
@@ -242,6 +344,7 @@
         <q-scroll-area style="height: 60vh">
           <q-list>
             <q-item v-for="(comment, idx) in comments" :key="comment.id || idx">
+              <!-- Avatar with dot -->
               <q-item-section avatar>
                 <q-avatar size="32px">
                   <img :src="comment.avatarUrl || defaultAvatar" />
@@ -253,11 +356,36 @@
                   />
                 </q-avatar>
               </q-item-section>
+
+              <!-- Comment content -->
               <q-item-section>
                 <q-item-label class="text-bold">
                   {{ comment.userName || comment.displayName || "User" }}
                 </q-item-label>
-                <q-item-label caption>{{ comment.text }}</q-item-label>
+
+                <q-item-label caption>
+                  {{ comment.text }}
+                </q-item-label>
+
+                <!-- Timestamp -->
+                <q-item-label caption class="text-grey-6">
+                  {{ new Date(comment.timestamp).toLocaleString() }}
+                </q-item-label>
+              </q-item-section>
+
+              <!-- Delete button (owner only) -->
+              <q-item-section
+                side
+                v-if="comment.userId === storeAuth.user?.uid"
+              >
+                <q-btn
+                  dense
+                  flat
+                  icon="delete"
+                  color="negative"
+                  size="sm"
+                  @click="confirmDeleteComment(comment.id)"
+                />
               </q-item-section>
             </q-item>
           </q-list>
@@ -325,6 +453,10 @@ const storeAuth = useStoreAuth();
 const onlineUsers = ref([]);
 const comments = ref([]);
 const commentText = ref("");
+
+const editingCommentId = ref(null);
+const editedText = ref("");
+
 const postId = ref("global");
 const username = ref(storeAuth.user?.displayName || "User Name");
 const posts = ref([]);
@@ -445,6 +577,12 @@ const getPosts = () => {
         .then((response) => {
           posts.value = response.data;
           loadingPosts.value = false;
+
+          // ✅ Process posts and add visibilityTag
+          posts.value = response.data.map((post) => ({
+            ...post,
+            visibilityTag: post.tags?.includes("public") ? "public" : "private",
+          }));
         })
         .catch((err) => {
           console.error("Error fetching posts:", err);
@@ -490,7 +628,7 @@ const niceDate = (value) => {
     minute: "numeric",
   });
 };
-
+//------------------------------------------------comments----------------------
 function fetchComments(postId = "global") {
   console.log("📡 Fetching comments from DB...");
 
@@ -533,6 +671,9 @@ onMounted(() => {
       initPresenceTracking(); // 👈 make sure it's called here too
     }
   });
+  if (auth.currentUser) {
+    getPosts();
+  }
 });
 
 // Watch for storeAuth.user to be ready
@@ -573,7 +714,7 @@ async function fetchUserData(uid) {
     console.error("Error fetching avatar: ", error);
   }
 }
-//--------------------------------------------------------------
+//---------------------------------------user presence-----------------------
 async function fetchPresence() {
   console.log("🚀 fetchPresence() called");
 
@@ -615,7 +756,7 @@ async function fetchPresence() {
     console.log("✅ allUserMap updated with presence:", newUserMap);
   });
 }
-
+//------------------------Send Comments----------------------------------------
 async function sendComment() {
   const user = storeAuth.user; // ✅ Define this!
   if (!storeAuth.user || !commentText.value) return;
@@ -663,11 +804,98 @@ const userMap = computed(() => {
   return map;
 });
 
-const showCommentModal = ref(false);
+//------- Inline Edit ------------------------
 
-// function handleCommentClick() {
-//   showCommentModal.value = true; // ✅ Force it to open regardless of screen size
-// }
+function startEditingComment(comment) {
+  editingCommentId.value = comment.id;
+  editedText.value = comment.text;
+}
+
+//----------Submit--------------------------
+async function submitEditedComment(commentId) {
+  const token = await auth.currentUser.getIdToken();
+
+  try {
+    await apiNode.put(
+      "/api/comments/update",
+      {
+        commentId,
+        postId: "global", // or dynamic postId
+        newText: editedText.value,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    $q.notify({ type: "positive", message: "✏️ Comment updated" });
+    editingCommentId.value = null;
+  } catch (err) {
+    console.error("❌ Failed to update:", err);
+    $q.notify({ type: "negative", message: "Update failed" });
+  }
+}
+
+//----------------------------
+async function toggleCommentOffline(comment) {
+  const token = await auth.currentUser.getIdToken();
+
+  await apiNode.put(
+    "/api/comments/update",
+    {
+      commentId: comment.id,
+      postId: "global",
+      newText: comment.text,
+      online: !comment.online, // ✅ flip the boolean
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  // Optional instant UI update
+  comment.online = !comment.online;
+}
+
+//---------------updateVisibility-------------------------------
+async function updateVisibility(postId, visibility) {
+  const token = await auth.currentUser.getIdToken();
+  try {
+    await apiNode.put(
+      "/api/posts/visibility",
+      {
+        postId,
+        makePublic: visibility === "public",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    // 🔄 Update the post in local array
+    const index = posts.value.findIndex((p) => p.id === postId);
+    if (index !== -1) {
+      posts.value[index].visibilityTag = visibility;
+
+      // Optionally update tags too
+      posts.value[index].tags =
+        visibility === "public" ? ["public"] : ["private"];
+    }
+    $q.notify({ type: "positive", message: "Visibility updated" });
+  } catch (err) {
+    console.error("Failed to update visibility", err);
+    $q.notify({ type: "negative", message: "Failed to update visibility" });
+  }
+}
+
+//-----------------------------------------------
+
+const showCommentModal = ref(false);
 </script>
 
 <style scoped lang="scss">

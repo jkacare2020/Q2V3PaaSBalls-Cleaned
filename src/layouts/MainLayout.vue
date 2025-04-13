@@ -165,6 +165,7 @@ import { LocalStorage } from "quasar";
 import { collection, getDocs } from "firebase/firestore";
 import { db, auth, dbRealtime } from "src/firebase/init"; // ✅ Make sure it's the Firestore instance
 import { ref as dbRef, set } from "firebase/database";
+import { apiNode } from "boot/apiNode";
 
 const storeUsers = useStoreUsers();
 const storeAuth = useStoreAuth();
@@ -391,6 +392,20 @@ async function logout() {
     } catch (err) {
       console.warn("⚠️ Failed to update presence status:", err);
     }
+  }
+  try {
+    await apiNode.post(
+      "/api/comments/markOffline",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${await auth.currentUser.getIdToken()}`,
+        },
+      }
+    );
+    console.log("✅ Comments marked offline");
+  } catch (err) {
+    console.warn("⚠️ Failed to mark comments offline", err);
   }
 
   // ⚠️ Only logout AFTER presence is updated
