@@ -1,5 +1,6 @@
 <template>
   <q-page class="constrain q-pa-md">
+    <!-- left side post video box -->
     <div class="row q-col-gutter-lg">
       <div class="col-12 col-sm-8">
         <template v-if="!loadingPosts && videos.length">
@@ -49,6 +50,37 @@
               <div class="text-caption text-grey">
                 {{ niceDate(video.date) }}
               </div>
+              <!--------------badge---------------->
+              <q-badge
+                v-if="video.tags?.includes('public')"
+                label="Public"
+                color="green"
+                class="q-mt-sm"
+                rounded
+              />
+              <q-badge
+                v-else
+                label="Private"
+                color="grey"
+                class="q-mt-sm"
+                rounded
+              />
+              <q-card-actions align="right">
+                <q-select
+                  v-model="video.visibilityTag"
+                  :options="['public', 'private']"
+                  label="Visibility"
+                  dense
+                  emit-value
+                  map-options
+                  outlined
+                  style="max-width: 140px"
+                  @update:model-value="
+                    (value) => updateVisibility(video.id, value)
+                  "
+                  :disable="video.userId !== storeAuth.user?.uid"
+                />
+              </q-card-actions>
             </q-card-section>
           </q-card>
         </template>
@@ -105,34 +137,100 @@
                   />
                 </q-avatar>
               </q-item-section>
+
+              <!-- Main text -->
               <q-item-section>
                 <q-item-label class="text-bold">
                   {{ comment.userName || comment.displayName || "User" }}
                 </q-item-label>
-                <q-item-label caption>{{ comment.text }}</q-item-label>
+
+                <!-- 👇 Inline Edit Mode -->
+                <div v-if="editingCommentId === comment.id">
+                  <q-input
+                    v-model="editedText"
+                    dense
+                    outlined
+                    autogrow
+                    autofocus
+                    @keyup.enter="submitEditedComment(comment.id)"
+                  />
+                  <div class="q-mt-xs">
+                    <q-btn
+                      flat
+                      dense
+                      color="primary"
+                      label="Save"
+                      @click="submitEditedComment(comment.id)"
+                    />
+                    <q-btn
+                      flat
+                      dense
+                      color="grey"
+                      label="Cancel"
+                      @click="editingCommentId = null"
+                    />
+                  </div>
+                </div>
+
+                <!-- 👇 Normal Display Mode -->
+                <div v-else>
+                  <q-item-label caption>{{ comment.text }}</q-item-label>
+                  <q-item-label caption class="text-grey-6">
+                    {{ new Date(comment.timestamp).toLocaleString() }}
+                    <span v-if="comment.edited">(edited)</span>
+                  </q-item-label>
+                </div>
               </q-item-section>
-              <!-------------------Timestamp------------------------------------->
-              <!-- Timestamp -->
-              <q-item-label caption class="text-grey-6">
-                {{ new Date(comment.timestamp).toLocaleString() }}
-              </q-item-label>
-              <!-- 🗑️ Delete Button (only for own comment) -->
+
+              <!-- ⋯ Action menu -->
               <q-item-section
                 side
                 v-if="comment.userId === storeAuth.user?.uid"
               >
-                <q-btn
-                  flat
-                  dense
-                  icon="delete"
-                  size="sm"
-                  color="negative"
-                  @click="confirmDeleteComment(comment.id)"
-                />
+                <q-btn round dense flat icon="more_vert" color="primary">
+                  <q-menu>
+                    <q-list style="min-width: 120px">
+                      <q-item
+                        clickable
+                        v-close-popup
+                        @click="startEditingComment(comment)"
+                      >
+                        <q-item-section avatar
+                          ><q-icon name="edit"
+                        /></q-item-section>
+                        <q-item-section>Edit</q-item-section>
+                      </q-item>
+
+                      <q-item
+                        clickable
+                        v-close-popup
+                        @click="confirmDeleteComment(comment.id)"
+                      >
+                        <q-item-section avatar
+                          ><q-icon name="delete"
+                        /></q-item-section>
+                        <q-item-section>Delete</q-item-section>
+                      </q-item>
+
+                      <q-item
+                        clickable
+                        v-close-popup
+                        @click="toggleCommentOffline(comment)"
+                      >
+                        <q-item-section avatar>
+                          <q-icon name="visibility_off" />
+                        </q-item-section>
+                        <q-item-section>
+                          {{ comment.online ? "Set Offline" : "Go Online" }}
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-menu>
+                </q-btn>
               </q-item-section>
             </q-item>
           </q-list>
-
+          <!-------------------------------------------------------------------------------------->
           <div v-else class="text-caption q-mt-sm">❌ No comments yet.</div>
           <!-- Comment input -->
           <div class="q-mt-md">
@@ -269,13 +367,12 @@
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { useQuasar } from "quasar";
+
 import { auth, dbRealtime, db } from "src/firebase/init";
-import { collection, query, getDocs, doc, getDoc } from "firebase/firestore";
-import axios from "axios";
-// import defaultAvatar from "src/assets/avatar.jpg";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+
 import { useStoreAuth } from "src/stores/storeAuth";
-import { apiNode, nodeApiBaseURL } from "boot/apiNode";
+import { apiNode } from "boot/apiNode";
 import {
   onValue,
   ref as dbRef,
@@ -289,23 +386,29 @@ import { onAuthStateChanged } from "firebase/auth";
 import defaultAvatar from "src/assets/avatar.png";
 import { useRouter } from "vue-router";
 import { nextTick } from "vue";
+import { useQuasar } from "quasar";
+
+const router = useRouter();
+const storeAuth = useStoreAuth();
 
 const onlineUsers = ref([]);
 const comments = ref([]);
 const commentText = ref("");
 const postId = ref("global");
 const posts = ref([]);
+const editingCommentId = ref(null);
+const editedText = ref("");
 const allUserMap = ref({});
-
-const showNotificationsBanner = ref(false);
-
-const storeAuth = useStoreAuth();
 const videos = ref([]);
-const loadingPosts = ref(false);
-const isAuthenticated = ref(false);
-const avatarUrl = ref(defaultAvatar);
 const username = ref(storeAuth.user?.displayName || "User Name");
 const email = ref(storeAuth.user?.email || "user@example.com");
+
+const loadingPosts = ref(false);
+const showNotificationsBanner = ref(false);
+const isAuthenticated = ref(false);
+
+const avatarUrl = ref(defaultAvatar);
+
 const $q = useQuasar();
 
 //---------------------Modal open ---------------
@@ -366,7 +469,7 @@ function deleteComment(commentId) {
     });
 }
 
-//-----------------------------------------------------------------------
+//---------------------------Presence--------------------------------------------
 function initPresenceTracking() {
   if (!auth.currentUser) {
     console.warn("⚠️ No authenticated user for presence");
@@ -390,37 +493,7 @@ function initPresenceTracking() {
 
   console.log("🟢 Presence tracking initialized for:", userId);
 }
-
-function fetchComments(postId = "global") {
-  console.log("📡 Fetching comments from DB...");
-
-  const commentsRef = dbRef(dbRealtime, `comments/${postId}`);
-
-  onValue(commentsRef, (snapshot) => {
-    const data = snapshot.val();
-    console.log("🪵 Raw snapshot:", data);
-
-    if (data) {
-      const parsed = Object.entries(data).map(([key, value]) => ({
-        ...value,
-        id: key,
-      }));
-      comments.value = parsed.sort((a, b) => b.timestamp - a.timestamp);
-    } else {
-      comments.value = [];
-    }
-
-    console.log("🧾 Parsed comments:", comments.value);
-
-    // ✅ Auto-scroll to latest comment
-    nextTick(() => {
-      const scrollEl = document.querySelector(".q-scrollarea__container");
-      if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
-    });
-  });
-}
-
-// Fetch videos from backend
+// ----------Fetch videos from backend---------
 const getVideos = () => {
   if (!auth.currentUser) {
     console.warn("No authenticated user, skipping video retrieval.");
@@ -449,6 +522,21 @@ const getVideos = () => {
             message: "Could not download videos.",
           });
           loadingPosts.value = false;
+          // ✅ Process posts and add visibilityTag
+          posts.value = response.data.map((post) => ({
+            ...post,
+            visibilityTag: video.tags?.includes("public")
+              ? "public"
+              : "private",
+          }));
+        })
+        .catch((err) => {
+          console.error("Error fetching posts:", err);
+          $q.dialog({
+            title: "Error",
+            message: "Could not download posts.",
+          });
+          loadingPosts.value = false;
         });
     })
     .catch((error) => {
@@ -457,7 +545,7 @@ const getVideos = () => {
     });
 };
 
-// Delete video
+// ---------- Delete video --------------------------
 const deleteVideo = (videoId) => {
   console.log("Delete this Video triggered", videoId);
   auth.currentUser.getIdToken().then((idToken) => {
@@ -493,9 +581,56 @@ const niceDate = (value) => {
     minute: "numeric",
   });
 };
+//---------------------------------fetch comments----------------------------------
+function fetchComments(postId = "global") {
+  console.log("📡 Fetching comments from DB...");
+
+  const commentsRef = dbRef(dbRealtime, `comments/${postId}`);
+
+  onValue(commentsRef, (snapshot) => {
+    const data = snapshot.val();
+    console.log("🪵 Raw snapshot:", data);
+
+    if (data) {
+      const parsed = Object.entries(data).map(([key, value]) => ({
+        ...value,
+        id: key,
+      }));
+      comments.value = parsed.sort((a, b) => b.timestamp - a.timestamp);
+    } else {
+      comments.value = [];
+    }
+
+    console.log("🧾 Parsed comments:", comments.value);
+
+    // ✅ Auto-scroll to latest comment
+    nextTick(() => {
+      const scrollEl = document.querySelector(".q-scrollarea__container");
+      if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+    });
+  });
+}
 
 onMounted(() => {
   getVideos();
+});
+
+onMounted(() => {
+  if (auth.currentUser) {
+    initPresenceTracking();
+  }
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("👤 Auth state changed:", user.uid);
+      fetchUserData(user.uid);
+      getVideos();
+      fetchComments(); // ✅ called from here
+      initPresenceTracking(); // 👈 make sure it's called here too
+    }
+  });
+  if (auth.currentUser) {
+    getVideos();
+  }
 });
 
 onMounted(async () => {
@@ -521,21 +656,6 @@ onMounted(async () => {
   }
 });
 
-onMounted(() => {
-  if (auth.currentUser) {
-    initPresenceTracking();
-  }
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log("👤 Auth state changed:", user.uid);
-      fetchUserData(user.uid);
-      getVideos();
-      fetchComments(); // ✅ called from here
-      initPresenceTracking(); // 👈 make sure it's called here too
-    }
-  });
-});
-
 // Watch for storeAuth.user to be ready
 watch(
   () => storeAuth.user,
@@ -549,7 +669,7 @@ watch(
   },
   { immediate: true }
 );
-
+//---------------------user Data------------------------------
 async function fetchUserData(uid) {
   try {
     const userDocRef = doc(db, "users", uid);
@@ -574,7 +694,7 @@ async function fetchUserData(uid) {
     console.error("Error fetching avatar: ", error);
   }
 }
-//--------------------------------------------------------------
+//--------------------user presence-----------------------------------
 async function fetchPresence() {
   console.log("🚀 fetchPresence() called");
 
@@ -616,7 +736,7 @@ async function fetchPresence() {
     console.log("✅ allUserMap updated with presence:", newUserMap);
   });
 }
-
+//------------------------Send Comments----------------------------------------
 async function sendComment() {
   const user = storeAuth.user; // ✅ Define this!
   if (!storeAuth.user || !commentText.value) return;
@@ -655,7 +775,7 @@ async function sendComment() {
   );
   commentText.value = "";
 }
-
+//------------------------map-----------------------------
 const userMap = computed(() => {
   const map = {};
   for (const user of onlineUsers.value) {
@@ -663,6 +783,96 @@ const userMap = computed(() => {
   }
   return map;
 });
+//------- Inline Edit ------------------------
+
+function startEditingComment(comment) {
+  editingCommentId.value = comment.id;
+  editedText.value = comment.text;
+}
+
+//----------Submit--------------------------
+async function submitEditedComment(commentId) {
+  const token = await auth.currentUser.getIdToken();
+
+  try {
+    await apiNode.put(
+      "/api/comments/update",
+      {
+        commentId,
+        postId: "global", // or dynamic postId
+        newText: editedText.value,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    $q.notify({ type: "positive", message: "✏️ Comment updated" });
+    editingCommentId.value = null;
+  } catch (err) {
+    console.error("❌ Failed to update:", err);
+    $q.notify({ type: "negative", message: "Update failed" });
+  }
+}
+
+//------------------------------------------------
+async function toggleCommentOffline(comment) {
+  const token = await auth.currentUser.getIdToken();
+
+  await apiNode.put(
+    "/api/comments/update",
+    {
+      commentId: comment.id,
+      postId: "global",
+      newText: comment.text,
+      online: !comment.online, // ✅ flip the boolean
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  // Optional instant UI update
+  comment.online = !comment.online;
+}
+
+//---------------Video tag updateVisibility-------------------------------
+async function updateVisibility(videoId, visibility) {
+  const token = await auth.currentUser.getIdToken();
+  try {
+    await apiNode.put(
+      "/api/videos/visibility",
+      {
+        videoId,
+        makePublic: visibility === "public",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    // 🔄 Update the post in local array
+    const index = videos.value.findIndex((p) => p.id === videoId);
+    if (index !== -1) {
+      videos.value[index].visibilityTag = visibility;
+
+      // Optionally update tags too ----------------------
+      videos.value[index].tags =
+        visibility === "public" ? ["public"] : ["private"];
+    }
+    $q.notify({ type: "positive", message: "Visibility updated" });
+  } catch (err) {
+    console.error("Failed to update visibility", err);
+    $q.notify({ type: "negative", message: "Failed to update visibility" });
+  }
+}
+
+//-----------------------------------------------
 
 const showCommentModal = ref(false);
 </script>

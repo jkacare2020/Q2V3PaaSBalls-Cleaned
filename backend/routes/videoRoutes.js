@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { createVideoPost } = require("../controllers/createVideoController");
 const {
-  getVideoPostById,
+  togglePostVisibility,
   getVideos,
   deleteVideo,
 } = require("../controllers/videosController");
@@ -17,5 +17,7 @@ router.get("/videos/", getVideos);
 
 // Route to create a new video post
 router.post("/create-video-post", createVideoPost);
+// Route to create a new video visibility ---
+router.put("/videos/visibility", togglePostVisibility);
 
 module.exports = router;

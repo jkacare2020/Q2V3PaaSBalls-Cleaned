@@ -109,6 +109,7 @@ exports.createVideoPost = (req, res) => {
               date: parseInt(fields.date),
               videoUrl,
               userId,
+              tags: fields.tags ? fields.tags.split(",") : [],
             };
 
             dbFirestore

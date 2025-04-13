@@ -1,10 +1,12 @@
 <template>
+  <!--PageVideoCam.vue--->
   <q-page class="constrain-more q-pa-md">
     <div class="camera-frame q-pa-md">
       <video
         v-show="!videoCaptured"
         ref="video"
         class="full-width"
+        height="300"
         autoplay
         playsinline
       />
@@ -75,6 +77,19 @@
         </template>
       </q-input>
     </div>
+    <!---Tag input---->
+    <div class="row justify-center q-ma-md">
+      <q-select
+        v-model="post.tags"
+        :options="['public', 'private', 'certification']"
+        multiple
+        label="Tags"
+        outlined
+        dense
+        class="col col-sm-6"
+        use-chips
+      />
+    </div>
 
     <!-- Upload Button -->
     <div class="row justify-center q-mt-lg">
@@ -109,6 +124,7 @@ const post = reactive({
   location: "",
   video: null,
   date: Date.now(),
+  tags: [], // ✅ Add this field
 });
 
 const video = ref(null);
@@ -193,6 +209,7 @@ async function uploadVideo() {
   formData.append("location", post.location);
   formData.append("date", post.date);
   formData.append("video", post.video, `${post.id}.mp4`);
+  formData.append("tags", post.tags.join(",")); // ✅ Add this line
 
   try {
     $q.loading.show();
@@ -241,9 +258,32 @@ function locationError() {
 }
 </script>
 
-<style scoped>
-.camera-frame {
-  border: 2px solid var(--q-color-grey-10);
-  border-radius: 10px;
-}
+<style lang="sass">
+.camera-frame
+  border: 2px solid $grey-10
+  border-radius: 10px
+
+  // app global css in Sass form
+.text-grand-hotel
+  font-family: 'Grand Hotel', 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif
+
+.small-screen-only
+  @media (max-width: $breakpoint-xs-max)
+    display: block
+  @media (min-width: $breakpoint-sm-min)
+    display: none
+
+.large-screen-only
+  @media (max-width: $breakpoint-xs-max)
+    display: none
+  @media (min-width: $breakpoint-sm-min)
+    display: block
+
+.constrain
+  max-width: 975px
+  margin: 0 auto
+
+.constrain-more
+  max-width: 600px
+  margin: 0 auto
 </style>

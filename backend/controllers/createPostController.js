@@ -53,7 +53,7 @@ exports.createPost = async (req, res) => {
       if (!fileData.filepath) {
         return res.status(400).send("No file uploaded");
       }
-
+      //-------------make avatar from photo uploaded wit htag avatar ----------------
       try {
         let finalPath = fileData.filepath;
 

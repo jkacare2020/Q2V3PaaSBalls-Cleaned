@@ -94,7 +94,7 @@
             </q-item>
 
             <q-separator />
-
+            <!-- photo Display--->
             <q-img :src="post.imageUrl" />
 
             <q-card-section>
@@ -102,6 +102,7 @@
               <div class="text-caption text-grey">
                 {{ niceDate(post.date) }}
               </div>
+              <!-----------badge------------>
               <q-badge
                 v-if="post.tags?.includes('public')"
                 label="Public"
@@ -139,6 +140,7 @@
           <h5 class="text-center text-grey">No posts yet.</h5>
         </template>
         <template v-else>
+          <!-- Skeleton Loading -->
           <q-card flat bordered>
             <q-item>
               <q-item-section avatar>
@@ -195,7 +197,7 @@
                   {{ comment.userName || comment.displayName || "User" }}
                 </q-item-label>
 
-                <!-- 👇 Inline Edit Mode -->
+                <!-- 👇 Inline Edit Mode -3 dots -->
                 <div v-if="editingCommentId === comment.id">
                   <q-input
                     v-model="editedText"
@@ -281,7 +283,7 @@
               </q-item-section>
             </q-item>
           </q-list>
-
+          <!-------------------------------------------------------------------------------------->
           <div v-else class="text-caption q-mt-sm">❌ No comments yet.</div>
           <!-- Comment input -->
           <div class="q-mt-md">
@@ -430,8 +432,9 @@ import {
   serverTimestamp,
 } from "firebase/database";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { apiNode } from "boot/apiNode";
+
 import { useStoreAuth } from "src/stores/storeAuth";
+import { apiNode } from "boot/apiNode";
 
 import { watch } from "vue";
 import { onAuthStateChanged } from "firebase/auth";
@@ -447,27 +450,25 @@ const hasUnreadComments = computed(() => {
 });
 
 const router = useRouter();
-
 const storeAuth = useStoreAuth();
 
 const onlineUsers = ref([]);
 const comments = ref([]);
 const commentText = ref("");
-
+const postId = ref("global");
+const posts = ref([]);
 const editingCommentId = ref(null);
 const editedText = ref("");
+const allUserMap = ref({});
 
-const postId = ref("global");
 const username = ref(storeAuth.user?.displayName || "User Name");
-const posts = ref([]);
+const email = ref(storeAuth.user?.email || "user@example.com");
+
 const loadingPosts = ref(false);
 const showNotificationsBanner = ref(false);
 const isAuthenticated = ref(false);
+
 const avatarUrl = ref(defaultAvatar);
-
-const allUserMap = ref({});
-
-const email = ref(storeAuth.user?.email || "user@example.com");
 
 const $q = useQuasar();
 
@@ -532,7 +533,7 @@ function deleteComment(commentId) {
     });
 }
 
-//-----------------------------------------------------------------------
+//---------------------------------Presence--------------------------------------
 function initPresenceTracking() {
   if (!auth.currentUser) {
     console.warn("⚠️ No authenticated user for presence");
@@ -556,7 +557,7 @@ function initPresenceTracking() {
 
   console.log("🟢 Presence tracking initialized for:", userId);
 }
-//----------------------------------------------------------------------
+//--------------------------------Fetch Post photo--------------------------------------
 const getPosts = () => {
   if (!auth.currentUser) {
     console.warn("No authenticated user, skipping post retrieval.");
@@ -598,7 +599,7 @@ const getPosts = () => {
       loadingPosts.value = false;
     });
 };
-
+//----------------Delete Post-------------------------------
 const deletePost = (postId) => {
   auth.currentUser.getIdToken().then((idToken) => {
     apiNode
@@ -628,7 +629,7 @@ const niceDate = (value) => {
     minute: "numeric",
   });
 };
-//------------------------------------------------comments----------------------
+//--------------------fetch comments----------------------
 function fetchComments(postId = "global") {
   console.log("📡 Fetching comments from DB...");
 
@@ -689,7 +690,7 @@ watch(
   },
   { immediate: true }
 );
-
+//---------user Data--------------------
 async function fetchUserData(uid) {
   try {
     const userDocRef = doc(db, "users", uid);
@@ -795,7 +796,7 @@ async function sendComment() {
   );
   commentText.value = "";
 }
-
+//--------------------map-----------------
 const userMap = computed(() => {
   const map = {};
   for (const user of onlineUsers.value) {
@@ -838,7 +839,7 @@ async function submitEditedComment(commentId) {
   }
 }
 
-//----------------------------
+//--------------------------------------------
 async function toggleCommentOffline(comment) {
   const token = await auth.currentUser.getIdToken();
 
@@ -861,7 +862,7 @@ async function toggleCommentOffline(comment) {
   comment.online = !comment.online;
 }
 
-//---------------updateVisibility-------------------------------
+//---------------updateVisibility post-----------------------
 async function updateVisibility(postId, visibility) {
   const token = await auth.currentUser.getIdToken();
   try {
@@ -882,7 +883,7 @@ async function updateVisibility(postId, visibility) {
     if (index !== -1) {
       posts.value[index].visibilityTag = visibility;
 
-      // Optionally update tags too
+      // Optionally update tags for post too ------
       posts.value[index].tags =
         visibility === "public" ? ["public"] : ["private"];
     }
