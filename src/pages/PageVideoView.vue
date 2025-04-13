@@ -668,7 +668,7 @@ const showCommentModal = ref(false);
 </script>
 
 <style scoped lang="scss">
-> .delete-icon {
+.delete-icon {
   position: absolute;
   top: 8px;
   right: 8px;
