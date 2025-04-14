@@ -297,14 +297,14 @@ const navLinks = [
         link: "/videoCamera",
       },
       { title: "TTS/STT", icon: "eva-mic-outline", link: "/audios" },
-      { title: "Video", icon: "eva-film-outline", link: "/videos" },
+      { title: "Videos", icon: "eva-film-outline", link: "/videos" },
+      { title: "Photos", icon: "image", link: "/photos" },
 
       {
         title: "Audio Files",
         icon: "graphic_eq",
         link: "/audio-posts",
       },
-      { title: "Photos", icon: "image", link: "/photos" },
     ],
   },
   {
