@@ -50,6 +50,7 @@
               <div class="text-caption text-grey">
                 {{ niceDate(video.date) }}
               </div>
+
               <!--------------badge---------------->
               <q-badge
                 v-if="video.tags?.includes('public')"
@@ -64,6 +65,12 @@
                 color="grey"
                 class="q-mt-sm"
                 rounded
+              />
+              <q-badge
+                v-if="video.userId === storeAuth.user?.uid"
+                label="You"
+                color="primary"
+                class="q-ml-sm"
               />
               <q-card-actions align="right">
                 <q-select

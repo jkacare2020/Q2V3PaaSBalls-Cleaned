@@ -117,6 +117,12 @@
                 class="q-mt-sm"
                 rounded
               />
+              <q-badge
+                v-if="post.userId === storeAuth.user?.uid"
+                label="You"
+                color="primary"
+                class="q-ml-sm"
+              />
               <q-card-actions align="right">
                 <q-select
                   v-model="post.visibilityTag"
