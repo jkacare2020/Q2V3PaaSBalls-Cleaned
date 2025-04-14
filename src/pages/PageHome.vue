@@ -50,267 +50,278 @@
     <!-- left side post box -->
     <div class="row q-col-gutter-lg">
       <div class="col-12 col-sm-8">
-        <template v-if="!loadingPosts && posts.length">
-          <q-card
-            v-for="post in posts"
-            :key="post.id"
-            class="card-post q-mb-md"
-            :class="{ 'bg-red-1': post.offline }"
-            bordered
-            flat
-          >
-            <q-badge
-              v-if="post.offline"
-              class="badge-offline absolute-top-right"
-              color="red"
+        <q-scroll-area style="height: calc(100vh - 100px)">
+          <template v-if="!loadingPosts && posts.length">
+            <q-card
+              v-for="post in posts"
+              :key="post.id"
+              class="card-post q-mb-md"
+              :class="{ 'bg-red-1': post.offline }"
+              bordered
+              flat
             >
-              Stored offline
-            </q-badge>
-
-            <!-- New delete icon -->
-            <q-icon
-              name="delete"
-              color="red"
-              class="delete-icon absolute"
-              size="24px"
-              aria-label="Delete post"
-              @click="deletePost(post.id)"
-              tabindex="0"
-            />
-
-            <q-item>
-              <q-item-section avatar>
-                <q-avatar>
-                  <img :src="avatarUrl" :alt="username" />
-                </q-avatar>
-              </q-item-section>
-
-              <q-item-section>
-                <q-item-label class="text-bold">{{ username }}</q-item-label>
-                <q-item-label caption>
-                  {{ post.location }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-separator />
-            <!-- photo Display--->
-            <q-img :src="post.imageUrl" />
-
-            <q-card-section>
-              <div>{{ post.caption }}</div>
-              <div class="text-caption text-grey">
-                {{ niceDate(post.date) }}
-              </div>
-              <!-----------badge------------>
               <q-badge
-                v-if="post.tags?.includes('public')"
-                label="Public"
-                color="green"
-                class="q-mt-sm"
-                rounded
+                v-if="post.offline"
+                class="badge-offline absolute-top-right"
+                color="red"
+              >
+                Stored offline
+              </q-badge>
+
+              <!-- New delete icon -->
+              <q-icon
+                name="delete"
+                color="red"
+                class="delete-icon absolute"
+                size="24px"
+                aria-label="Delete post"
+                @click="deletePost(post.id)"
+                tabindex="0"
               />
-              <q-badge
-                v-else
-                label="Private"
-                color="grey"
-                class="q-mt-sm"
-                rounded
-              />
-              <q-badge
-                v-if="post.userId === storeAuth.user?.uid"
-                label="You"
-                color="primary"
-                class="q-ml-sm"
-              />
-              <q-card-actions align="right">
-                <q-select
-                  v-model="post.visibilityTag"
-                  :options="['public', 'private']"
-                  label="Visibility"
-                  dense
-                  emit-value
-                  map-options
-                  outlined
-                  style="max-width: 140px"
-                  @update:model-value="
-                    (value) => updateVisibility(post.id, value)
-                  "
-                  :disable="post.userId !== storeAuth.user?.uid"
+
+              <q-item>
+                <q-item-section avatar>
+                  <q-avatar>
+                    <img :src="avatarUrl" :alt="username" />
+                  </q-avatar>
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label class="text-bold">{{ username }}</q-item-label>
+                  <q-item-label caption>
+                    {{ post.location }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-separator />
+              <!-- photo Display--->
+              <q-img :src="post.imageUrl" />
+
+              <q-card-section>
+                <div>{{ post.caption }}</div>
+                <div class="text-caption text-grey">
+                  {{ niceDate(post.date) }}
+                </div>
+                <!-----------badge------------>
+                <q-badge
+                  v-if="post.tags?.includes('public')"
+                  label="Public"
+                  color="green"
+                  class="q-mt-sm"
+                  rounded
                 />
-              </q-card-actions>
-            </q-card-section>
-          </q-card>
-        </template>
-        <template v-else-if="!loadingPosts && !posts.length">
-          <h5 class="text-center text-grey">No posts yet.</h5>
-        </template>
-        <template v-else>
-          <!-- Skeleton Loading -->
-          <q-card flat bordered>
-            <q-item>
-              <q-item-section avatar>
-                <q-skeleton type="QAvatar" animation="fade" size="40px" />
-              </q-item-section>
+                <q-badge
+                  v-else
+                  label="Private"
+                  color="grey"
+                  class="q-mt-sm"
+                  rounded
+                />
+                <q-badge
+                  v-if="post.userId === storeAuth.user?.uid"
+                  label="You"
+                  color="primary"
+                  class="q-ml-sm"
+                />
+                <q-card-actions align="right">
+                  <q-select
+                    v-model="post.visibilityTag"
+                    :options="['public', 'private']"
+                    label="Visibility"
+                    dense
+                    emit-value
+                    map-options
+                    outlined
+                    style="max-width: 140px"
+                    @update:model-value="
+                      (value) => updateVisibility(post.id, value)
+                    "
+                    :disable="post.userId !== storeAuth.user?.uid"
+                  />
+                </q-card-actions>
+              </q-card-section>
+            </q-card>
+          </template>
+          <template v-else-if="!loadingPosts && !posts.length">
+            <h5 class="text-center text-grey">No posts yet.</h5>
+          </template>
+          <template v-else>
+            <!-- Skeleton Loading -->
+            <q-card flat bordered>
+              <q-item>
+                <q-item-section avatar>
+                  <q-skeleton type="QAvatar" animation="fade" size="40px" />
+                </q-item-section>
 
-              <q-item-section>
-                <q-item-label>
-                  <q-skeleton type="text" animation="fade" />
-                </q-item-label>
-                <q-item-label caption>
-                  <q-skeleton type="text" animation="fade" />
-                </q-item-label>
-              </q-item-section>
-            </q-item>
+                <q-item-section>
+                  <q-item-label>
+                    <q-skeleton type="text" animation="fade" />
+                  </q-item-label>
+                  <q-item-label caption>
+                    <q-skeleton type="text" animation="fade" />
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
 
-            <q-skeleton height="200px" square animation="fade" />
+              <q-skeleton height="200px" square animation="fade" />
 
-            <q-card-section>
-              <q-skeleton type="text" class="text-subtitle2" animation="fade" />
-              <q-skeleton
-                type="text"
-                width="50%"
-                class="text-subtitle2"
-                animation="fade"
-              />
-            </q-card-section>
-          </q-card>
-        </template>
+              <q-card-section>
+                <q-skeleton
+                  type="text"
+                  class="text-subtitle2"
+                  animation="fade"
+                />
+                <q-skeleton
+                  type="text"
+                  width="50%"
+                  class="text-subtitle2"
+                  animation="fade"
+                />
+              </q-card-section>
+            </q-card>
+          </template>
+        </q-scroll-area>
       </div>
 
       <!-- RIGHT: Presence + Comment input -->
       <div class="col-4 large-screen-only">
-        <q-card class="q-pa-md">
-          <!---------------------comments ------------------------>
-          <q-list bordered class="q-mb-md" v-if="comments.length">
-            <q-item v-for="(comment, idx) in comments" :key="comment.id || idx">
-              <!-- Avatar and online status -->
-              <q-item-section avatar>
-                <q-avatar size="32px">
-                  <img :src="comment.avatarUrl || defaultAvatar" />
-                  <q-badge
-                    rounded
-                    floating
-                    :color="comment.online ? 'green' : 'red'"
-                    class="presence-dot"
-                  />
-                </q-avatar>
-              </q-item-section>
-
-              <!-- Main text -->
-              <q-item-section>
-                <q-item-label class="text-bold">
-                  {{ comment.userName || comment.displayName || "User" }}
-                </q-item-label>
-
-                <!-- 👇 Inline Edit Mode -3 dots -->
-                <div v-if="editingCommentId === comment.id">
-                  <q-input
-                    v-model="editedText"
-                    dense
-                    outlined
-                    autogrow
-                    autofocus
-                    @keyup.enter="submitEditedComment(comment.id)"
-                  />
-                  <div class="q-mt-xs">
-                    <q-btn
-                      flat
-                      dense
-                      color="primary"
-                      label="Save"
-                      @click="submitEditedComment(comment.id)"
-                    />
-                    <q-btn
-                      flat
-                      dense
-                      color="grey"
-                      label="Cancel"
-                      @click="editingCommentId = null"
-                    />
-                  </div>
-                </div>
-
-                <!-- 👇 Normal Display Mode -->
-                <div v-else>
-                  <q-item-label caption>{{ comment.text }}</q-item-label>
-                  <q-item-label caption class="text-grey-6">
-                    {{ new Date(comment.timestamp).toLocaleString() }}
-                    <span v-if="comment.edited">(edited)</span>
-                  </q-item-label>
-                </div>
-              </q-item-section>
-
-              <!-- ⋯ Action menu -->
-              <q-item-section
-                side
-                v-if="comment.userId === storeAuth.user?.uid"
+        <q-scroll-area style="height: calc(100vh - 100px)">
+          <q-card class="q-pa-md">
+            <!---------------------comments ------------------------>
+            <q-list bordered class="q-mb-md" v-if="comments.length">
+              <q-item
+                v-for="(comment, idx) in comments"
+                :key="comment.id || idx"
               >
-                <q-btn round dense flat icon="more_vert" color="primary">
-                  <q-menu>
-                    <q-list style="min-width: 120px">
-                      <q-item
-                        clickable
-                        v-close-popup
-                        @click="startEditingComment(comment)"
-                      >
-                        <q-item-section avatar
-                          ><q-icon name="edit"
-                        /></q-item-section>
-                        <q-item-section>Edit</q-item-section>
-                      </q-item>
+                <!-- Avatar and online status -->
+                <q-item-section avatar>
+                  <q-avatar size="32px">
+                    <img :src="comment.avatarUrl || defaultAvatar" />
+                    <q-badge
+                      rounded
+                      floating
+                      :color="comment.online ? 'green' : 'red'"
+                      class="presence-dot"
+                    />
+                  </q-avatar>
+                </q-item-section>
 
-                      <q-item
-                        clickable
-                        v-close-popup
-                        @click="confirmDeleteComment(comment.id)"
-                      >
-                        <q-item-section avatar
-                          ><q-icon name="delete"
-                        /></q-item-section>
-                        <q-item-section>Delete</q-item-section>
-                      </q-item>
+                <!-- Main text -->
+                <q-item-section>
+                  <q-item-label class="text-bold">
+                    {{ comment.userName || comment.displayName || "User" }}
+                  </q-item-label>
 
-                      <q-item
-                        clickable
-                        v-close-popup
-                        @click="toggleCommentOffline(comment)"
-                      >
-                        <q-item-section avatar>
-                          <q-icon name="visibility_off" />
-                        </q-item-section>
-                        <q-item-section>
-                          {{ comment.online ? "Set Offline" : "Go Online" }}
-                        </q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
-              </q-item-section>
-            </q-item>
-          </q-list>
-          <!-------------------------------------------------------------------------------------->
-          <div v-else class="text-caption q-mt-sm">❌ No comments yet.</div>
-          <!-- Comment input -->
-          <div class="q-mt-md">
-            <q-input
-              filled
-              v-model="commentText"
-              label="Leave a comment..."
-              dense
-              type="textarea"
-              autogrow
-              @keyup.enter="sendComment"
-            />
-            <q-btn
-              class="q-mt-sm"
-              label="Send"
-              color="primary"
-              @click="sendComment"
-              :disable="!commentText"
-            />
-          </div>
-        </q-card>
+                  <!-- 👇 Inline Edit Mode -3 dots -->
+                  <div v-if="editingCommentId === comment.id">
+                    <q-input
+                      v-model="editedText"
+                      dense
+                      outlined
+                      autogrow
+                      autofocus
+                      @keyup.enter="submitEditedComment(comment.id)"
+                    />
+                    <div class="q-mt-xs">
+                      <q-btn
+                        flat
+                        dense
+                        color="primary"
+                        label="Save"
+                        @click="submitEditedComment(comment.id)"
+                      />
+                      <q-btn
+                        flat
+                        dense
+                        color="grey"
+                        label="Cancel"
+                        @click="editingCommentId = null"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- 👇 Normal Display Mode -->
+                  <div v-else>
+                    <q-item-label caption>{{ comment.text }}</q-item-label>
+                    <q-item-label caption class="text-grey-6">
+                      {{ new Date(comment.timestamp).toLocaleString() }}
+                      <span v-if="comment.edited">(edited)</span>
+                    </q-item-label>
+                  </div>
+                </q-item-section>
+
+                <!-- ⋯ Action menu -->
+                <q-item-section
+                  side
+                  v-if="comment.userId === storeAuth.user?.uid"
+                >
+                  <q-btn round dense flat icon="more_vert" color="primary">
+                    <q-menu>
+                      <q-list style="min-width: 120px">
+                        <q-item
+                          clickable
+                          v-close-popup
+                          @click="startEditingComment(comment)"
+                        >
+                          <q-item-section avatar
+                            ><q-icon name="edit"
+                          /></q-item-section>
+                          <q-item-section>Edit</q-item-section>
+                        </q-item>
+
+                        <q-item
+                          clickable
+                          v-close-popup
+                          @click="confirmDeleteComment(comment.id)"
+                        >
+                          <q-item-section avatar
+                            ><q-icon name="delete"
+                          /></q-item-section>
+                          <q-item-section>Delete</q-item-section>
+                        </q-item>
+
+                        <q-item
+                          clickable
+                          v-close-popup
+                          @click="toggleCommentOffline(comment)"
+                        >
+                          <q-item-section avatar>
+                            <q-icon name="visibility_off" />
+                          </q-item-section>
+                          <q-item-section>
+                            {{ comment.online ? "Set Offline" : "Go Online" }}
+                          </q-item-section>
+                        </q-item>
+                      </q-list>
+                    </q-menu>
+                  </q-btn>
+                </q-item-section>
+              </q-item>
+            </q-list>
+            <!-------------------------------------------------------------------------------------->
+            <div v-else class="text-caption q-mt-sm">❌ No comments yet.</div>
+            <!-- Comment input -->
+            <div class="q-mt-md">
+              <q-input
+                filled
+                v-model="commentText"
+                label="Leave a comment..."
+                dense
+                type="textarea"
+                autogrow
+                @keyup.enter="sendComment"
+              />
+              <q-btn
+                class="q-mt-sm"
+                label="Send"
+                color="primary"
+                @click="sendComment"
+                :disable="!commentText"
+              />
+            </div>
+          </q-card>
+        </q-scroll-area>
       </div>
     </div>
 
