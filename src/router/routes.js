@@ -208,6 +208,12 @@ const routes = [
         path: "/upload-success",
         component: () => import("pages/feature/py_SuccessfulPage.vue"),
       },
+      // router/index.js or wherever you define routes
+      {
+        path: "/replies/:postId/:commentId",
+        name: "PageReplies",
+        component: () => import("pages/PageReplies.vue"),
+      },
     ],
   },
 

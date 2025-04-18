@@ -26,6 +26,10 @@ exports.createPost = async (req, res) => {
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const userId = decodedToken.uid;
+    // Fetch user info for displayName and userName
+    const userDoc = await dbFirestore.collection("users").doc(userId).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+
     console.log("Authenticated userId:", userId);
 
     const uuid = UUID();
@@ -85,6 +89,8 @@ exports.createPost = async (req, res) => {
           imageUrl,
           userId,
           tags: fields.tags ? fields.tags.split(",") : [],
+          userName: userData.userName || "", // 👈 add this
+          displayName: userData.displayName || "User", // 👈 and this
         };
 
         await dbFirestore.collection("posts").doc(fields.id).set(postData);

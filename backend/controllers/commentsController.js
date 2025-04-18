@@ -39,6 +39,7 @@ exports.addComment = async (req, res) => {
     // ✅ 4. Save comment
     const commentRef = admin.database().ref(`comments/${postId}`).push();
     await commentRef.set({
+      postId, // ✅ this! postId
       userId,
       text,
       timestamp: Date.now(),

@@ -67,17 +67,25 @@
               >
                 Stored offline
               </q-badge>
-
-              <!-- New delete icon -->
-              <q-icon
-                name="delete"
-                color="red"
-                class="delete-icon absolute"
-                size="24px"
-                aria-label="Delete post"
-                @click="deletePost(post.id)"
-                tabindex="0"
-              />
+              <!-- Post action icons (top-right) -->
+              <div class="post-icons-top-right q-mr-lg">
+                <q-icon
+                  name="chat"
+                  color="primary"
+                  size="24px"
+                  aria-label="Comment on post"
+                  @click="startCommentForPost(post)"
+                >
+                  <q-icon
+                    name="delete"
+                    color="red"
+                    size="24px"
+                    aria-label="Delete post"
+                    @click="deletePost(post.id)"
+                  />
+                  <q-tooltip>Comment</q-tooltip>
+                </q-icon>
+              </div>
 
               <q-item>
                 <q-item-section avatar>
@@ -243,6 +251,22 @@
 
                   <!-- 👇 Normal Display Mode -->
                   <div v-else>
+                    <q-item-label caption v-if="comment.replyTo">
+                      🧵 Reply to another comment
+                    </q-item-label>
+                    <q-btn
+                      flat
+                      dense
+                      label="View thread"
+                      color="primary"
+                      size="sm"
+                      @click="
+                        $router.push(
+                          `/replies/${comment.postId}/${comment.replyTo}`
+                        )
+                      "
+                    />
+
                     <q-item-label caption>{{ comment.text }}</q-item-label>
                     <q-item-label caption class="text-grey-6">
                       {{ new Date(comment.timestamp).toLocaleString() }}
@@ -252,14 +276,13 @@
                 </q-item-section>
 
                 <!-- ⋯ Action menu -->
-                <q-item-section
-                  side
-                  v-if="comment.userId === storeAuth.user?.uid"
-                >
+                <q-item-section side>
                   <q-btn round dense flat icon="more_vert" color="primary">
                     <q-menu>
-                      <q-list style="min-width: 120px">
+                      <q-list style="min-width: 140px">
+                        <!-- ✏️ Edit (only if owner) -->
                         <q-item
+                          v-if="comment.userId === storeAuth.user?.uid"
                           clickable
                           v-close-popup
                           @click="startEditingComment(comment)"
@@ -270,7 +293,9 @@
                           <q-item-section>Edit</q-item-section>
                         </q-item>
 
+                        <!-- 🗑️ Delete (only if owner) -->
                         <q-item
+                          v-if="comment.userId === storeAuth.user?.uid"
                           clickable
                           v-close-popup
                           @click="confirmDeleteComment(comment.id)"
@@ -281,17 +306,32 @@
                           <q-item-section>Delete</q-item-section>
                         </q-item>
 
+                        <!-- 🟢 Go Online/Offline (only if owner) -->
                         <q-item
+                          v-if="comment.userId === storeAuth.user?.uid"
                           clickable
                           v-close-popup
                           @click="toggleCommentOffline(comment)"
                         >
-                          <q-item-section avatar>
-                            <q-icon name="visibility_off" />
-                          </q-item-section>
+                          <q-item-section avatar
+                            ><q-icon name="visibility_off"
+                          /></q-item-section>
                           <q-item-section>
                             {{ comment.online ? "Set Offline" : "Go Online" }}
                           </q-item-section>
+                        </q-item>
+
+                        <!-- 💬 Reply (always available if logged in) -->
+                        <q-item
+                          v-if="storeAuth.user"
+                          clickable
+                          v-close-popup
+                          @click="goToReplies(comment)"
+                        >
+                          <q-item-section avatar>
+                            <q-icon name="reply" />
+                          </q-item-section>
+                          <q-item-section>Reply</q-item-section>
                         </q-item>
                       </q-list>
                     </q-menu>
@@ -299,6 +339,7 @@
                 </q-item-section>
               </q-item>
             </q-list>
+
             <!-------------------------------------------------------------------------------------->
             <div v-else class="text-caption q-mt-sm">❌ No comments yet.</div>
             <!-- Comment input -->
@@ -472,6 +513,7 @@ const storeAuth = useStoreAuth();
 const onlineUsers = ref([]);
 const comments = ref([]);
 const commentText = ref("");
+const replyTo = ref(null); // 👈 Add this line for comment reply
 const postId = ref("global");
 const posts = ref([]);
 const editingCommentId = ref(null);
@@ -484,6 +526,7 @@ const email = ref(storeAuth.user?.email || "user@example.com");
 const loadingPosts = ref(false);
 const showNotificationsBanner = ref(false);
 const isAuthenticated = ref(false);
+const showCommentModal = ref(false);
 
 const avatarUrl = ref(defaultAvatar);
 
@@ -647,12 +690,40 @@ const niceDate = (value) => {
   });
 };
 //--------------------fetch comments----------------------
+// function fetchComments(postId = "global") {
+//   console.log("📡 Fetching comments from DB...");
+
+//   const commentsRef = dbRef(dbRealtime, `comments/${postId}`);
+
+//   onValue(commentsRef, (snapshot) => {
+//     const data = snapshot.val();
+//     console.log("🪵 Raw snapshot:", data);
+
+//     if (data) {
+//       const parsed = Object.entries(data).map(([key, value]) => ({
+//         ...value,
+//         id: key,
+//       }));
+//       comments.value = parsed.sort((a, b) => b.timestamp - a.timestamp);
+//     } else {
+//       comments.value = [];
+//     }
+
+//     console.log("🧾 Parsed comments:", comments.value);
+
+//     // ✅ Auto-scroll to latest comment
+//     nextTick(() => {
+//       const scrollEl = document.querySelector(".q-scrollarea__container");
+//       if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+//     });
+//   });
+// }
 function fetchComments(postId = "global") {
   console.log("📡 Fetching comments from DB...");
 
   const commentsRef = dbRef(dbRealtime, `comments/${postId}`);
 
-  onValue(commentsRef, (snapshot) => {
+  onValue(commentsRef, async (snapshot) => {
     const data = snapshot.val();
     console.log("🪵 Raw snapshot:", data);
 
@@ -661,6 +732,26 @@ function fetchComments(postId = "global") {
         ...value,
         id: key,
       }));
+
+      // ✅ Enrich avatars asynchronously
+      await Promise.all(
+        parsed.map(async (comment) => {
+          if (!comment.avatarUrl || comment.avatarUrl === "") {
+            try {
+              const avatarSnap = await getDocs(
+                collection(db, `users/${comment.userId}/avatar`)
+              );
+              if (!avatarSnap.empty) {
+                comment.avatarUrl =
+                  avatarSnap.docs[0].data().imageUrl || defaultAvatar;
+              }
+            } catch (err) {
+              console.warn(`Could not fetch avatar for ${comment.userId}`);
+            }
+          }
+        })
+      );
+
       comments.value = parsed.sort((a, b) => b.timestamp - a.timestamp);
     } else {
       comments.value = [];
@@ -798,21 +889,28 @@ async function sendComment() {
   }
 
   const token = await auth.currentUser.getIdToken();
-
-  await apiNode.post(
-    "/api/comments/add",
-    {
-      postId: postId.value,
-      text: commentText.value,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
+  try {
+    await apiNode.post(
+      "/api/comments/add",
+      {
+        postId: postId.value,
+        text: commentText.value,
+        replyTo: replyTo.value || null, // 🧠 Send null unless replying a comment
       },
-    }
-  );
-  commentText.value = "";
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    $q.notify({ type: "positive", message: "Comment posted ✅" });
+    resetCommentBox(); // 👈 Clears postId, replyTo, and input
+  } catch (error) {
+    console.error("❌ Comment post failed:", error);
+    $q.notify({ type: "negative", message: "Failed to post comment." });
+  }
 }
+
 //--------------------map-----------------
 const userMap = computed(() => {
   const map = {};
@@ -821,6 +919,12 @@ const userMap = computed(() => {
   }
   return map;
 });
+//--------------------------
+function resetCommentBox() {
+  commentText.value = "";
+  postId.value = "global";
+  replyTo.value = null;
+}
 
 //------- Inline Edit ------------------------
 
@@ -910,10 +1014,62 @@ async function updateVisibility(postId, visibility) {
     $q.notify({ type: "negative", message: "Failed to update visibility" });
   }
 }
+//------------------Send a comment to a post selected -----------------------------
+function startCommentForPost(post) {
+  // 🟢 Fallback order: userName → displayName → "User"
+  const name = post.userName || post.displayName || "User";
+
+  commentText.value = `@${name} `;
+  postId.value = post.id;
+  replyTo.value = null;
+  editingCommentId.value = null;
+
+  if ($q.screen.lt.md) {
+    showCommentModal.value = true;
+  } else {
+    nextTick(() => {
+      document.querySelector("#general-comment-input")?.focus();
+    });
+  }
+}
+//--------------Group by postId------------------
+const groupedComments = computed(() => {
+  const map = {};
+  for (const c of comments.value) {
+    const pid = c.postId || "global";
+    if (!map[pid]) map[pid] = [];
+    map[pid].push(c);
+  }
+
+  // Sort comments within each group
+  Object.keys(map).forEach((pid) => {
+    map[pid].sort((a, b) => a.timestamp - b.timestamp);
+  });
+
+  return map;
+});
+//-------------------------------------------------
+const repliesByCommentId = computed(() => {
+  const grouped = {};
+  for (const comment of comments.value) {
+    if (comment.replyTo) {
+      if (!grouped[comment.replyTo]) grouped[comment.replyTo] = [];
+      grouped[comment.replyTo].push(comment);
+    }
+  }
+  return grouped;
+});
 
 //-----------------------------------------------
-
-const showCommentModal = ref(false);
+function goToReplies(comment) {
+  router.push({
+    name: "PageReplies",
+    params: {
+      postId: comment.postId || "global",
+      commentId: comment.id,
+    },
+  });
+}
 </script>
 
 <style scoped lang="scss">
@@ -945,5 +1101,18 @@ const showCommentModal = ref(false);
 }
 .q-dialog__inner--top {
   align-items: flex-end;
+}
+
+.post-icons-top-right {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+
+  q-icon {
+    cursor: pointer;
+  }
 }
 </style>
