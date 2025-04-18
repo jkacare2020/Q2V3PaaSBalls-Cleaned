@@ -49,7 +49,7 @@ import { useQuasar } from "quasar";
 
 import defaultAvatar from "src/assets/avatar.png";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import { db } from "src/firebase/init"; // ✅ your Firestore instance
+import { db } from "src/firebase/init";
 
 const avatarUrl = ref(defaultAvatar);
 const username = ref("User");
@@ -66,7 +66,6 @@ const comments = ref([]);
 const replyText = ref("");
 const rootComment = ref(null);
 
-//------------------User data----------------
 async function fetchUserData(uid) {
   try {
     const userDocRef = doc(db, "users", uid);
@@ -93,13 +92,15 @@ async function fetchUserData(uid) {
       if (storeAuth.user) {
         storeAuth.user.avatarUrl = url;
       }
+    } else {
+      avatarUrl.value = defaultAvatar;
     }
   } catch (error) {
     console.error("Error fetching avatar: ", error);
+    avatarUrl.value = defaultAvatar;
   }
 }
 
-//------------------------------------------------------
 async function fetchComments() {
   const commentsRef = dbRef(dbRealtime, `comments/${postId}`);
   onValue(
@@ -111,7 +112,6 @@ async function fetchComments() {
         ...value,
       }));
 
-      // Enrich avatar per comment
       await Promise.all(
         parsed.map(async (comment) => {
           if (!comment.avatarUrl || comment.avatarUrl === "") {
@@ -124,9 +124,12 @@ async function fetchComments() {
               if (!avatarSnapshot.empty) {
                 comment.avatarUrl =
                   avatarSnapshot.docs[0].data().imageUrl || defaultAvatar;
+              } else {
+                comment.avatarUrl = defaultAvatar;
               }
             } catch (err) {
               console.warn(`Could not fetch avatar for ${comment.userId}`);
+              comment.avatarUrl = defaultAvatar;
             }
           }
         })
@@ -171,7 +174,7 @@ async function submitReply() {
   if (!replyText.value.trim()) return;
 
   const user = storeAuth.user;
-  await fetchUserData(user.uid); // 💡 Ensure fresh data
+  await fetchUserData(user.uid);
 
   const newComment = {
     text: replyText.value,
