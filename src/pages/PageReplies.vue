@@ -17,6 +17,7 @@
         :comment="rootComment"
         :repliesByCommentId="repliesByCommentId"
         :level="0"
+        :getUserName="getUserName"
       />
 
       <!-- Reply input -->
@@ -169,6 +170,11 @@ const repliesByCommentId = computed(() => {
   }
   return grouped;
 });
+
+const getUserName = (replyToId) => {
+  const comment = comments.value.find((c) => c.id === replyToId);
+  return comment?.userName || "User";
+};
 
 async function submitReply() {
   if (!replyText.value.trim()) return;

@@ -196,7 +196,7 @@
       <div class="col-4 large-screen-only">
         <q-scroll-area style="height: calc(100vh - 100px)">
           <q-card class="q-pa-md">
-            <!---------------------comments ------------------------>
+            <!---------------------comments list------------------------>
             <q-list bordered class="q-mb-md" v-if="comments.length">
               <q-item
                 v-for="(comment, idx) in comments"
@@ -251,23 +251,64 @@
 
                   <!-- 👇 Normal Display Mode -->
                   <div v-else>
-                    <q-item-label caption v-if="comment.replyTo">
-                      🧵 Reply to another comment
+                    <!-- 🧵 If it's a reply comment  Reply indicator -->
+                    <template v-if="comment.replyTo">
+                      <q-item-label caption>
+                        🧵 Reply to another comment
+                      </q-item-label>
+                      <q-btn
+                        flat
+                        dense
+                        label="View thread"
+                        color="primary"
+                        size="sm"
+                        @click="
+                          $router.push(
+                            `/replies/${comment.postId}/${comment.replyTo}`
+                          )
+                        "
+                      />
+                      <q-icon name="reply" />
+                    </template>
+                    <!-------------------------------------------------------------------->
+                    <!-- Render mentions with router-link and popover -->
+                    <!-- Render mentions as inline chips with popovers -->
+                    <q-item-label caption>
+                      <template
+                        v-for="(part, i) in comment.parsedText"
+                        :key="i"
+                      >
+                        <span v-if="part.isMention">
+                          <q-chip
+                            clickable
+                            square
+                            class="mention-chip"
+                            @click="
+                              $router.push(`/profile/${part.text.substring(1)}`)
+                            "
+                          >
+                            <q-tooltip
+                              >View profile of {{ part.text }}</q-tooltip
+                            >
+                            {{ part.text }}
+                          </q-chip>
+                        </span>
+                        <span v-else>{{ part.text }}</span>
+                      </template>
                     </q-item-label>
-                    <q-btn
-                      flat
-                      dense
-                      label="View thread"
-                      color="primary"
-                      size="sm"
-                      @click="
-                        $router.push(
-                          `/replies/${comment.postId}/${comment.replyTo}`
-                        )
-                      "
-                    />
 
-                    <q-item-label caption>{{ comment.text }}</q-item-label>
+                    <!------------------- 🏷️ Mention ----------------------------------->
+                    <q-item-label caption v-if="comment.text.includes('@')">
+                      🧵 Mentioned:
+                      <span class="text-bold">{{ comment.text }}</span>
+                    </q-item-label>
+
+                    <!-- 📝 Normal comment (if no replyTo and no @mention) -->
+                    <q-item-label caption v-else>
+                      {{ comment.text }}
+                    </q-item-label>
+
+                    <!-- ⏰ Timestamp -->
                     <q-item-label caption class="text-grey-6">
                       {{ new Date(comment.timestamp).toLocaleString() }}
                       <span v-if="comment.edited">(edited)</span>
@@ -340,7 +381,7 @@
               </q-item>
             </q-list>
 
-            <!-------------------------------------------------------------------------------------->
+            <!-----------------------------------general commend input--------------------------------------------------->
             <div v-else class="text-caption q-mt-sm">❌ No comments yet.</div>
             <!-- Comment input -->
             <div class="q-mt-md">
@@ -535,6 +576,10 @@ const $q = useQuasar();
 const serviceWorkerSupported = computed(() => "serviceWorker" in navigator);
 const pushNotificationsSupported = computed(() => "PushManager" in window);
 
+const topLevelComments = computed(() =>
+  comments.value.filter((c) => !c.replyTo)
+);
+
 //---------------------Modal open ---------------
 function openActionSheet() {
   $q.bottomSheet({
@@ -690,39 +735,9 @@ const niceDate = (value) => {
   });
 };
 //--------------------fetch comments----------------------
-// function fetchComments(postId = "global") {
-//   console.log("📡 Fetching comments from DB...");
-
-//   const commentsRef = dbRef(dbRealtime, `comments/${postId}`);
-
-//   onValue(commentsRef, (snapshot) => {
-//     const data = snapshot.val();
-//     console.log("🪵 Raw snapshot:", data);
-
-//     if (data) {
-//       const parsed = Object.entries(data).map(([key, value]) => ({
-//         ...value,
-//         id: key,
-//       }));
-//       comments.value = parsed.sort((a, b) => b.timestamp - a.timestamp);
-//     } else {
-//       comments.value = [];
-//     }
-
-//     console.log("🧾 Parsed comments:", comments.value);
-
-//     // ✅ Auto-scroll to latest comment
-//     nextTick(() => {
-//       const scrollEl = document.querySelector(".q-scrollarea__container");
-//       if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
-//     });
-//   });
-// }
 function fetchComments(postId = "global") {
   console.log("📡 Fetching comments from DB...");
-
   const commentsRef = dbRef(dbRealtime, `comments/${postId}`);
-
   onValue(commentsRef, async (snapshot) => {
     const data = snapshot.val();
     console.log("🪵 Raw snapshot:", data);
@@ -798,7 +813,7 @@ watch(
   },
   { immediate: true }
 );
-//---------user Data--------------------
+//---------  user Data  --------------------
 async function fetchUserData(uid) {
   try {
     const userDocRef = doc(db, "users", uid);
@@ -1014,13 +1029,13 @@ async function updateVisibility(postId, visibility) {
     $q.notify({ type: "negative", message: "Failed to update visibility" });
   }
 }
-//------------------Send a comment to a post selected -----------------------------
+//------------------Send a comment for a post selected -----------------------------
 function startCommentForPost(post) {
   // 🟢 Fallback order: userName → displayName → "User"
   const name = post.userName || post.displayName || "User";
 
   commentText.value = `@${name} `;
-  postId.value = post.id;
+  postId.value = "global";
   replyTo.value = null;
   editingCommentId.value = null;
 
@@ -1070,6 +1085,14 @@ function goToReplies(comment) {
     },
   });
 }
+//--------------------------------------------------
+function parseMention(text) {
+  const parts = text.split(/(@\w+)/g); // captures @mentions
+  return parts.map((part) => ({
+    text: part,
+    isMention: part.startsWith("@"),
+  }));
+}
 </script>
 
 <style scoped lang="scss">
@@ -1114,5 +1137,29 @@ function goToReplies(comment) {
   q-icon {
     cursor: pointer;
   }
+}
+
+.mention-chip {
+  display: inline-block;
+  background: #e0f7fa;
+  color: #00796b;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-right: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
+}
+.mention-chip:hover {
+  background-color: #b2dfdb;
+  text-decoration: underline;
+}
+.presence-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
 }
 </style>

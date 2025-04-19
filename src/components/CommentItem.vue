@@ -21,8 +21,8 @@
 
         <!-- Optional reply context -->
         <q-item-label caption v-if="comment.replyTo && getUserName">
-          <q-icon name="reply" size="16px" color="grey" class="q-mr-xs" />
           Replying to <strong>{{ getUserName(comment.replyTo) }}</strong>
+          <q-icon name="reply" size="16px" color="grey" class="q-mr-xs" />
         </q-item-label>
 
         <q-item-label caption>{{ comment.text }}</q-item-label>
