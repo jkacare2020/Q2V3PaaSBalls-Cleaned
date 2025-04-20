@@ -271,7 +271,6 @@
                       <q-icon name="reply" />
                     </template>
                     <!-------------------------------------------------------------------->
-                    <!-- Render mentions with router-link and popover -->
                     <!-- Render mentions as inline chips with popovers -->
                     <q-item-label caption>
                       <template
@@ -283,9 +282,7 @@
                             clickable
                             square
                             class="mention-chip"
-                            @click="
-                              $router.push(`/profile/${part.text.substring(1)}`)
-                            "
+                            @click="goToProfile(part.text)"
                           >
                             <q-tooltip
                               >View profile of {{ part.text }}</q-tooltip
@@ -295,17 +292,6 @@
                         </span>
                         <span v-else>{{ part.text }}</span>
                       </template>
-                    </q-item-label>
-
-                    <!------------------- 🏷️ Mention ----------------------------------->
-                    <q-item-label caption v-if="comment.text.includes('@')">
-                      🧵 Mentioned:
-                      <span class="text-bold">{{ comment.text }}</span>
-                    </q-item-label>
-
-                    <!-- 📝 Normal comment (if no replyTo and no @mention) -->
-                    <q-item-label caption v-else>
-                      {{ comment.text }}
                     </q-item-label>
 
                     <!-- ⏰ Timestamp -->
@@ -549,6 +535,7 @@ const hasUnreadComments = computed(() => {
 });
 
 const router = useRouter();
+
 const storeAuth = useStoreAuth();
 
 const onlineUsers = ref([]);
@@ -746,6 +733,7 @@ function fetchComments(postId = "global") {
       const parsed = Object.entries(data).map(([key, value]) => ({
         ...value,
         id: key,
+        parsedText: parseMention(value.text),
       }));
 
       // ✅ Enrich avatars asynchronously
@@ -1086,6 +1074,14 @@ function goToReplies(comment) {
   });
 }
 //--------------------------------------------------
+function goToProfile(mentionText) {
+  const username = mentionText.startsWith("@")
+    ? mentionText.substring(1)
+    : mentionText;
+  router.push(`/profile/${username}`);
+}
+
+//-----------------------------------------------
 function parseMention(text) {
   const parts = text.split(/(@\w+)/g); // captures @mentions
   return parts.map((part) => ({
