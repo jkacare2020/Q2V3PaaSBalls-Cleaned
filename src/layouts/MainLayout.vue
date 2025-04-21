@@ -369,7 +369,7 @@ function toggleLeftDrawer() {
 // Go to profile page of the logged-in user
 function goToProfile() {
   if (storeAuth.user) {
-    router.push("/profile"); // Redirects to the User Profile page
+    router.push("/profile/edit/"); // Redirects to the User Profile page
     dropdownOpen.value = false; // Ensure dropdown closes
   } else {
     console.error("User is not logged in");

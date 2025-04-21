@@ -1,4 +1,5 @@
 <template>
+  <!--ViewUserList.vue  -->
   <q-page class="q-pa-md">
     <q-card class="q-pa-md">
       <q-card-section>
@@ -23,7 +24,18 @@
                 color="primary"
                 @click="openUserProfile(props.row.id)"
                 aria-label="Edit Profile"
-              />
+              /><q-tooltip>Edit User</q-tooltip>
+
+              <q-btn
+                flat
+                round
+                dense
+                icon="delete"
+                color="red"
+                @click="deleteUser(props.row.id)"
+              >
+                <q-tooltip>Delete User</q-tooltip>
+              </q-btn>
             </q-td>
           </template>
         </q-table>
@@ -36,7 +48,11 @@
 import { computed, onMounted } from "vue";
 import { useStoreUsers } from "src/stores/storeUsers";
 import { useRouter } from "vue-router";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "src/firebase/init";
+import { useQuasar } from "quasar";
 
+const $q = useQuasar();
 const storeUsers = useStoreUsers();
 const router = useRouter();
 const isAdmin = computed(() => storeUsers.user?.role === "admin");
@@ -91,6 +107,12 @@ const columns = [
     field: "companyName",
   },
   {
+    name: "UserName",
+    label: "User Name",
+    align: "left",
+    field: "userName",
+  },
+  {
     name: "actions",
     label: "Actions",
     align: "left",
@@ -100,6 +122,30 @@ const columns = [
 ];
 
 function openUserProfile(userId) {
-  router.push(`/profile/${userId}`); // Navigate to UserProfile page with the user's ID
+  router.push(`/profile/edit/${userId}`); // Navigate to UserProfile page with the user's ID
 }
+
+const deleteUser = async (userId) => {
+  $q.dialog({
+    title: "Delete User",
+    message: "Are you sure you want to delete this user?",
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const userRef = doc(db, "users", userId);
+      await deleteDoc(userRef);
+      $q.notify({ type: "positive", message: "🗑️ User deleted successfully" });
+
+      // Optionally re-fetch user list if you're admin
+      await storeUsers.getAllUsers();
+    } catch (err) {
+      console.error("❌ Error deleting user:", err);
+      $q.notify({
+        type: "negative",
+        message: "Failed to delete user. Check permissions.",
+      });
+    }
+  });
+};
 </script>

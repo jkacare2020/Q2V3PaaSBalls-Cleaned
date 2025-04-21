@@ -76,7 +76,6 @@
                   dense
                   label="Company Name"
                   required
-                  :readonly="!isAdmin"
                 />
                 <!-- Set field as readonly if not admin -->
               </q-item-section>
@@ -93,7 +92,6 @@
                   dense
                   label="Display Name"
                   required
-                  :readonly="!isAdmin"
                 />
                 <!-- Set field as readonly if not admin -->
               </q-item-section>
@@ -105,7 +103,6 @@
                   dense
                   label="UserName"
                   required
-                  :readonly="!isAdmin"
                 />
                 <!-- Set field as readonly if not admin -->
               </q-item-section>
@@ -127,6 +124,16 @@
                 <!-- Set field as readonly if not admin -->
               </q-item-section>
             </q-item>
+            <q-card-section>
+              <div class="text-h6">
+                <q-badge
+                  v-if="editableUser?.role === 'admin'"
+                  color="red"
+                  label="Protected Admin !"
+                  class="q-ml-md"
+                />
+              </div>
+            </q-card-section>
           </q-list>
           <q-btn
             label="Save"
@@ -140,6 +147,35 @@
       <q-card-section v-else>
         <div class="text-center">Loading user data...</div>
       </q-card-section>
+      <q-btn
+        label="Delete My Account"
+        color="negative"
+        flat
+        class="q-mt-md"
+        @click="confirmDeleteAccount"
+      />
+
+      <q-dialog v-model="showDeleteDialog" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6 text-negative">Confirm Deletion</div>
+            <div class="text-subtitle2">
+              Are you sure you want to delete your account?
+            </div>
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" color="primary" v-close-popup />
+            <q-btn
+              v-if="editableUser && editableUser.role !== 'admin'"
+              label="Delete Account"
+              color="negative"
+              class="q-mt-md"
+              @click="confirmDeleteAccount"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </q-card>
   </q-page>
 </template>
@@ -160,6 +196,10 @@ import { db } from "src/firebase/init";
 import { useStoreAuth } from "src/stores/storeAuth";
 import { useStoreUsers } from "src/stores/storeUsers";
 import { formatPhoneNumber, isValidPhoneNumber } from "src/utils/phoneUtils";
+import { useQuasar } from "quasar";
+import { useRouter } from "vue-router";
+const router = useRouter();
+const $q = useQuasar();
 
 const route = useRoute();
 const storeAuth = useStoreAuth();
@@ -259,6 +299,60 @@ const saveProfile = async () => {
   } catch (error) {
     console.error("❌ Error saving profile:", error);
     alert("Error updating profile. Insuficient Permission.");
+  }
+};
+//---------------------Deletion----------------------------
+
+const confirmDeleteAccount = () => {
+  if (editableUser.value?.role === "admin") {
+    $q.notify({
+      type: "negative",
+      message: "❌ Admin accounts are protected and cannot be deleted.",
+      position: "top",
+      timeout: 3000,
+      icon: "block",
+    });
+    return; // Exit early if admin
+  }
+  $q.dialog({
+    title: "Delete Account",
+    message:
+      "Are you sure you want to delete your account? This action cannot be undone.",
+    cancel: true,
+    persistent: true,
+  }).onOk(() => {
+    deleteAccount();
+  });
+};
+
+const deleteAccount = async () => {
+  if (editableUser.value?.role === "admin") {
+    $q.notify({
+      type: "warning",
+      message: "Admin accounts cannot be deleted.",
+    });
+    return;
+  }
+
+  try {
+    // 🧠 Example: soft delete Firestore user doc
+    const userRef = doc(db, "users", storeAuth.user.uid);
+    await updateDoc(userRef, {
+      deleted: true,
+      deletedAt: new Date().toISOString(),
+    });
+
+    // ✅ Sign out and redirect
+    await storeAuth.logoutUser();
+    router.push("/");
+
+    $q.notify({
+      type: "positive",
+      message: "Your account was marked as deleted.",
+    });
+  } catch (error) {
+    console.error("Error deleting account:", error);
+    $q.notify({ type: "negative", message: "Failed to delete account." });
   }
 };
 </script>

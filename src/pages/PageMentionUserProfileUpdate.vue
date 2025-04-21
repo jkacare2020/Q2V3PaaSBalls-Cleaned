@@ -83,7 +83,7 @@
             </q-item>
             <q-item>
               <q-item-section side>
-                <q-icon name="business" />
+                <q-icon name="laptop" />
               </q-item-section>
               <q-item-section>
                 <q-input
@@ -111,7 +111,7 @@
             </q-item>
             <q-item>
               <q-item-section side>
-                <q-icon name="business" />
+                <q-icon name="star" />
               </q-item-section>
               <q-item-section>
                 <q-input

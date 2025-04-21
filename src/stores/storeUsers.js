@@ -1,3 +1,5 @@
+// This store only handles users from Firestore `users` collection.
+
 import { defineStore } from "pinia";
 import { db } from "../firebase/init";
 import { doc, getDoc, getDocs, collection } from "firebase/firestore";
@@ -12,9 +14,6 @@ export const useStoreUsers = defineStore("storeUsers", {
   }),
   actions: {
     async init() {
-      // Avoid re-fetching if user is already loaded
-      if (this.userLoaded) return;
-
       const storeAuth = useStoreAuth();
       if (!storeAuth.user?.uid) {
         console.error("No logged-in user found");
@@ -22,7 +21,28 @@ export const useStoreUsers = defineStore("storeUsers", {
       }
 
       const userDocRef = doc(db, "users", storeAuth.user.uid);
+
+      // Always re-fetch fresh user data
       await this.getUser(userDocRef);
+    },
+    //---------------------------------
+
+    async beforeEnter(to, from, next) {
+      const storeUsers = useStoreUsers();
+
+      if (!storeUsers.userLoaded) {
+        await storeUsers.init();
+      }
+
+      console.log("🧠 storeUsers.user =", storeUsers.user);
+      console.log("🔍 Detected role:", storeUsers.user?.role);
+
+      if ((storeUsers.user?.role || "").toLowerCase() === "admin") {
+        next(); // ✅ Proceed if admin
+      } else {
+        console.warn("❌ Not admin. Redirecting...");
+        next("/profile/edit");
+      }
     },
     //--------------------------------------------------------------
     async getUser(userDocRef) {

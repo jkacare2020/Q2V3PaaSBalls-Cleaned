@@ -25,11 +25,17 @@ const routes = [
         component: () => import("pages/Signup.vue"),
       },
       {
-        path: "/profile/:id?",
+        path: "/user/:username",
+        name: "PublicUserProfile",
+        component: () => import("pages/PageMentionUserProfileUpdate.vue"),
+      },
+      {
+        path: "/profile/edit/:id?",
+        name: "UserProfileEdit",
         component: () => import("pages/UserProfile.vue"),
         meta: { requiresAuth: true },
-        name: "UserProfile",
       },
+
       {
         path: "/camera",
         component: () => import("pages/PageCamera.vue"),
@@ -68,24 +74,31 @@ const routes = [
         meta: { requiresAuth: true },
       },
       {
-        path: "/users",
-        component: () => import("pages/ViewUsersList.vue"),
+        path: "/firestore-users",
+        component: () => import("pages/PageFirestoreUsers.vue"),
         meta: { requiresAuth: true },
         async beforeEnter(to, from, next) {
           const storeUsers = useStoreUsers();
 
-          // Ensure user data is loaded before making access control decisions
+          console.log("🛂 Route guard triggered for /firestore-users");
+
           if (!storeUsers.userLoaded) {
+            console.log("🔄 Initializing user data...");
             await storeUsers.init();
           }
 
-          if (storeUsers.user?.role === "admin") {
-            next(); // Allow access if the user is an admin
+          console.log("🔍 storeUsers.user =", storeUsers.user);
+
+          if ((storeUsers.user?.role || "").toLowerCase() === "admin") {
+            console.log("✅ Admin detected. Proceeding...");
+            next();
           } else {
-            next("/profile"); // Redirect to profile or another appropriate page if not admin
+            console.warn("❌ Not admin. Redirecting...");
+            next("/profile/edit");
           }
         },
       },
+
       {
         path: "/mongo-users",
         component: () => import("pages/PageMongoUsers.vue"),
