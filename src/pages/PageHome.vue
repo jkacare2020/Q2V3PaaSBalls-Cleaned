@@ -69,22 +69,27 @@
               </q-badge>
               <!-- Post action icons (top-right) -->
               <div class="post-icons-top-right q-mr-lg">
-                <q-icon
-                  name="chat"
+                <q-btn
+                  flat
+                  round
+                  dense
+                  icon="chat"
                   color="primary"
-                  size="24px"
-                  aria-label="Comment on post"
                   @click="startCommentForPost(post)"
                 >
-                  <q-icon
-                    name="delete"
-                    color="red"
-                    size="24px"
-                    aria-label="Delete post"
-                    @click="deletePost(post.id)"
-                  />
                   <q-tooltip>Comment</q-tooltip>
-                </q-icon>
+                </q-btn>
+
+                <q-btn
+                  flat
+                  round
+                  dense
+                  icon="delete"
+                  color="red"
+                  @click="deletePost(post.id)"
+                >
+                  <q-tooltip>Delete post</q-tooltip>
+                </q-btn>
               </div>
 
               <q-item>
@@ -302,7 +307,7 @@
                   </div>
                 </q-item-section>
 
-                <!-- ⋯ Action menu -->
+                <!-- ⋯ Action dropdown menu -->
                 <q-item-section side>
                   <q-btn round dense flat icon="more_vert" color="primary">
                     <q-menu>
@@ -428,55 +433,148 @@
         </q-bar>
 
         <!-- Modal Comment Feed -->
-        <q-scroll-area style="height: 60vh">
-          <q-list>
-            <q-item v-for="(comment, idx) in comments" :key="comment.id || idx">
-              <!-- Avatar with dot -->
-              <q-item-section avatar>
-                <q-avatar size="32px">
-                  <img :src="comment.avatarUrl || defaultAvatar" />
-                  <q-badge
-                    rounded
-                    floating
-                    :color="comment.online ? 'green' : 'red'"
-                    class="presence-dot"
-                  />
-                </q-avatar>
-              </q-item-section>
+        <q-page class="constrain q-pa-md">
+          <q-scroll-area style="height: calc(100vh - 100px)">
+            <q-card class="q-pa-md">
+              <q-toolbar class="bg-grey-2 text-primary">
+                <q-toolbar-title> 💬 Comments </q-toolbar-title>
+              </q-toolbar>
 
-              <!-- Comment content -->
-              <q-item-section>
-                <q-item-label class="text-bold">
-                  {{ comment.userName || comment.displayName || "User" }}
-                </q-item-label>
+              <!-- Comments List -->
+              <q-list v-if="comments.length">
+                <q-item
+                  v-for="(comment, idx) in comments"
+                  :key="comment?.id || idx"
+                >
+                  <q-item-section avatar>
+                    <q-avatar size="32px">
+                      <img :src="comment.avatarUrl || defaultAvatar" />
+                      <q-badge
+                        rounded
+                        floating
+                        :color="comment.online ? 'green' : 'red'"
+                        class="presence-dot"
+                      />
+                    </q-avatar>
+                  </q-item-section>
 
-                <q-item-label caption>
-                  {{ comment.text }}
-                </q-item-label>
+                  <q-item-section>
+                    <q-item-label class="text-bold">
+                      {{ comment.userName || comment.displayName || "User" }}
+                    </q-item-label>
 
-                <!-- Timestamp -->
-                <q-item-label caption class="text-grey-6">
-                  {{ new Date(comment.timestamp).toLocaleString() }}
-                </q-item-label>
-              </q-item-section>
+                    <!-- Reply indicator -->
+                    <template v-if="comment.replyTo">
+                      <q-item-label caption>
+                        🧵 Reply to another comment
+                      </q-item-label>
+                      <q-btn
+                        flat
+                        dense
+                        label="View thread"
+                        color="primary"
+                        size="sm"
+                        @click="
+                          $router.push(
+                            `/replies/${comment.postId}/${comment.replyTo}`
+                          )
+                        "
+                      />
+                    </template>
 
-              <!-- Delete button (owner only) -->
-              <q-item-section
-                side
-                v-if="comment.userId === storeAuth.user?.uid"
-              >
-                <q-btn
-                  dense
-                  flat
-                  icon="delete"
-                  color="negative"
-                  size="sm"
-                  @click="confirmDeleteComment(comment.id)"
-                />
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-scroll-area>
+                    <!-- Render mentions as inline chips with popovers -->
+                    <q-item-label caption>
+                      <template
+                        v-for="(part, i) in comment.parsedText"
+                        :key="i"
+                      >
+                        <span v-if="part.isMention">
+                          <q-chip
+                            clickable
+                            square
+                            class="mention-chip"
+                            @click="goToProfile(part.text)"
+                          >
+                            <q-tooltip
+                              >View profile of {{ part.text }}</q-tooltip
+                            >
+                            {{ part.text }}
+                          </q-chip>
+                        </span>
+                        <span v-else>{{ part.text }}</span>
+                      </template>
+                    </q-item-label>
+
+                    <q-item-label caption class="text-grey-6">
+                      {{ new Date(comment.timestamp).toLocaleString() }}
+                      <span v-if="comment.edited">(edited)</span>
+                    </q-item-label>
+                  </q-item-section>
+
+                  <!-- ⋯ Action dropdown menu (always shown) -->
+                  <q-item-section side>
+                    <q-btn round dense flat icon="more_vert" color="primary">
+                      <q-menu>
+                        <q-list style="min-width: 140px">
+                          <q-item
+                            v-if="comment.userId === storeAuth.user?.uid"
+                            clickable
+                            v-close-popup
+                            @click="startEditingComment(comment)"
+                          >
+                            <q-item-section avatar
+                              ><q-icon name="edit"
+                            /></q-item-section>
+                            <q-item-section>Edit</q-item-section>
+                          </q-item>
+
+                          <q-item
+                            v-if="comment.userId === storeAuth.user?.uid"
+                            clickable
+                            v-close-popup
+                            @click="confirmDeleteComment(comment.id)"
+                          >
+                            <q-item-section avatar
+                              ><q-icon name="delete"
+                            /></q-item-section>
+                            <q-item-section>Delete</q-item-section>
+                          </q-item>
+
+                          <q-item
+                            v-if="comment.userId === storeAuth.user?.uid"
+                            clickable
+                            v-close-popup
+                            @click="toggleCommentOffline(comment)"
+                          >
+                            <q-item-section avatar
+                              ><q-icon name="visibility_off"
+                            /></q-item-section>
+                            <q-item-section>
+                              {{ comment.online ? "Set Offline" : "Go Online" }}
+                            </q-item-section>
+                          </q-item>
+
+                          <q-item
+                            v-if="storeAuth.user"
+                            clickable
+                            v-close-popup
+                            @click="goToReplies(comment)"
+                          >
+                            <q-item-section avatar
+                              ><q-icon name="reply"
+                            /></q-item-section>
+                            <q-item-section>Reply</q-item-section>
+                          </q-item>
+                        </q-list>
+                      </q-menu>
+                    </q-btn>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <div v-else class="text-caption">❌ No comments yet.</div>
+            </q-card>
+          </q-scroll-area>
+        </q-page>
 
         <!-- Modal Input Section -->
         <q-separator />
@@ -535,7 +633,6 @@ const hasUnreadComments = computed(() => {
 });
 
 const router = useRouter();
-
 const storeAuth = useStoreAuth();
 
 const onlineUsers = ref([]);
@@ -547,7 +644,6 @@ const posts = ref([]);
 const editingCommentId = ref(null);
 const editedText = ref("");
 const allUserMap = ref({});
-
 const username = ref(storeAuth.user?.displayName || "User Name");
 const email = ref(storeAuth.user?.email || "user@example.com");
 
@@ -868,7 +964,7 @@ async function fetchPresence() {
     console.log("✅ allUserMap updated with presence:", newUserMap);
   });
 }
-//------------------------Send Comments----------------------------------------
+//------------------------General Comment input and Send Comments-----------------
 async function sendComment() {
   const user = storeAuth.user; // ✅ Define this!
   if (!storeAuth.user || !commentText.value) return;

@@ -15,9 +15,9 @@ const dbFirestore = admin.firestore();
  * @param {Object} res - Express response object.
  */
 exports.createPost = async (req, res) => {
+  const idToken = req.headers.authorization?.split(" ")[1];
   console.log("Received a request to /createPost");
 
-  const idToken = req.headers.authorization?.split(" ")[1];
   if (!idToken) {
     console.error("No Firebase token found in request");
     return res.status(401).send("Unauthorized: Missing Firebase token");
@@ -81,6 +81,7 @@ exports.createPost = async (req, res) => {
         });
 
         const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`;
+        // Store the post data in Firestore
         const postData = {
           id: fields.id,
           caption: fields.caption,

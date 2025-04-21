@@ -41,8 +41,14 @@ exports.createVideoPost = (req, res) => {
   admin
     .auth()
     .verifyIdToken(idToken)
-    .then((decodedToken) => {
+    .then(async (decodedToken) => {
       const userId = decodedToken.uid;
+      const userSnapshot = await dbFirestore
+        .collection("users")
+        .doc(userId)
+        .get();
+      const userData = userSnapshot.exists ? userSnapshot.data() : {};
+
       const uuid = UUID();
       const busboy = Busboy({ headers: req.headers });
       let fields = {};
@@ -110,6 +116,8 @@ exports.createVideoPost = (req, res) => {
               videoUrl,
               userId,
               tags: fields.tags ? fields.tags.split(",") : [],
+              userName: userData.userName || "", // 👈 add this
+              displayName: userData.displayName || "User", // 👈 and this
             };
 
             dbFirestore
