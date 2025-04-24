@@ -7,9 +7,11 @@ const {
   deleteAudio,
 } = require("../controllers/audioController");
 
-router.post("/audios/upload", uploadAudio);
-router.get("/audios/:id", getAudio);
-router.get("/audios", getAllAudios);
-router.delete("/audios/:id", deleteAudio);
+const authenticate = require("../middlewares/authMiddleware");
+
+router.post("/audios/upload", authenticate(), uploadAudio);
+router.get("/audios/:id", authenticate(), getAudio);
+router.get("/audios", authenticate(), getAllAudios);
+router.delete("/audios/:id", authenticate(), deleteAudio);
 
 module.exports = router;

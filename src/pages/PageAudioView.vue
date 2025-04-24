@@ -50,10 +50,18 @@
               Your browser does not support the audio tag.
             </audio>
 
+            <WaveformPlayer :src="audio.audioUrl" />
+
+            <template>
+              <div class="waveform-wrapper">
+                <div ref="waveformContainer" class="waveform-container"></div>
+              </div>
+            </template>
+
             <q-card-section>
               <div>{{ audio.caption }}</div>
               <div class="text-caption text-grey">
-                {{ niceDate(audio.date) }}
+                {{ audio.formattedDate }}
               </div>
             </q-card-section>
           </q-card>
@@ -113,13 +121,45 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useQuasar } from "quasar";
 import { auth } from "src/firebase/init";
 import axios from "axios";
 import defaultAvatar from "src/assets/avatar.jpg";
 import { useStoreAuth } from "src/stores/storeAuth";
 import { apiNode } from "boot/apiNode";
+
+import WaveSurfer from "wavesurfer.js";
+
+const props = defineProps({
+  src: { type: String, required: true },
+});
+
+const waveformContainer = ref(null);
+let wave = null;
+
+onMounted(async () => {
+  await nextTick(); // ⏳ ensures DOM is ready
+
+  if (!waveformContainer.value) {
+    console.error("❌ Waveform container is missing");
+    return;
+  }
+
+  wave = WaveSurfer.create({
+    container: waveformContainer.value,
+    waveColor: "#ccc",
+    progressColor: "#2196f3",
+    height: 80,
+    responsive: true,
+  });
+
+  wave.load(props.src);
+});
+
+onBeforeUnmount(() => {
+  if (wave) wave.destroy();
+});
 
 const storeAuth = useStoreAuth();
 const audios = ref([]);
@@ -231,5 +271,9 @@ onMounted(() => {
 
 .delete-icon:hover {
   color: blue !important;
+}
+
+.waveform-container {
+  width: 100%;
 }
 </style>

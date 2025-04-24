@@ -3,6 +3,25 @@ const { v4: uuidv4 } = require("uuid");
 const dbFirestore = admin.firestore(); // Firestore instance
 const bucket = admin.storage().bucket(); // Firebase Storage bucket
 
+const niceDate = (value) => {
+  if (!value) return "No date available";
+
+  // 🔥 Firestore Timestamp object check
+  if (value.seconds) {
+    value = new Date(value.seconds * 1000); // convert Firestore timestamp to JS Date
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return "Invalid Date";
+
+  return date.toLocaleString("en-US", {
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  });
+};
+
 // Upload Audio
 exports.uploadAudio = async (req, res) => {
   console.log("Backend uploadAudio function called");
@@ -93,6 +112,7 @@ exports.getAllAudios = async (req, res) => {
       return {
         ...audioData, // Spread document data first
         id: doc.id, // Then override `id` with Firestore document ID
+        formattedDate: niceDate(audioData.date), // ✅ add this field
       };
     });
 
@@ -124,30 +144,33 @@ exports.getAudio = async (req, res) => {
 exports.deleteAudio = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Audio id :", id);
+    const requesterUid = req.user.uid;
+
     const audioDoc = await dbFirestore.collection("audios").doc(id).get();
-    console.log("audioDoc: ", audioDoc);
     if (!audioDoc.exists) {
-      console.error("Audio document not found in Firestore for ID:", id);
       return res.status(404).json({ error: "Audio not found" });
     }
 
     const data = audioDoc.data();
-    console.log("Audio document data:", data);
 
-    const { audioUrl } = audioDoc.data();
-    console.log("Audio document data:", data);
-    const filePath = decodeURIComponent(audioUrl.split("/o/")[1].split("?")[0]);
+    // ✅ Check if requester is admin
+    const userDoc = await dbFirestore
+      .collection("users")
+      .doc(requesterUid)
+      .get();
+    const isAdmin = userDoc.exists && userDoc.data().role === "admin";
 
-    if (!data.audioUrl) {
-      console.error("audioUrl field missing in Firestore document for ID:", id);
-      return res.status(400).json({ error: "audioUrl is missing" });
+    // ❌ Not owner or admin
+    if (!isAdmin && data.userId !== requesterUid) {
+      return res.status(403).json({ error: "Forbidden: Not your audio file." });
     }
 
-    // Delete from Firebase Storage
-    await bucket.file(filePath).delete();
+    // ✅ Proceed with delete
+    const filePath = decodeURIComponent(
+      data.audioUrl.split("/o/")[1].split("?")[0]
+    );
 
-    // Delete Firestore metadata
+    await bucket.file(filePath).delete();
     await dbFirestore.collection("audios").doc(id).delete();
 
     res.status(200).json({ message: "Audio deleted successfully" });

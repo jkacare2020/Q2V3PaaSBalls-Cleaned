@@ -1,4 +1,5 @@
 <template>
+  <!-- PageAdudio.vue -->
   <q-page class="q-pa-md">
     <!-- Text-to-Speech (TTS) Section -->
     <div class="audio-frame q-pa-md">
@@ -63,26 +64,22 @@
     </div>
 
     <!-- Playback, Upload, and File Input Section -->
+    <!-- Playback, Caption, Upload Section -->
     <div class="audio-frame q-pa-md q-mt-md">
       <q-card class="q-ma-md">
         <q-card-section>
-          <q-card-title>Playback and Upload</q-card-title>
-          <div class="row items-center q-gutter-md q-mt-md">
-            <q-btn
-              @click="playRecording"
-              label="Play Recording"
-              color="primary"
-              icon="play_arrow"
-              :disable="!audioUrl"
-            />
-            <q-btn
-              @click="uploadAudio"
-              label="Upload Audio"
-              color="teal"
-              icon="cloud_upload"
-              :disable="!audioBlob"
-            />
-          </div>
+          <q-card-title>Caption & Upload</q-card-title>
+
+          <!-- Step 1: Caption -->
+          <q-input
+            v-model="caption"
+            label="Add a caption"
+            class="q-mb-md"
+            outlined
+            :rules="[(val) => !!val.trim() || 'Caption is required']"
+          />
+
+          <!-- Step 2: Attach File from PC -->
           <div class="row justify-center q-ma-md">
             <q-file
               label="Choose an audio file"
@@ -95,17 +92,29 @@
               </template>
             </q-file>
           </div>
-          <q-input
-            v-if="audioBlob"
-            v-model="caption"
-            label="Add a caption"
-            class="q-mb-md"
-            outlined
-          />
+
+          <!-- Step 3: Buttons -->
+          <div class="row items-center q-gutter-md q-mt-md">
+            <!-- <q-btn
+              @click="playRecording"
+              label="Play Recording"
+              color="primary"
+              icon="play_arrow"
+              :disable="!audioUrl || caption.trim() === ''"
+            /> -->
+            <q-btn
+              @click="uploadAudio"
+              label="Upload Audio"
+              color="teal"
+              icon="cloud_upload"
+              :disable="!audioBlob || caption.trim() === ''"
+            />
+          </div>
         </q-card-section>
 
+        <!-- Step 4: Audio Preview -->
         <q-card-section v-if="audioUrl" class="q-mt-md">
-          <audio :src="audioUrl" controls autoplay class="full-width"></audio>
+          <audio :src="audioUrl" controls autoplay class="full-width" />
         </q-card-section>
       </q-card>
     </div>
@@ -118,6 +127,8 @@ import axios from "axios";
 import { auth } from "src/firebase/init";
 import { useQuasar } from "quasar";
 import { apiNode } from "boot/apiNode";
+import { useRouter } from "vue-router";
+const router = useRouter();
 
 const isLoading = ref(false);
 
@@ -131,7 +142,7 @@ const sttOutput = ref("");
 const textToSpeak = ref("");
 const text = ref("");
 
-// Handles file upload from local device
+// Handles file upload from local device attachment ------
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -157,7 +168,7 @@ const startRecording = () => {
       mediaRecorder.ondataavailable = (e) => {
         audioChunks.push(e.data);
       };
-
+      //--------------------------------------------------------------------------
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunks, { type: "audio/webm" });
         audioBlob.value = blob;
@@ -268,15 +279,15 @@ const convertToSpeech = () => {
 };
 
 // Plays the recorded audio
-const playRecording = () => {
-  if (audioUrl.value) {
-    const audio = new Audio(audioUrl.value);
-    audio.play();
-    console.log("Playing audio...");
-  } else {
-    $q.notify({ type: "negative", message: "No audio available to play." });
-  }
-};
+// const playRecording = () => {
+//   if (audioUrl.value) {
+//     const audio = new Audio(audioUrl.value);
+//     audio.play();
+//     console.log("Playing audio...");
+//   } else {
+//     $q.notify({ type: "negative", message: "No audio available to play." });
+//   }
+// };
 
 //---------------------------------------
 const uploadAudio = async () => {
@@ -308,41 +319,39 @@ const uploadAudio = async () => {
     const reader = new FileReader();
 
     reader.onloadend = async () => {
-      console.log("FileReader onloadend triggered"); // Log when FileReader completes
-      const base64Audio = reader.result.split(",")[1]; // Remove the data URL prefix
-      const fileName = `recording_${Date.now()}.webm`; // Ensure file extension matches type
-      const userId = user.uid; // Use logged-in user's UID
+      console.log("FileReader onloadend triggered");
+
+      const base64Audio = reader.result.split(",")[1];
+      const fileName = `recording_${Date.now()}.webm`;
+      const userId = user.uid;
 
       const payload = {
         audioData: base64Audio,
         fileName,
         userId,
-        caption: caption.value, // Include the caption
+        caption: caption.value,
       };
 
       try {
-        console.log("Sending payload to backend:", payload); // Log the payload
-        const response = await apiNode.post(`/api/audios/upload`, payload);
+        const idToken = await user.getIdToken(); // ✅ moved down
+
+        console.log("Sending payload to backend:", payload);
+        const response = await apiNode.post(`/api/audios/upload`, payload, {
+          headers: {
+            Authorization: `Bearer ${idToken}`, // ✅ included correctly
+          },
+        });
 
         if (response.data.audioUrl) {
-          console.log("Backend response received:", response.data); // Log the backend response
-          // Metadata saved to Firestore
-          // await addDoc(collection(db, "audios"), {
-          //   userId,
-          //   audioUrl: response.data.audioUrl,
-          //   fileName,
-          //   date: new Date(),
-          //   caption: caption.value,
-          // });
-          console.log("Firestore document added"); // Log Firestore save
+          console.log("Backend response received:", response.data);
           $q.notify({
             type: "positive",
             message: "Audio uploaded successfully!",
           });
-
-          // Clear data
           audioBlob.value = null;
           audioUrl.value = null;
+          // ✅ Redirect to audio post view page
+          router.push("/audio-posts");
         } else {
           $q.notify({
             type: "negative",
@@ -356,7 +365,6 @@ const uploadAudio = async () => {
           message: "Failed to upload audio to backend.",
         });
       } finally {
-        // Re-enable the upload button
         if (uploadButton) uploadButton.disabled = false;
       }
     };

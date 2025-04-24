@@ -1047,7 +1047,7 @@ function goToProfile(mentionText) {
   const username = mentionText.startsWith("@")
     ? mentionText.substring(1)
     : mentionText;
-  router.push(`/profile/${username}`);
+  router.push(`/user/${username}`);
 }
 
 //-----------------------------------------------

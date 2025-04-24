@@ -14,6 +14,7 @@ const videoRoutes = require("./routes/videoRoutes");
 const audioRoutes = require("./routes/audioRoutes");
 const chatBotRoutes = require("./routes/chatBotRoutes");
 const tenantRoutes = require("./routes/tenantRoutes");
+const bioRoutes = require("./routes/bioRoutes");
 
 const authenticateAndAuthorize = require("./middlewares/authMiddleware");
 
@@ -89,6 +90,7 @@ app.use("/api", videoRoutes);
 app.use("/api", audioRoutes); // Mount STT routes under /api
 app.use("/api", chatBotRoutes);
 app.use("/api", tenantRoutes);
+app.use("/api/bio", bioRoutes);
 // app.use("/api/image-process", imageProcessingRoutes); // Uncomment if you have image processing routes
 
 // Define other routes here if needed, e.g., app.get("/posts", ...), app.post("/createPost", ...), etc.

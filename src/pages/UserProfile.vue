@@ -134,6 +134,65 @@
                 />
               </div>
             </q-card-section>
+            <q-item>
+              <q-item-section side>
+                <q-icon name="description" />
+              </q-item-section>
+              <q-item-section>
+                <q-input
+                  v-model="editableUser.bio"
+                  type="textarea"
+                  outlined
+                  dense
+                  label="Bio"
+                  autogrow
+                  :counter="300"
+                />
+              </q-item-section>
+            </q-item>
+            <div class="q-pa-md flex flex-center">
+              <q-uploader
+                label="Upload Bio File (PDF/TXT)"
+                accept=".pdf,.txt"
+                :auto-upload="false"
+                :hide-upload-btn="true"
+                @added="handleBioFileUpload"
+              />
+            </div>
+            <!------------- Preview Bio  --------------->
+            <div class="q-pa-md flex flex-center">
+              <div v-if="editableUser.bioFileUrl">
+                <q-btn
+                  label="Preview Bio"
+                  @click="openBioPreview"
+                  icon="visibility"
+                  color="primary"
+                />
+              </div>
+              <q-btn
+                class="q-ml-sm"
+                v-if="editableUser.bioFileUrl"
+                label="Delete Bio"
+                icon="delete"
+                color="negative"
+                @click="deleteBioFile"
+              />
+            </div>
+            <q-dialog v-model="showBioPreview" persistent>
+              <q-card style="min-width: 80vw; min-height: 80vh">
+                <q-card-section>
+                  <iframe
+                    :src="editableUser.bioFileUrl"
+                    width="100%"
+                    height="600"
+                    style="border: none"
+                  ></iframe>
+                </q-card-section>
+                <q-card-actions align="right">
+                  <q-btn flat label="Close" v-close-popup />
+                </q-card-actions>
+              </q-card>
+            </q-dialog>
           </q-list>
           <q-btn
             label="Save"
@@ -182,7 +241,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
   doc,
   getDoc,
@@ -197,7 +256,9 @@ import { useStoreAuth } from "src/stores/storeAuth";
 import { useStoreUsers } from "src/stores/storeUsers";
 import { formatPhoneNumber, isValidPhoneNumber } from "src/utils/phoneUtils";
 import { useQuasar } from "quasar";
-import { useRouter } from "vue-router";
+// import { useRouter } from "vue-router";
+import { auth } from "src/firebase/init";
+import { apiNode } from "boot/apiNode";
 const router = useRouter();
 const $q = useQuasar();
 
@@ -206,6 +267,7 @@ const storeAuth = useStoreAuth();
 const storeUsers = useStoreUsers();
 
 const editableUser = ref(null);
+const showDeleteDialog = ref(false);
 
 // Check if the logged-in user is an admin
 const isAdmin = computed(() => storeUsers.user?.role === "admin");
@@ -292,13 +354,16 @@ const saveProfile = async () => {
       userName: proposedUserName || "", // Save empty string if blank
       role: editableUser.value.role,
       email: editableUser.value.email,
+      bio: editableUser.value.bio,
     });
 
     console.log("✅ Profile updated successfully");
     alert("Profile updated successfully!");
+    $q.notify({ type: "positive", message: "Profile updated successfully" });
   } catch (error) {
     console.error("❌ Error saving profile:", error);
     alert("Error updating profile. Insuficient Permission.");
+    $q.notify({ type: "negative", message: "Error updating profile." });
   }
 };
 //---------------------Deletion----------------------------
@@ -353,6 +418,87 @@ const deleteAccount = async () => {
   } catch (error) {
     console.error("Error deleting account:", error);
     $q.notify({ type: "negative", message: "Failed to delete account." });
+  }
+};
+
+//-------------------------Upload PDF -------------------------
+const handleBioFileUpload = async (files) => {
+  console.log("handleBioFileUpload triggered with:", files);
+  const file = files[0];
+  if (!file) return;
+
+  try {
+    $q.loading.show();
+
+    const user = auth.currentUser;
+    const idToken = await user.getIdToken();
+
+    // ✅ Correctly instantiate FormData
+    const formData = new FormData();
+    formData.append("bioFile", file); // 👈 name should match backend busboy
+    formData.append("uid", user.uid);
+
+    // ✅ Optional: Log FormData contents (can't log full file in browser)
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+
+    const response = await apiNode.post("/api/bio/upload", formData, {
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "multipart/form-data", // this lets Axios auto-set boundary
+      },
+    });
+
+    if (response.status === 200 && response.data.bioFileUrl) {
+      editableUser.value.bioFileUrl = response.data.bioFileUrl;
+      $q.notify({
+        type: "positive",
+        message: "Bio file uploaded successfully",
+        position: "center",
+        timeout: 2500,
+        textColor: "white",
+        color: "green-6",
+        icon: "cloud_done",
+      });
+    }
+  } catch (error) {
+    console.error("Upload error:", {
+      message: error.message,
+      code: error.code,
+      request: error.request,
+      response: error.response,
+    });
+    $q.notify({ type: "negative", message: "Failed to upload bio file." });
+  } finally {
+    $q.loading.hide();
+  }
+};
+
+//--------------------------Preview Bio--------------
+const showBioPreview = ref(false);
+const openBioPreview = () => {
+  showBioPreview.value = true;
+};
+//-----------------------Delete Bio-------------------
+const deleteBioFile = async () => {
+  try {
+    const user = auth.currentUser;
+    const idToken = await user.getIdToken();
+
+    await apiNode.post(
+      "/api/bio/delete",
+      { uid: user.uid },
+      {
+        headers: { Authorization: `Bearer ${idToken}` },
+      }
+    );
+
+    editableUser.value.bioFileUrl = "";
+    $q.notify({ type: "positive", message: "Bio file deleted successfully." });
+  } catch (error) {
+    console.error("Delete failed:", error);
+    $q.notify({ type: "negative", message: "Failed to delete bio file." });
   }
 };
 </script>

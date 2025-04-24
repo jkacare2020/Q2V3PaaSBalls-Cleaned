@@ -2,140 +2,99 @@
   <q-page class="q-pa-md">
     <q-card class="q-pa-md q-mx-auto" style="max-width: 600px">
       <q-card-section>
-        <div class="text-h6">Edit User Profile</div>
+        <div class="text-h6">Public User Profile</div>
       </q-card-section>
       <q-card-section v-if="editableUser">
-        <q-form @submit.prevent="saveProfile">
-          <q-list>
-            <q-item>
-              <q-item-section side>
-                <q-icon name="account_circle" />
-              </q-item-section>
-              <q-item-section>
-                <q-input
-                  v-model="editableUser.firstName"
-                  outlined
-                  dense
-                  label="First Name"
-                  required
-                />
-              </q-item-section>
-            </q-item>
-            <q-item>
-              <q-item-section side>
-                <q-icon name="account_circle" />
-              </q-item-section>
-              <q-item-section>
-                <q-input
-                  v-model="editableUser.lastName"
-                  outlined
-                  dense
-                  label="Last Name"
-                  required
-                />
-              </q-item-section>
-            </q-item>
-            <q-item>
-              <q-item-section side>
-                <q-icon name="email" />
-              </q-item-section>
-              <q-item-section>
-                <q-input
-                  v-model="editableUser.email"
-                  outlined
-                  dense
-                  label="Email"
-                  disabled
-                />
-              </q-item-section>
-            </q-item>
-            <q-item>
-              <q-item-section side>
-                <q-icon name="phone" />
-              </q-item-section>
-              <q-item-section>
-                <q-input
-                  v-model="editableUser.phoneNo"
-                  outlined
-                  dense
-                  label="Phone Number"
-                  @blur="formatPhone"
-                  required
-                />
-              </q-item-section>
-            </q-item>
-            <q-item>
-              <q-item-section side>
-                <q-icon name="business" />
-              </q-item-section>
-              <q-item-section>
-                <q-input
-                  v-if="storeAuth.user"
-                  v-model="editableUser.companyName"
-                  outlined
-                  dense
-                  label="Company Name"
-                  required
-                  :readonly="!isAdmin"
-                />
-                <!-- Set field as readonly if not admin -->
-              </q-item-section>
-            </q-item>
-            <q-item>
-              <q-item-section side>
-                <q-icon name="laptop" />
-              </q-item-section>
-              <q-item-section>
-                <q-input
-                  v-if="storeAuth.user"
-                  v-model="editableUser.displayName"
-                  outlined
-                  dense
-                  label="Display Name"
-                  required
-                  :readonly="!isAdmin"
-                />
-                <!-- Set field as readonly if not admin -->
-              </q-item-section>
-              <q-item-section>
-                <q-input
-                  v-if="storeAuth.user"
-                  v-model="editableUser.userName"
-                  outlined
-                  dense
-                  label="UserName"
-                  required
-                />
-                <!-- Set field as readonly if not admin -->
-              </q-item-section>
-            </q-item>
-            <q-item>
-              <q-item-section side>
-                <q-icon name="star" />
-              </q-item-section>
-              <q-item-section>
-                <q-input
-                  v-if="storeAuth.user"
-                  v-model="editableUser.role"
-                  outlined
-                  dense
-                  label="Role Name"
-                  required
-                  :readonly="!isAdmin"
-                />
-                <!-- Set field as readonly if not admin -->
-              </q-item-section>
-            </q-item>
-          </q-list>
-          <q-btn
-            label="Save"
-            color="primary"
-            class="q-mt-lg full-width"
-            type="submit"
-          />
-        </q-form>
+        <q-list>
+          <q-item>
+            <q-item-section side>
+              <q-icon name="laptop" />
+            </q-item-section>
+            <q-item-section>
+              <q-input
+                v-model="editableUser.displayName"
+                outlined
+                dense
+                label="Display Name"
+                readonly
+              />
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section side>
+              <q-icon name="person" />
+            </q-item-section>
+            <q-item-section>
+              <q-input
+                v-model="editableUser.userName"
+                outlined
+                dense
+                label="Username"
+                readonly
+              />
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section side>
+              <q-icon name="description" />
+            </q-item-section>
+            <q-item-section>
+              <q-input
+                v-model="editableUser.bio"
+                outlined
+                dense
+                label="Biography"
+                readonly
+                type="textarea"
+                autogrow
+              />
+            </q-item-section>
+          </q-item>
+          <q-item v-if="editableUser.registrationDate">
+            <q-item-section side>
+              <q-icon name="event" />
+            </q-item-section>
+            <q-item-section>
+              <q-input
+                :model-value="
+                  new Date(
+                    editableUser.registrationDate.seconds * 1000
+                  ).toLocaleDateString()
+                "
+                outlined
+                dense
+                label="Registered On"
+                readonly
+              />
+            </q-item-section>
+          </q-item>
+          <div class="q-pa-md flex flex-center">
+            <div v-if="editableUser?.bioFileUrl">
+              <q-btn
+                label="Preview Bio"
+                @click="openBioPreview"
+                icon="visibility"
+                color="primary"
+              />
+            </div>
+          </div>
+          <q-dialog v-model="showBioPreview" persistent>
+            <q-card style="min-width: 80vw; min-height: 80vh">
+              <q-card-section>
+                <iframe
+                  :src="editableUser?.bioFileUrl || ''"
+                  width="100%"
+                  height="600"
+                  style="border: none"
+                ></iframe>
+              </q-card-section>
+              <q-card-actions align="right">
+                <q-btn flat label="Close" v-close-popup />
+              </q-card-actions>
+            </q-card>
+          </q-dialog>
+        </q-list>
       </q-card-section>
-      <!-- Show loading text if data is not yet loaded -->
       <q-card-section v-else>
         <div class="text-center">Loading user data...</div>
       </q-card-section>
@@ -164,7 +123,11 @@ const route = useRoute();
 const storeAuth = useStoreAuth();
 const storeUsers = useStoreUsers();
 
-const editableUser = ref(null);
+// const editableUser = ref(null);
+
+const editableUser = ref({
+  bioFileUrl: null, // or ""
+});
 
 // Check if the logged-in user is an admin
 const isAdmin = computed(() => storeUsers.user?.role === "admin");
@@ -243,14 +206,16 @@ const saveProfile = async () => {
 
     // ✅ Proceed to update
     await updateDoc(userRef, {
-      firstName: editableUser.value.firstName,
-      lastName: editableUser.value.lastName,
-      phoneNo: editableUser.value.phoneNo,
+      // firstName: editableUser.value.firstName,
+      // lastName: editableUser.value.lastName,
+      // phoneNo: editableUser.value.phoneNo,
       companyName: editableUser.value.companyName,
       displayName: editableUser.value.displayName,
       userName: proposedUserName || "", // Save empty string if blank
-      role: editableUser.value.role,
-      email: editableUser.value.email,
+      bio: editableUser.value.bio || "", // default to empty string if not filled,
+      registrationDate: editableUser.value.Timestamp,
+      // role: editableUser.value.role,
+      // email: editableUser.value.email,
     });
 
     console.log("✅ Profile updated successfully");
@@ -260,8 +225,13 @@ const saveProfile = async () => {
     alert("Error updating profile. Insuficient Permission.");
   }
 };
-</script>
 
+//--------------------------Preview Bio--------------
+const showBioPreview = ref(false);
+const openBioPreview = () => {
+  showBioPreview.value = true;
+};
+</script>
 <style scoped>
 .q-item-section[side] {
   max-width: 150px; /* Adjust label width */
