@@ -2,7 +2,12 @@
   <q-page class="q-pa-md">
     <q-card flat bordered class="q-pa-md">
       <q-toolbar class="bg-grey-2 text-primary">
-        <q-toolbar-title> 💬 Replies to Comment </q-toolbar-title>
+        <q-toolbar-title>
+          💬 Replies to Comment
+          <q-badge color="primary" align="top right">
+            {{ replyCount }}
+          </q-badge></q-toolbar-title
+        >
         <q-btn flat round dense icon="close" @click="$router.go(-1)" />
       </q-toolbar>
 
@@ -66,6 +71,8 @@ const rootCommentId = route.params.commentId;
 const comments = ref([]);
 const replyText = ref("");
 const rootComment = ref(null);
+const commentCount = ref(0);
+const replyCount = ref(0);
 
 async function fetchUserData(uid) {
   try {
@@ -137,12 +144,15 @@ async function fetchComments() {
       );
 
       comments.value = parsed;
+      commentCount.value = comments.value.length;
 
       const targetComment = parsed.find((c) => c.id === rootCommentId);
       if (targetComment) {
         rootComment.value = targetComment.replyTo
           ? parsed.find((c) => c.id === targetComment.replyTo)
           : targetComment;
+        const replies = parsed.filter((c) => c.replyTo === rootCommentId);
+        replyCount.value = replies.length;
       } else {
         console.warn("⚠️ Comment ID not found:", rootCommentId);
       }

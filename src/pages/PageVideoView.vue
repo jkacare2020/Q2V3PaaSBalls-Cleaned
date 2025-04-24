@@ -156,6 +156,10 @@
 
       <!-- RIGHT: Presence + Comment input -->
       <div class="col-4 large-screen-only">
+        <q-badge color="primary" align="top right">
+          Comments: {{ commentCount }}
+        </q-badge>
+
         <q-scroll-area style="height: calc(100vh - 100px)">
           <q-card class="q-pa-md">
             <!--------------------- comments ------------------------>
@@ -505,6 +509,7 @@ const loadingVideos = ref(false);
 const showNotificationsBanner = ref(false);
 const isAuthenticated = ref(false);
 const showCommentModal = ref(false);
+const commentCount = ref(0);
 
 const avatarUrl = ref(defaultAvatar);
 
@@ -722,6 +727,7 @@ function fetchComments(videoId = "global") {
       );
 
       comments.value = parsed.sort((a, b) => b.timestamp - a.timestamp);
+      commentCount.value = comments.value.length;
     } else {
       comments.value = [];
     }

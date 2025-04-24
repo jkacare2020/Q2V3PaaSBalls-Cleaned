@@ -199,6 +199,9 @@
 
       <!-- RIGHT: Presence + Comment input -->
       <div class="col-4 large-screen-only">
+        <q-badge color="primary" align="top right">
+          Comments: {{ commentCount }}
+        </q-badge>
         <q-scroll-area style="height: calc(100vh - 100px)">
           <q-card class="q-pa-md">
             <!---------------------comments list------------------------>
@@ -437,7 +440,12 @@
           <q-scroll-area style="height: calc(100vh - 100px)">
             <q-card class="q-pa-md">
               <q-toolbar class="bg-grey-2 text-primary">
-                <q-toolbar-title> 💬 Comments </q-toolbar-title>
+                <q-toolbar-title>
+                  💬 Comments
+                  <q-badge color="primary" align="top right">
+                    {{ commentCount }}
+                  </q-badge></q-toolbar-title
+                >
               </q-toolbar>
 
               <!-- Comments List -->
@@ -638,6 +646,7 @@ const storeAuth = useStoreAuth();
 const onlineUsers = ref([]);
 const comments = ref([]);
 const commentText = ref("");
+const commentCount = ref(0);
 const replyTo = ref(null); // 👈 Add this line for comment reply
 const postId = ref("global");
 const posts = ref([]);
@@ -852,6 +861,7 @@ function fetchComments(postId = "global") {
       );
 
       comments.value = parsed.sort((a, b) => b.timestamp - a.timestamp);
+      commentCount.value = comments.value.length;
     } else {
       comments.value = [];
     }

@@ -136,6 +136,7 @@ const videoURL = ref(null);
 const hasCameraSupport = ref(true);
 const locationLoading = ref(false);
 const locationSupported = computed(() => "geolocation" in navigator);
+const commentCount = ref(0);
 
 // Initialize camera
 onMounted(() => {
