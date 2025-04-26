@@ -3,10 +3,20 @@
     <!-- left side post video box -->
     <div class="row q-col-gutter-lg">
       <div class="col-12 col-sm-8">
+        <!-- 🔍 Search Input -->
+        <q-input
+          v-model="searchQuery"
+          label="Search posts"
+          outlined
+          dense
+          debounce="300"
+          class="q-mb-md"
+          clearable
+        />
         <q-scroll-area style="height: calc(100vh - 100px)">
           <template v-if="!loadingVideos && videos.length">
             <q-card
-              v-for="video in videos"
+              v-for="video in filteredVideos"
               :key="video.id"
               class="card-post q-mb-md"
               bordered
@@ -388,53 +398,153 @@
         </q-bar>
 
         <!-- Modal Comment Feed -->
-        <q-scroll-area style="height: 60vh">
-          <q-list>
-            <q-item v-for="(comment, idx) in comments" :key="comment.id || idx">
-              <!-- Avatar with dot -->
-              <q-item-section avatar>
-                <q-avatar size="32px">
-                  <img :src="comment.avatarUrl || defaultAvatar" />
-                  <q-badge
-                    rounded
-                    floating
-                    :color="comment.online ? 'green' : 'red'"
-                    class="presence-dot"
-                  />
-                </q-avatar>
-              </q-item-section>
+        <q-page class="constrain q-pa-md">
+          <q-scroll-area style="height: calc(100vh - 100px)">
+            <q-card class="q-pa-md">
+              <q-toolbar class="bg-grey-2 text-primary">
+                <q-toolbar-title>
+                  💬 Comments
+                  <q-badge color="primary" align="top right">
+                    {{ commentCount }}
+                  </q-badge></q-toolbar-title
+                >
+              </q-toolbar>
 
-              <!-- Comment content -->
-              <q-item-section>
-                <q-item-label class="text-bold">
-                  {{ comment.userName || comment.displayName || "User" }}
-                </q-item-label>
-                <!-- Timestamp -->
-                <q-item-label caption class="text-grey-6">
-                  {{ new Date(comment.timestamp).toLocaleString() }}
-                </q-item-label>
-                <q-item-label caption>
-                  {{ comment.text }}
-                </q-item-label>
-              </q-item-section>
+              <!-- Comments List -->
+              <q-list v-if="comments.length">
+                <q-item
+                  v-for="(comment, idx) in comments"
+                  :key="comment?.id || idx"
+                >
+                  <q-item-section avatar>
+                    <q-avatar size="32px">
+                      <img :src="comment.avatarUrl || defaultAvatar" />
+                      <q-badge
+                        rounded
+                        floating
+                        :color="comment.online ? 'green' : 'red'"
+                        class="presence-dot"
+                      />
+                    </q-avatar>
+                  </q-item-section>
 
-              <!-- Delete button (owner only) -->
-              <q-item-section
-                side
-                v-if="comment.userId === storeAuth.user?.uid"
-              >
-                <q-btn
-                  dense
-                  flat
-                  icon="delete"
-                  color="negative"
-                  size="sm"
-                  @click="confirmDeleteComment(comment.id)"
-                />
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-scroll-area>
+                  <q-item-section>
+                    <q-item-label class="text-bold">
+                      {{ comment.userName || comment.displayName || "User" }}
+                    </q-item-label>
+
+                    <!-- Reply indicator -->
+                    <template v-if="comment.replyTo">
+                      <q-item-label caption>
+                        🧵 Reply to another comment
+                      </q-item-label>
+                      <q-btn
+                        flat
+                        dense
+                        label="View thread"
+                        color="primary"
+                        size="sm"
+                        @click="
+                          $router.push(
+                            `/replies/${comment.postId}/${comment.replyTo}`
+                          )
+                        "
+                      />
+                    </template>
+
+                    <!-- Render mentions as inline chips with popovers -->
+                    <q-item-label caption>
+                      <template
+                        v-for="(part, i) in comment.parsedText"
+                        :key="i"
+                      >
+                        <span v-if="part.isMention">
+                          <q-chip
+                            clickable
+                            square
+                            class="mention-chip"
+                            @click="goToProfile(part.text)"
+                          >
+                            <q-tooltip
+                              >View profile of {{ part.text }}</q-tooltip
+                            >
+                            {{ part.text }}
+                          </q-chip>
+                        </span>
+                        <span v-else>{{ part.text }}</span>
+                      </template>
+                    </q-item-label>
+
+                    <q-item-label caption class="text-grey-6">
+                      {{ new Date(comment.timestamp).toLocaleString() }}
+                      <span v-if="comment.edited">(edited)</span>
+                    </q-item-label>
+                  </q-item-section>
+
+                  <!-- ⋯ Action dropdown menu (always shown) -->
+                  <q-item-section side>
+                    <q-btn round dense flat icon="more_vert" color="primary">
+                      <q-menu>
+                        <q-list style="min-width: 140px">
+                          <q-item
+                            v-if="comment.userId === storeAuth.user?.uid"
+                            clickable
+                            v-close-popup
+                            @click="startEditingComment(comment)"
+                          >
+                            <q-item-section avatar
+                              ><q-icon name="edit"
+                            /></q-item-section>
+                            <q-item-section>Edit</q-item-section>
+                          </q-item>
+
+                          <q-item
+                            v-if="comment.userId === storeAuth.user?.uid"
+                            clickable
+                            v-close-popup
+                            @click="confirmDeleteComment(comment.id)"
+                          >
+                            <q-item-section avatar
+                              ><q-icon name="delete"
+                            /></q-item-section>
+                            <q-item-section>Delete</q-item-section>
+                          </q-item>
+
+                          <q-item
+                            v-if="comment.userId === storeAuth.user?.uid"
+                            clickable
+                            v-close-popup
+                            @click="toggleCommentOffline(comment)"
+                          >
+                            <q-item-section avatar
+                              ><q-icon name="visibility_off"
+                            /></q-item-section>
+                            <q-item-section>
+                              {{ comment.online ? "Set Offline" : "Go Online" }}
+                            </q-item-section>
+                          </q-item>
+
+                          <q-item
+                            v-if="storeAuth.user"
+                            clickable
+                            v-close-popup
+                            @click="goToReplies(comment)"
+                          >
+                            <q-item-section avatar
+                              ><q-icon name="reply"
+                            /></q-item-section>
+                            <q-item-section>Reply</q-item-section>
+                          </q-item>
+                        </q-list>
+                      </q-menu>
+                    </q-btn>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <div v-else class="text-caption">❌ No comments yet.</div>
+            </q-card>
+          </q-scroll-area>
+        </q-page>
 
         <!-- Modal Input Section -->
         <q-separator />
@@ -1064,6 +1174,19 @@ function parseMention(text) {
     isMention: part.startsWith("@"),
   }));
 }
+
+const searchQuery = ref("");
+
+const filteredVideos = computed(() =>
+  videos.value.filter((video) => {
+    const query = searchQuery.value.toLowerCase();
+    return (
+      video.caption?.toLowerCase().includes(query) ||
+      video.location?.toLowerCase().includes(query) ||
+      niceDate(video.date).toLowerCase().includes(query)
+    );
+  })
+);
 
 //-----------------------------------------------
 </script>

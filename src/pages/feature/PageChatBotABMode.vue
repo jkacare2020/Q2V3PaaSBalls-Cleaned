@@ -95,11 +95,11 @@
 
 <script setup>
 import { ref } from "vue";
-import axios from "axios";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { auth } from "src/firebase/init";
 import { apiNode } from "boot/apiNode"; // Make sure this is imported at the top
+import { nextTick } from "vue";
 
 const router = useRouter();
 const $q = useQuasar();
@@ -158,6 +158,11 @@ const sendMessage = async () => {
 
     const botResponse = response.data.botResponse;
     chatMessages.value.push({ role: "bot", text: botResponse });
+
+    // Auto-scroll after DOM updates
+    await nextTick();
+    const el = document.querySelector(".chat-display");
+    if (el) el.scrollTop = el.scrollHeight;
 
     // ✅ Speak response only if Speaker is enabled
     if (isSpeakerEnabled.value) {
@@ -280,7 +285,7 @@ can **enable Voice Mode**, **toggle Speaker on/off**, and **confirm voice
 input** before sending! 🚀🔥
 
 <style scoped>
-.chat-container {
+/* .chat-container {
   max-width: 600px;
   margin: 0 auto;
   display: flex;
@@ -318,5 +323,33 @@ input** before sending! 🚀🔥
   max-width: 600px;
   width: 100%;
   margin: 20px auto;
+}
+
+.chat-display {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background-color: var(--q-background);
+  color: var(--q-text);
+}
+
+.user-message {
+  text-align: right;
+  background-color: var(--q-color-primary-lightest);
+  color: var(--q-text);
+  padding: 8px 12px;
+  border-radius: 16px;
+  margin: 5px 0;
+}
+
+.bot-message {
+  text-align: left;
+  background-color: var(--q-color-secondary-lightest);
+  color: var(--q-text);
+  padding: 8px 12px;
+  border-radius: 16px;
+  margin: 5px 0;
 }
 </style>

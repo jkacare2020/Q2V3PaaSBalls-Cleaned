@@ -50,153 +50,166 @@
     <!-- left side post box -->
     <div class="row q-col-gutter-lg">
       <div class="col-12 col-sm-8">
-        <q-scroll-area style="height: calc(100vh - 100px)">
-          <template v-if="!loadingPosts && posts.length">
-            <q-card
-              v-for="post in posts"
-              :key="post.id"
-              class="card-post q-mb-md"
-              :class="{ 'bg-red-1': post.offline }"
-              bordered
-              flat
-            >
-              <q-badge
-                v-if="post.offline"
-                class="badge-offline absolute-top-right"
-                color="red"
+        <div class="col-12 col-sm-8">
+          <!-- 🔍 Search Input -->
+          <q-input
+            v-model="searchQuery"
+            label="Search posts"
+            outlined
+            dense
+            debounce="300"
+            class="q-mb-md"
+            clearable
+          />
+          <q-scroll-area style="height: calc(100vh - 100px)">
+            <template v-if="!loadingPosts && posts.length">
+              <q-card
+                v-for="post in filteredPosts"
+                :key="post.id"
+                class="card-post q-mb-md"
+                :class="{ 'bg-red-1': post.offline }"
+                bordered
+                flat
               >
-                Stored offline
-              </q-badge>
-              <!-- Post action icons (top-right) -->
-              <div class="post-icons-top-right q-mr-lg">
-                <q-btn
-                  flat
-                  round
-                  dense
-                  icon="chat"
-                  color="primary"
-                  @click="startCommentForPost(post)"
-                >
-                  <q-tooltip>Comment</q-tooltip>
-                </q-btn>
-
-                <q-btn
-                  flat
-                  round
-                  dense
-                  icon="delete"
+                <q-badge
+                  v-if="post.offline"
+                  class="badge-offline absolute-top-right"
                   color="red"
-                  @click="deletePost(post.id)"
                 >
-                  <q-tooltip>Delete post</q-tooltip>
-                </q-btn>
-              </div>
-
-              <q-item>
-                <q-item-section avatar>
-                  <q-avatar>
-                    <img :src="avatarUrl" :alt="username" />
-                  </q-avatar>
-                </q-item-section>
-
-                <q-item-section>
-                  <q-item-label class="text-bold">{{ username }}</q-item-label>
-                  <q-item-label caption>
-                    {{ post.location }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-separator />
-              <!-- photo Display--->
-              <q-img :src="post.imageUrl" />
-
-              <q-card-section>
-                <div>{{ post.caption }}</div>
-                <div class="text-caption text-grey">
-                  {{ niceDate(post.date) }}
-                </div>
-                <!-----------badge------------>
-                <q-badge
-                  v-if="post.tags?.includes('public')"
-                  label="Public"
-                  color="green"
-                  class="q-mt-sm"
-                  rounded
-                />
-                <q-badge
-                  v-else
-                  label="Private"
-                  color="grey"
-                  class="q-mt-sm"
-                  rounded
-                />
-                <q-badge
-                  v-if="post.userId === storeAuth.user?.uid"
-                  label="You"
-                  color="primary"
-                  class="q-ml-sm"
-                />
-                <q-card-actions align="right">
-                  <q-select
-                    v-model="post.visibilityTag"
-                    :options="['public', 'private']"
-                    label="Visibility"
+                  Stored offline
+                </q-badge>
+                <!-- Post action icons (top-right) -->
+                <div class="post-icons-top-right q-mr-lg">
+                  <q-btn
+                    flat
+                    round
                     dense
-                    emit-value
-                    map-options
-                    outlined
-                    style="max-width: 140px"
-                    @update:model-value="
-                      (value) => updateVisibility(post.id, value)
-                    "
-                    :disable="post.userId !== storeAuth.user?.uid"
+                    icon="chat"
+                    color="primary"
+                    @click="startCommentForPost(post)"
+                  >
+                    <q-tooltip>Comment</q-tooltip>
+                  </q-btn>
+                  <!-------------------------------------------------------->
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    icon="delete"
+                    color="red"
+                    @click="deletePost(post.id)"
+                  >
+                    <q-tooltip>Delete post</q-tooltip>
+                  </q-btn>
+                </div>
+
+                <q-item>
+                  <q-item-section avatar>
+                    <q-avatar>
+                      <img :src="avatarUrl" :alt="username" />
+                    </q-avatar>
+                  </q-item-section>
+
+                  <q-item-section>
+                    <q-item-label class="text-bold">{{
+                      username
+                    }}</q-item-label>
+                    <q-item-label caption>
+                      {{ post.location }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-separator />
+                <!-- photo Display--->
+                <q-img :src="post.imageUrl" />
+
+                <q-card-section>
+                  <div>{{ post.caption }}</div>
+                  <div class="text-caption text-grey">
+                    {{ niceDate(post.date) }}
+                  </div>
+                  <!-----------badge------------>
+                  <q-badge
+                    v-if="post.tags?.includes('public')"
+                    label="Public"
+                    color="green"
+                    class="q-mt-sm"
+                    rounded
                   />
-                </q-card-actions>
-              </q-card-section>
-            </q-card>
-          </template>
-          <template v-else-if="!loadingPosts && !posts.length">
-            <h5 class="text-center text-grey">No posts yet.</h5>
-          </template>
-          <template v-else>
-            <!-- Skeleton Loading -->
-            <q-card flat bordered>
-              <q-item>
-                <q-item-section avatar>
-                  <q-skeleton type="QAvatar" animation="fade" size="40px" />
-                </q-item-section>
+                  <q-badge
+                    v-else
+                    label="Private"
+                    color="grey"
+                    class="q-mt-sm"
+                    rounded
+                  />
+                  <q-badge
+                    v-if="post.userId === storeAuth.user?.uid"
+                    label="You"
+                    color="primary"
+                    class="q-ml-sm"
+                  />
+                  <q-card-actions align="right">
+                    <q-select
+                      v-model="post.visibilityTag"
+                      :options="['public', 'private']"
+                      label="Visibility"
+                      dense
+                      emit-value
+                      map-options
+                      outlined
+                      style="max-width: 140px"
+                      @update:model-value="
+                        (value) => updateVisibility(post.id, value)
+                      "
+                      :disable="post.userId !== storeAuth.user?.uid"
+                    />
+                  </q-card-actions>
+                </q-card-section>
+              </q-card>
+            </template>
+            <template v-else-if="!loadingPosts && !posts.length">
+              <h5 class="text-center text-grey">No posts yet.</h5>
+            </template>
+            <template v-else>
+              <!-- Skeleton Loading -->
+              <q-card flat bordered>
+                <q-item>
+                  <q-item-section avatar>
+                    <q-skeleton type="QAvatar" animation="fade" size="40px" />
+                  </q-item-section>
 
-                <q-item-section>
-                  <q-item-label>
-                    <q-skeleton type="text" animation="fade" />
-                  </q-item-label>
-                  <q-item-label caption>
-                    <q-skeleton type="text" animation="fade" />
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
+                  <q-item-section>
+                    <q-item-label>
+                      <q-skeleton type="text" animation="fade" />
+                    </q-item-label>
+                    <q-item-label caption>
+                      <q-skeleton type="text" animation="fade" />
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
 
-              <q-skeleton height="200px" square animation="fade" />
+                <q-skeleton height="200px" square animation="fade" />
 
-              <q-card-section>
-                <q-skeleton
-                  type="text"
-                  class="text-subtitle2"
-                  animation="fade"
-                />
-                <q-skeleton
-                  type="text"
-                  width="50%"
-                  class="text-subtitle2"
-                  animation="fade"
-                />
-              </q-card-section>
-            </q-card>
-          </template>
-        </q-scroll-area>
+                <q-card-section>
+                  <q-skeleton
+                    type="text"
+                    class="text-subtitle2"
+                    animation="fade"
+                  />
+                  <q-skeleton
+                    type="text"
+                    width="50%"
+                    class="text-subtitle2"
+                    animation="fade"
+                  />
+                </q-card-section>
+              </q-card>
+            </template>
+          </q-scroll-area>
+        </div>
       </div>
-
       <!-- RIGHT: Presence + Comment input -->
       <div class="col-4 large-screen-only">
         <q-badge color="primary" align="top right">
@@ -1195,6 +1208,19 @@ function parseMention(text) {
     isMention: part.startsWith("@"),
   }));
 }
+
+const searchQuery = ref("");
+
+const filteredPosts = computed(() =>
+  posts.value.filter((post) => {
+    const query = searchQuery.value.toLowerCase();
+    return (
+      post.caption?.toLowerCase().includes(query) ||
+      post.location?.toLowerCase().includes(query) ||
+      niceDate(post.date).toLowerCase().includes(query)
+    );
+  })
+);
 </script>
 
 <style scoped lang="scss">

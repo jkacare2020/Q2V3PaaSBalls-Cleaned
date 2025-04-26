@@ -47,6 +47,15 @@ exports.uploadAudio = async (req, res) => {
       return res.status(409).json({ error: "Duplicate audio detected" });
     }
 
+    // 🛠️ Fetch userData
+    const userDoc = await dbFirestore.collection("users").doc(userId).get();
+    let userData = {};
+    if (userDoc.exists) {
+      userData = userDoc.data();
+    } else {
+      console.warn(`⚠️ No user profile found for UID: ${userId}`);
+    }
+
     // Create a new document reference (to generate doc.id first)
     const docRef = dbFirestore.collection("audios").doc();
 
@@ -79,6 +88,8 @@ exports.uploadAudio = async (req, res) => {
       audioUrl,
       fileName,
       caption,
+      userName: userData.userName,
+      displayName: userData.displayName,
     });
     await docRef.set({
       id, // Firestore document ID
@@ -87,6 +98,8 @@ exports.uploadAudio = async (req, res) => {
       fileName,
       caption,
       date: new Date(),
+      userName: userData.userName || "", // 👈 add this
+      displayName: userData.displayName || "User", // 👈 and this
     });
 
     console.log("Audio uploaded and metadata saved to Firestore:", id);

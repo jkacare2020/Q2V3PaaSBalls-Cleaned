@@ -81,7 +81,7 @@
     <div class="row justify-center q-ma-md">
       <q-select
         v-model="post.tags"
-        :options="['public', 'private', 'certification']"
+        :options="['public', 'private', 'certification', 'market']"
         multiple
         label="Tags"
         outlined
@@ -261,8 +261,26 @@ function locationError() {
 
 <style lang="sass">
 .camera-frame
+  position: relative
+  width: 100%
+  max-width: 500px
+  aspect-ratio: 4 / 3
+  overflow: hidden
+  margin: 0 auto
   border: 2px solid $grey-10
   border-radius: 10px
+  background-color: white
+
+video
+  width: 100%
+  height: 100%
+  object-fit: cover
+  display: block
+
+
+
+
+  padding-bottom: env(safe-area-inset-bottom);
 
   // app global css in Sass form
 .text-grand-hotel
@@ -287,4 +305,5 @@ function locationError() {
 .constrain-more
   max-width: 600px
   margin: 0 auto
+  padding-bottom: 40px // extra space for buttons
 </style>

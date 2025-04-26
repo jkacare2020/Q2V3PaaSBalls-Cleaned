@@ -1,86 +1,106 @@
 <template>
   <!--PageCamera.vue--->
   <q-page class="constrain-more q-pa-md">
-    <div class="camera-frame q-pa-md">
-      <video v-show="!imageCaptured" ref="video" class="full-width" autoplay />
-      <canvas
-        v-show="imageCaptured"
-        ref="canvas"
-        class="full-width"
-        height="240"
-      />
-    </div>
-    <div class="text-center q-pa-md">
-      <q-btn
-        v-if="hasCameraSupport"
-        @click="captureImage"
-        :disable="imageCaptured"
-        color="grey-10"
-        icon="eva-camera"
-        size="lg"
-        round
-      />
-      <q-file
-        v-else
-        v-model="imageUpload"
-        @input="captureImageFallback"
-        label="Choose an image"
-        accept="image/*"
-        outlined
-      >
-        <template v-slot:prepend>
-          <q-icon name="eva-attach-outline" />
-        </template>
-      </q-file>
-      <div class="row justify-center q-ma-md">
-        <q-input
-          v-model="post.caption"
-          class="col col-sm-6"
-          label="Caption *"
-          dense
+    <div class="camera-action-group">
+      <div class="camera-frame">
+        <video
+          v-show="!imageCaptured"
+          ref="video"
+          class="full-width"
+          autoplay
+          playsinline
+          muted
+        />
+        <canvas
+          v-show="imageCaptured"
+          ref="canvas"
+          class="full-width"
+          height="240"
         />
       </div>
-      <div class="row justify-center q-ma-md">
-        <q-input
-          v-model="post.location"
-          :loading="locationLoading"
-          class="col col-sm-6"
-          label="Location"
-          dense
-        >
-          <template v-slot:append>
-            <q-btn
-              v-if="!locationLoading && locationSupported"
-              @click="getLocation"
-              icon="eva-navigation-2-outline"
-              dense
-              flat
-              round
-            />
-          </template>
-        </q-input>
-      </div>
-      <div class="row justify-center q-ma-md">
-        <q-select
-          v-model="post.tags"
-          :options="['avatar', 'public', 'private', 'logo', 'certification']"
-          multiple
-          label="Tags"
-          outlined
-          dense
-          class="col col-sm-6"
-          use-chips
-        />
-      </div>
-      <div class="row justify-center q-mt-lg">
+      <div class="text-center q-pa-md">
         <q-btn
-          @click="addPost()"
-          :disable="!post.caption || !post.photo"
-          color="primary"
-          label="Post Image"
-          rounded
-          unelevated
+          v-if="hasCameraSupport"
+          @click="captureImage"
+          :disable="imageCaptured"
+          color="grey-10"
+          icon="eva-camera"
+          size="lg"
+          round
         />
+        <q-file
+          v-else
+          v-model="imageUpload"
+          @input="captureImageFallback"
+          label="Choose an image"
+          accept="image/*"
+          outlined
+        >
+          <template v-slot:prepend>
+            <q-icon name="eva-attach-outline" />
+          </template>
+        </q-file>
+        <div class="row justify-center q-ma-md">
+          <q-input
+            v-model="post.caption"
+            label="Caption *"
+            outlined
+            dense
+            class="q-mt-md"
+            style="width: 100%; max-width: 500px"
+          />
+        </div>
+        <div class="row justify-center q-ma-md">
+          <q-input
+            v-model="post.location"
+            :loading="locationLoading"
+            label="Location"
+            outlined
+            dense
+            class="q-mt-md"
+            style="width: 100%; max-width: 500px"
+          >
+            <template v-slot:append>
+              <q-btn
+                v-if="!locationLoading && locationSupported"
+                @click="getLocation"
+                icon="eva-navigation-2-outline"
+                dense
+                flat
+                round
+              />
+            </template>
+          </q-input>
+        </div>
+        <div class="row justify-center q-ma-md">
+          <q-select
+            v-model="post.tags"
+            :options="[
+              'avatar',
+              'public',
+              'private',
+              'market',
+              'logo',
+              'certification',
+            ]"
+            multiple
+            label="Tags"
+            outlined
+            dense
+            class="col col-sm-6"
+            use-chips
+          />
+        </div>
+        <div class="row justify-center q-mt-lg">
+          <q-btn
+            @click="addPost()"
+            :disable="!post.caption || !post.photo"
+            color="primary"
+            label="Post Image"
+            rounded
+            unelevated
+          />
+        </div>
       </div>
     </div>
   </q-page>
@@ -307,9 +327,32 @@ function addPostError() {
 </script>
 
 <style lang="sass">
+.camera-action-group
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  gap: 12px // controls vertical spacing between video & button
+
+
 .camera-frame
+  position: relative
+  width: 100%
+  max-width: 500px
+  aspect-ratio: 4 / 3
+  overflow: hidden
   border: 2px solid $grey-10
   border-radius: 10px
+  background: white
+
+
+.video-preview
+  width: 110%
+  height: 100%
+  object-fit: cover
+
+
+
 
   // app global css in Sass form
 .text-grand-hotel
