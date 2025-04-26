@@ -873,12 +873,13 @@ onMounted(() => {
     if (user) {
       console.log("👤 Auth state changed:", user.uid);
       fetchUserData(user.uid);
-
+      getAudios();
       fetchComments(); // ✅ called from here
       initPresenceTracking(); // 👈 make sure it's called here too
     }
   });
   if (auth.currentUser) {
+    getAudios();
   }
 });
 

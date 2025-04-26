@@ -193,7 +193,7 @@ function captureVideoFallback(event) {
   }
 }
 
-// Upload video
+// ---------------Upload video --------------------------
 async function uploadVideo() {
   const user = auth.currentUser;
   if (!user) {
@@ -227,7 +227,7 @@ async function uploadVideo() {
   }
 }
 
-// Geolocation logic
+// ------------Geolocation logic -------------------
 function getLocation() {
   locationLoading.value = true;
   navigator.geolocation.getCurrentPosition(

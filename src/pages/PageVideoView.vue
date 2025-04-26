@@ -72,10 +72,12 @@
               <q-separator />
 
               <!-- Video Display -->
-              <video controls class="full-width">
-                <source :src="video.videoUrl" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+              <video
+                controls
+                class="full-width"
+                :poster="video.posterUrl"
+                :src="video.videoUrl"
+              ></video>
 
               <q-card-section>
                 <div>{{ video.caption }}</div>

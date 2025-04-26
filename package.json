@@ -15,7 +15,8 @@
     "build:mac": "quasar build -m electron",
     "build:win": "quasar build -m electron --target win32",
     "build:ios": "quasar build -m capacitor -T ios --ide",
-    "build:android": "quasar build -m capacitor -T android --ide"
+    "build:android": "quasar build -m capacitor -T android --ide",
+    "build-deploy": "quasar build -m pwa && firebase deploy --only hosting"
   },
   "dependencies": {
     "@capacitor/dialog": "^6.0.0",
