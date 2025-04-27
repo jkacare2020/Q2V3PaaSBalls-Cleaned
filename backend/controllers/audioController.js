@@ -2,6 +2,15 @@ const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
 const dbFirestore = admin.firestore(); // Firestore instance
 const bucket = admin.storage().bucket(); // Firebase Storage bucket
+const path = require("path");
+const fs = require("fs"); // If not already there
+const ffmpeg = require("fluent-ffmpeg");
+const ffmpegPath = require("ffmpeg-static");
+
+const os = require("os");
+
+// ✅ Important: Set ffmpeg path for fluent-ffmpeg
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 const niceDate = (value) => {
   if (!value) return "No date available";
@@ -59,24 +68,42 @@ exports.uploadAudio = async (req, res) => {
     // Create a new document reference (to generate doc.id first)
     const docRef = dbFirestore.collection("audios").doc();
 
+    // Create Firestore document reference and ID first
     // Use Firestore document ID as the unique ID
     const id = docRef.id;
 
-    // Upload to Firebase Storage
-    const filePath = `audios/${id}_${fileName}`;
+    // ✅ Step 2: Save base64 to a temporary file
+    const tempOriginalPath = path.join(os.tmpdir(), `${id}_original.webm`);
+    fs.writeFileSync(tempOriginalPath, Buffer.from(audioData, "base64"));
+
+    // ✅ Step 3: Prepare temp MP3 path
+    const tempMp3Path = path.join(os.tmpdir(), `${id}.mp3`);
+
+    // ✅ Step 4: Convert using ffmpeg
+    await new Promise((resolve, reject) => {
+      ffmpeg(tempOriginalPath)
+        .toFormat("mp3")
+        .outputOptions("-b:a 192k")
+        .save(tempMp3Path)
+        .on("end", resolve)
+        .on("error", reject);
+    });
+
+    console.log("✅ Audio converted to MP3:", tempMp3Path);
+    // ✅ Step 5: Upload converted MP3 to Firebase
+    const filePath = `audios/${id}.mp3`;
     const file = bucket.file(filePath);
 
-    console.log("Uploading file to Firebase Storage:", filePath);
-    await file.save(Buffer.from(audioData, "base64"), {
+    await file.save(fs.readFileSync(tempMp3Path), {
       metadata: {
-        contentType: "audio/wav",
+        contentType: "audio/mpeg",
         metadata: {
           firebaseStorageDownloadTokens: uuidv4(),
         },
       },
     });
 
-    // Get the download URL
+    // ✅ Step 6: Generate Firebase download URL
     const audioUrl = `https://firebasestorage.googleapis.com/v0/b/${
       bucket.name
     }/o/${encodeURIComponent(filePath)}?alt=media`;
@@ -91,6 +118,7 @@ exports.uploadAudio = async (req, res) => {
       userName: userData.userName,
       displayName: userData.displayName,
     });
+    //------------------------------------------------------
     await docRef.set({
       id, // Firestore document ID
       userId,

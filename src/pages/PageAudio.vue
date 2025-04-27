@@ -162,7 +162,13 @@ const startRecording = () => {
   navigator.mediaDevices
     .getUserMedia({ audio: true })
     .then((stream) => {
-      mediaRecorder = new MediaRecorder(stream);
+      // Try to create MediaRecorder with safer MIME type
+      let options = { mimeType: "audio/webm" };
+
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: "audio/wav" }; // fallback to wav if webm not supported
+      }
+      mediaRecorder = new MediaRecorder(stream, options);
       const audioChunks = [];
 
       mediaRecorder.ondataavailable = (e) => {
@@ -170,7 +176,7 @@ const startRecording = () => {
       };
       //--------------------------------------------------------------------------
       mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunks, { type: "audio/webm" });
+        const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
         audioBlob.value = blob;
         audioUrl.value = URL.createObjectURL(blob);
         console.log("Recording completed. Blob created:", blob);
