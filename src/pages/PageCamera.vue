@@ -20,6 +20,17 @@
       </div>
       <div class="text-center q-pa-md">
         <q-btn
+          color="primary"
+          icon="flip_camera_android"
+          @click="flipCamera"
+          size="lg"
+          round
+        >
+          <q-tooltip>Flip Camera</q-tooltip>
+          <!-- 🧠 Tooltip here -->
+        </q-btn>
+        <!-- 📸 Capture Image Button (Icon only) -->
+        <q-btn
           v-if="hasCameraSupport"
           @click="captureImage"
           :disable="imageCaptured"
@@ -27,7 +38,11 @@
           icon="eva-camera"
           size="lg"
           round
-        />
+          class="q-ml-md"
+        >
+          <q-tooltip>Capture Photo</q-tooltip>
+          <!-- 🧠 Tooltip here -->
+        </q-btn>
         <q-file
           v-else
           v-model="imageUpload"
@@ -324,6 +339,36 @@ async function addPost() {
 function addPostError() {
   $q.dialog({ title: "Error", message: "Sorry, could not create post!" });
 }
+
+const usingRearCamera = ref(true);
+let currentStream = null;
+
+const startCamera = async () => {
+  if (currentStream) {
+    currentStream.getTracks().forEach((track) => track.stop());
+  }
+  try {
+    const constraints = {
+      video: {
+        facingMode: usingRearCamera.value ? { exact: "environment" } : "user",
+      },
+      audio: false,
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.value.srcObject = stream;
+    currentStream = stream;
+  } catch (err) {
+    console.error("Error starting camera:", err);
+  }
+};
+
+const flipCamera = async () => {
+  usingRearCamera.value = !usingRearCamera.value;
+  await startCamera();
+};
+
+// Call startCamera() once initially:
+startCamera();
 </script>
 
 <style lang="sass">

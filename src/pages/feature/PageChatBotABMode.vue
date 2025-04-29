@@ -47,10 +47,10 @@
             />
             <q-btn
               label="Play Response"
-              color="blue"
-              icon="play_arrow"
-              :disable="!audioUrl"
+              color="primary"
+              icon="volume_up"
               @click="playBotResponse"
+              :class="{ 'pulse-button': shouldPulse }"
             />
           </div>
         </q-card-section>
@@ -106,10 +106,18 @@ const $q = useQuasar();
 
 const userMessage = ref("");
 const chatMessages = ref([]);
+const botResponse = ref("");
 const audioUrl = ref(null);
 const isVoiceMode = ref(false); // 🔄 Voice Mode Toggle
 const isSpeakerEnabled = ref(true); // 🔊 Speaker Toggle
+const latestBotResponse = ref("");
+const shouldPulse = ref(false);
 
+const handleBotReply = (botText) => {
+  latestBotResponse.value = botText;
+  shouldPulse.value = true; // 🎯 Start animation when bot replies
+};
+//-----------------------------------
 const goToChatHistory = () => {
   router.push("/ChatbotHistory");
 };
@@ -167,6 +175,7 @@ const sendMessage = async () => {
     // ✅ Speak response only if Speaker is enabled
     if (isSpeakerEnabled.value) {
       convertToSpeech(botResponse);
+      handleBotReply(response.data.botResponse);
     }
   } catch (error) {
     console.error("Error sending message:", error);
@@ -228,12 +237,17 @@ const convertToSpeech = (text) => {
 
 // 🖥️ Play Stored Audio Response
 const playBotResponse = () => {
-  if (audioUrl.value) {
-    const audio = new Audio(audioUrl.value);
-    audio.play();
-  } else {
-    $q.notify({ type: "negative", message: "No audio to play." });
-  }
+  if (!latestBotResponse.value) return;
+
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(latestBotResponse.value);
+  utterance.lang = "en-US";
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  speechSynthesis.speak(utterance);
+
+  shouldPulse.value = false; // 🛑 Stop animation when clicked
 };
 
 // 🎤 Start Voice Mode STT (B Mode)
@@ -351,5 +365,24 @@ input** before sending! 🚀🔥
   padding: 8px 12px;
   border-radius: 16px;
   margin: 5px 0;
+}
+
+.pulse-button {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 </style>

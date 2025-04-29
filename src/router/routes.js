@@ -62,6 +62,10 @@ const routes = [
       },
       { path: "/photos", component: () => import("pages/PageHome.vue") },
       { path: "/videos", component: () => import("pages/PageVideoView.vue") },
+      {
+        path: "/audios-AI-stt",
+        component: () => import("pages/PageSTTAudio.vue"),
+      },
       { path: "/audios", component: () => import("pages/PageAudio.vue") },
 
       {

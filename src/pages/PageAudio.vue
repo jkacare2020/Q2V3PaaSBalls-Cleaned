@@ -21,6 +21,7 @@
             @click="convertToSpeech"
             class="q-mt-md"
           />
+          <!---Player---->
         </q-card-section>
         <q-card-section v-if="audioUrl" class="q-mt-md">
           <audio :src="audioUrl" controls autoplay class="full-width"></audio>
@@ -47,13 +48,14 @@
               icon="stop"
             />
 
-            <!--Start Transcription and Mic Input Section -->
             <q-btn
               label="Start Transcription"
               color="blue"
               icon="mic"
               @click="startTranscription"
             />
+            <!-- 🔴 Flashing Red Light During Recording -->
+            <div v-if="isRecording" class="recording-indicator"></div>
           </div>
         </q-card-section>
         <q-card-section class="q-mt-md">
@@ -64,7 +66,7 @@
     </div>
 
     <!-- Playback, Upload, and File Input Section -->
-    <!-- Playback, Caption, Upload Section -->
+
     <div class="audio-frame q-pa-md q-mt-md">
       <q-card class="q-ma-md">
         <q-card-section>
@@ -95,13 +97,21 @@
 
           <!-- Step 3: Buttons -->
           <div class="row items-center q-gutter-md q-mt-md">
-            <!-- <q-btn
-              @click="playRecording"
+            <q-btn
+              v-if="audioUrl"
               label="Play Recording"
               color="primary"
               icon="play_arrow"
-              :disable="!audioUrl || caption.trim() === ''"
-            /> -->
+              @click="playRecording"
+            />
+            <!-------Audio  Player -------------------->
+            <audio
+              ref="recordedAudio"
+              :src="audioUrl"
+              controls
+              class="full-width"
+            />
+
             <q-btn
               @click="uploadAudio"
               label="Upload Audio"
@@ -141,6 +151,7 @@ const isUploading = ref(false);
 const sttOutput = ref("");
 const textToSpeak = ref("");
 const text = ref("");
+const recordedAudio = ref(null);
 
 // Handles file upload from local device attachment ------
 const handleFileUpload = (event) => {
@@ -156,6 +167,7 @@ const handleFileUpload = (event) => {
 
 // Starts audio recording
 let mediaRecorder = null;
+
 const startRecording = () => {
   if (isRecording.value) return;
 
@@ -397,8 +409,18 @@ const uploadAudio = async () => {
     if (uploadButton) uploadButton.disabled = false;
   }
 };
+
+const playRecording = () => {
+  if (recordedAudio.value) {
+    recordedAudio.value
+      .play()
+      .then(() => console.log("Audio playing"))
+      .catch((err) => console.error("Audio play failed:", err));
+  }
+};
 </script>
 <style lang="sass">
+
 .audio-frame
   border: 2px solid $grey-10
   border-radius: 10px
@@ -426,4 +448,25 @@ const uploadAudio = async () => {
 .constrain-more
   max-width: 600px
   margin: 0 auto
+
+
+.recording-indicator
+  width: 20px
+  height: 20px
+  background-color: red
+  border-radius: 50%
+  animation: pulse 1s infinite
+  margin-left: 10px
+  display: inline-block
+
+@keyframes pulse
+  0%
+    transform: scale(1)
+    opacity: 1
+  50%
+    transform: scale(1.5)
+    opacity: 0.4
+  100%
+    transform: scale(1)
+    opacity: 1
 </style>
