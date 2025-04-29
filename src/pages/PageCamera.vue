@@ -2,6 +2,16 @@
   <!--PageCamera.vue--->
   <q-page class="constrain-more q-pa-md">
     <div class="camera-action-group">
+      <q-select
+        v-model="selectedResolution"
+        :options="resolutionOptions"
+        label="Resolution"
+        outlined
+        dense
+        emit-value
+        map-options
+      />
+
       <div class="camera-frame">
         <video
           v-show="!imageCaptured"
@@ -104,6 +114,7 @@
             dense
             class="col col-sm-6"
             use-chips
+            hide-dropdown-after-select
           />
         </div>
         <div class="row justify-center q-mt-lg">
@@ -146,8 +157,15 @@ const imageCaptured = ref(false);
 const imageUpload = ref([]);
 const hasCameraSupport = ref(true);
 const locationLoading = ref(false);
-
 const locationSupported = computed(() => "geolocation" in navigator);
+const selectedResolution = ref("1280x720");
+const cameraFacingMode = ref("environment"); // default: back camera
+
+const resolutionOptions = [
+  { label: "HD 1280x720", value: "1280x720" },
+  { label: "SD 640x480", value: "640x480" },
+  { label: "Full HD 1920x1080", value: "1920x1080" },
+];
 
 onMounted(() => {
   initCamera();
@@ -155,7 +173,14 @@ onMounted(() => {
 
 function initCamera() {
   navigator.mediaDevices
-    .getUserMedia({ video: true })
+    .getUserMedia({
+      video: {
+        width: selectedResolution.value.width,
+        height: selectedResolution.value.height,
+        facingMode: cameraFacingMode.value,
+      },
+      audio: false,
+    })
     .then((stream) => {
       video.value.srcObject = stream;
     })
@@ -164,27 +189,35 @@ function initCamera() {
     });
 }
 
-function captureImage() {
+const captureImage = () => {
+  if (!video.value) return;
+
   const videoElement = video.value;
   const canvasElement = canvas.value;
+  const context = canvasElement.getContext("2d");
 
-  if (videoElement && canvasElement) {
-    canvasElement.width = videoElement.getBoundingClientRect().width;
-    canvasElement.height = videoElement.getBoundingClientRect().height;
-    const context = canvasElement.getContext("2d");
-    context.drawImage(
-      videoElement,
-      0,
-      0,
-      canvasElement.width,
-      canvasElement.height
-    );
+  // ⚡ VERY IMPORTANT: match canvas size to actual video stream size
+  canvasElement.width = videoElement.videoWidth;
+  canvasElement.height = videoElement.videoHeight;
 
-    imageCaptured.value = true;
-    post.photo = dataURItoBlob(canvasElement.toDataURL());
-    disableCamera();
-  }
-}
+  context.drawImage(
+    videoElement,
+    0,
+    0,
+    canvasElement.width,
+    canvasElement.height
+  );
+
+  // ✅ Now capture correctly
+  canvasElement.toBlob(
+    (blob) => {
+      post.photo = blob;
+      imageCaptured.value = true;
+    },
+    "image/jpeg",
+    0.9
+  ); // you can adjust quality here
+};
 
 function captureImageFallback(event) {
   // Accessing the files property directly from the event target
@@ -422,4 +455,10 @@ startCamera();
 .constrain-more
   max-width: 600px
   margin: 0 auto
+
+.video
+  width: 100%
+  height: auto
+  object-fit: cover
+  /* Stretch nicely if needed */
 </style>
