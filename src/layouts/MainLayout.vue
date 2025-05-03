@@ -166,6 +166,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db, auth, dbRealtime } from "src/firebase/init"; // ✅ Make sure it's the Firestore instance
 import { ref as dbRef, set } from "firebase/database";
 import { apiNode } from "boot/apiNode";
+import { onAuthStateChanged } from "firebase/auth";
 
 const storeUsers = useStoreUsers();
 const storeAuth = useStoreAuth();
@@ -205,6 +206,27 @@ async function loadAvatar(uid) {
     console.error("❌ Error loading avatar from Firestore:", err);
   }
 }
+//----------------------------------------------------------
+
+const fetchTenants = async () => {
+  const token = await auth.currentUser?.getIdToken();
+  const response = await apiNode.get("/api/tenants", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  // ... store tenants
+};
+
+onMounted(() => {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      fetchTenants();
+    } else {
+      console.warn("User not logged in");
+    }
+  });
+});
 
 // Watch for changes in the user data to trigger updates
 watch(
@@ -339,33 +361,6 @@ function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
 }
 
-// Navigation function to go to different pages
-// function goToPage(page) {
-//   leftDrawerOpen.value = false; // Close drawer when navigating
-//   switch (page) {
-//     case "users":
-//       router.push("/users"); // Admin users list page
-//       break;
-//     default:
-//       break;
-//   }
-// }
-
-// function navigateToViewEditTransactions() {
-//   router.push("/mongo-transacts");
-//   leftDrawerOpen.value = false; // Close the drawer after navigation
-// }
-
-// function navigateToViewMyTransactions() {
-//   router.push("/mongo-mytransacts");
-//   leftDrawerOpen.value = false; // Close the drawer after navigation
-// }
-
-// function navigateToNewTransaction() {
-//   router.push("/new-transaction"); // Add the route for creating a new transaction
-//   leftDrawerOpen.value = false;
-// }
-
 // Go to profile page of the logged-in user
 function goToProfile() {
   if (storeAuth.user) {
@@ -494,4 +489,6 @@ onMounted(() => {
     });
   });
 });
+
+//----------------------------
 </script>

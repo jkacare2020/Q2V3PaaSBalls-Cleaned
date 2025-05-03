@@ -1,4 +1,5 @@
 <template>
+  <!---PageTenantList.vue--->
   <q-page class="q-pa-md">
     <q-table
       title="Tenants"
@@ -34,9 +35,12 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
 import { useRouter } from "vue-router";
 import { apiNode } from "boot/apiNode";
+import { getAuth } from "firebase/auth";
+
+import { onAuthStateChanged } from "firebase/auth";
+const auth = getAuth();
 
 const router = useRouter(); // Access the Vue Router instance
 
@@ -75,10 +79,22 @@ const columns = [
   },
   { name: "actions", label: "Actions", field: "actions", align: "left" },
 ];
-
+//----------------------------------------------
 const fetchTenants = async () => {
   try {
-    const response = await apiNode.get(`/api/tenants`);
+    if (!auth.currentUser) {
+      console.warn("❌ No user is currently logged in.");
+      return;
+    }
+
+    const token = await auth.currentUser.getIdToken();
+
+    const response = await apiNode.get(`/api/tenants`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
     tenants.value = response.data;
   } catch (error) {
     console.error("Error fetching tenants:", error);
@@ -108,4 +124,14 @@ const deleteTenant = async (tenant) => {
 };
 
 onMounted(fetchTenants);
+
+onMounted(() => {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      fetchTenants();
+    } else {
+      console.warn("User not logged in");
+    }
+  });
+});
 </script>

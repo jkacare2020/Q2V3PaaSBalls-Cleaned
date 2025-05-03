@@ -1,4 +1,5 @@
 <template>
+  <!--PageTenantEdit.vue---->
   <q-page class="q-pa-md">
     <q-form @submit.prevent="editTenant">
       <q-input v-model="tenant.First_Name" label="First Name" required />
@@ -20,8 +21,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router"; // Use Vue Router hooks
-import axios from "axios";
 import { apiNode } from "boot/apiNode";
+import { auth } from "src/firebase/init";
+import { onAuthStateChanged } from "firebase/auth";
 
 const tenant = ref({});
 const route = useRoute(); // Access the route parameters
@@ -50,5 +52,15 @@ const editTenant = async () => {
   }
 };
 
-onMounted(fetchTenant); // Fetch tenant data on component mount
+// onMounted(fetchTenant); // Fetch tenant data on component mount
+
+onMounted(() => {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      fetchTenant();
+    } else {
+      console.warn("User not logged in");
+    }
+  });
+});
 </script>

@@ -101,6 +101,17 @@
                   >
                     <q-tooltip>Delete post</q-tooltip>
                   </q-btn>
+
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    icon="shopping_cart"
+                    color="orange"
+                    @click="goToProductPage(post.id)"
+                  >
+                    <q-tooltip>View Product</q-tooltip>
+                  </q-btn>
                 </div>
 
                 <q-item>
@@ -635,7 +646,15 @@ import {
   onDisconnect,
   serverTimestamp,
 } from "firebase/database";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
 
 import { useStoreAuth } from "src/stores/storeAuth";
 import { apiNode } from "boot/apiNode";
@@ -649,6 +668,7 @@ import { nextTick } from "vue";
 
 import { useQuasar } from "quasar";
 
+const currentUserId = auth.currentUser?.uid;
 const hasUnreadComments = computed(() => {
   return comments.value.length > 0 && !showCommentModal.value;
 });
@@ -1221,6 +1241,41 @@ const filteredPosts = computed(() =>
     );
   })
 );
+//-----------Clicked cart-----------
+
+// function goToProductPage(postId) {
+//   router.push(`/post-product/${postId}`);
+// }
+
+const goToProductPage = async (postId) => {
+  const currentUserId = auth.currentUser?.uid;
+
+  if (!currentUserId) {
+    console.warn("⚠️ No logged-in user.");
+    return;
+  }
+  const userDoc = await getDoc(doc(db, "users", currentUserId));
+  const userRole = userDoc.data()?.role || [];
+
+  if (!userRole.includes("buyer") && !userRole.includes("merchant")) {
+    // Prompt upgrade
+    $q.dialog({
+      title: "Join Marketplace",
+      message:
+        "You need to be a buyer or merchant to use the marketplace. Would you like to join?",
+      cancel: true,
+      persistent: true,
+    }).onOk(async () => {
+      await updateDoc(doc(db, "users", currentUserId), {
+        role: arrayUnion("buyer"), // or "merchant" based on intent
+      });
+      $q.notify({ type: "positive", message: "Marketplace access granted!" });
+      router.push(`/post-product/${postId}`);
+    });
+  } else {
+    router.push(`/post-product/${postId}`);
+  }
+};
 </script>
 
 <style scoped lang="scss">

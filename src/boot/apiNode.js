@@ -1,6 +1,7 @@
 //--aipNode.js ----
-import { boot } from "quasar/wrappers";
+// import { boot } from "quasar/wrappers";
 import axios from "axios";
+import { auth } from "src/firebase/init"; // ✅ must be present
 
 const nodeApiBaseURL =
   process.env.NODE_ENV === "production"
@@ -10,12 +11,28 @@ const nodeApiBaseURL =
 
 console.log("🧠 Node API base URL:", nodeApiBaseURL);
 
+// const apiNode = axios.create({
+//   baseURL: nodeApiBaseURL,
+// });
+
+// export default boot(({ app }) => {
+//   app.config.globalProperties.$apiNode = apiNode;
+// });
+
+// export { apiNode, nodeApiBaseURL };
+// src/boot/apiNode.js
+
 const apiNode = axios.create({
   baseURL: nodeApiBaseURL,
 });
 
-export default boot(({ app }) => {
-  app.config.globalProperties.$apiNode = apiNode;
+apiNode.interceptors.request.use(async (config) => {
+  const user = auth.currentUser;
+  if (user) {
+    const token = await user.getIdToken();
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export { apiNode, nodeApiBaseURL };

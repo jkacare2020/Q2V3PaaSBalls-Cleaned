@@ -231,6 +231,15 @@ const routes = [
         name: "PageReplies",
         component: () => import("pages/PageReplies.vue"),
       },
+      {
+        path: "/post-product/:postId",
+        component: () => import("pages/feature/PostProduct.vue"),
+      },
+      {
+        path: "/my-products",
+        name: "ProductList",
+        component: () => import("pages/feature/ProductList.vue"),
+      },
     ],
   },
 

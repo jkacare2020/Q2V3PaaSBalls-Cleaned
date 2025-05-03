@@ -111,6 +111,14 @@ exports.createPost = async (req, res) => {
           console.log("✅ Avatar metadata saved under /users/{userId}/avatar");
         }
 
+        if (postData.tags.includes("merchant")) {
+          const userRef = dbFirestore.collection("users").doc(userId);
+          await userRef.update({
+            role: admin.firestore.FieldValue.arrayUnion("merchant"),
+          });
+          console.log("✅ Merchant role added to user:", userId);
+        }
+
         res.send("Post added: " + fields.id);
       } catch (uploadErr) {
         console.error("Image processing or upload error:", uploadErr);

@@ -104,7 +104,7 @@
               'avatar',
               'public',
               'private',
-              'market',
+              'merchant',
               'logo',
               'certification',
             ]"

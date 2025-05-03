@@ -3,8 +3,10 @@ const router = express.Router();
 const {
   getPosts,
   deletePost,
+  getPostById,
   togglePostVisibility,
 } = require("../controllers/postController");
+
 const { createPost } = require("../controllers/createPostController");
 
 // Route to fetch posts
@@ -16,5 +18,7 @@ router.post("/create-post", createPost);
 router.delete("/posts/:id", deletePost);
 
 router.put("/posts/visibility", togglePostVisibility);
+
+router.get("/posts/:id", getPostById); // ✅ add this
 
 module.exports = router;

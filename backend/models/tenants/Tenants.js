@@ -1,5 +1,4 @@
 // backend/models/tenants/tenants.js
-
 const mongoose = require("mongoose");
 const Counter = require("../counters/Counter"); // Import the Counter model
 const { formatPhoneNumber } = require("../../utils/phoneUtils");
@@ -23,6 +22,7 @@ const TenantSchema = new mongoose.Schema(
     tenant_plan: String,
     product_description: String,
     payment_method: String,
+    tenant_role: { type: String, enum: ["merchant", "buyer"], required: true },
   },
   {
     timestamps: true,

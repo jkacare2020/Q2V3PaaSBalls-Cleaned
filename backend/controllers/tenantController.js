@@ -1,5 +1,5 @@
+//-- tenantController --//
 const Tenant = require("../models/tenants/Tenants");
-
 const admin = require("firebase-admin");
 
 exports.createTenant = async (req, res) => {
@@ -36,9 +36,20 @@ exports.createTenant = async (req, res) => {
       Phone_Number: req.body.Phone_Number,
       tenant_plan: req.body.tenant_plan || "Basic",
       payment_amount: req.body.payment_amount,
+      tenant_role: req.body.tenant_role, // 🔥 Required by schema
     });
 
     await newTenant.save();
+    //-----------------------update user role--------
+    await admin
+      .firestore()
+      .collection("users")
+      .doc(uid)
+      .update({
+        role: admin.firestore.FieldValue.arrayUnion(req.body.tenant_role),
+        tenantId: newTenant._id.toString(),
+      });
+
     res.status(201).json(newTenant);
   } catch (error) {
     console.error("Error creating tenant:", error);

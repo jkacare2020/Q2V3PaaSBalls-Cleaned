@@ -15,6 +15,7 @@ const audioRoutes = require("./routes/audioRoutes");
 const chatBotRoutes = require("./routes/chatBotRoutes");
 const tenantRoutes = require("./routes/tenantRoutes");
 const bioRoutes = require("./routes/bioRoutes");
+const postProductRoutes = require("./routes/postProductRoutes");
 
 const authenticateAndAuthorize = require("./middlewares/authMiddleware");
 
@@ -39,6 +40,7 @@ app.use(
         "http://localhost:9000",
         "http://localhost:9200",
         "http://localhost:9201",
+        "http://localhost:9202",
         "https://q2v3paasapp.web.app",
       ];
       if (!origin || allowedOrigins.includes(origin)) {
@@ -89,8 +91,9 @@ app.use("/api/presence", userPresenceRoutes); // optional
 app.use("/api", videoRoutes);
 app.use("/api", audioRoutes); // Mount STT routes under /api
 app.use("/api", chatBotRoutes);
-app.use("/api", tenantRoutes);
+app.use("/api/tenants", tenantRoutes);
 app.use("/api/bio", bioRoutes);
+app.use("/api/products", postProductRoutes); // will result in /api/products/add, etc.
 // app.use("/api/image-process", imageProcessingRoutes); // Uncomment if you have image processing routes
 
 // Define other routes here if needed, e.g., app.get("/posts", ...), app.post("/createPost", ...), etc.
