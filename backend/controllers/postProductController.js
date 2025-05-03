@@ -11,21 +11,28 @@ exports.importFromFirebasePost = async (req, res) => {
     // Check if this postId already exists in MongoDB
     const existing = await PostProduct.findOne({ postId });
     if (existing) {
-      console.log("✅ Post already exists in MongoDB, skipping insert.");
-      return res.status(200).json(existing);
+      console.log("✅ Post already imported, skipping insert.");
+      return res.status(200).json(existing); // ✅ return existing post
     }
-    const userData = userDoc.exists ? userDoc.data() : {};
-    // Fetch post from Firestore
-    const doc = await dbFirestore.collection("posts").doc(postId).get();
 
+    // Get post from Firestore
+    const doc = await dbFirestore.collection("posts").doc(postId).get();
     if (!doc.exists) {
       return res.status(404).json({ message: "Post not found in Firestore" });
     }
-    const userRoles = Array.isArray(userData.role) ? userData.role : [];
-    const combinedTags = Array.from(new Set(["public", ...userRoles])); // ensures no duplicates
 
     const post = doc.data();
 
+    // Fetch user data for role-based tags
+    const userDoc = await dbFirestore
+      .collection("users")
+      .doc(post.userId)
+      .get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    const userRoles = Array.isArray(userData.role) ? userData.role : [];
+    const combinedTags = Array.from(new Set(["public", ...userRoles]));
+
+    // Create and save new product
     const newProduct = new PostProduct({
       userId: post.userId,
       postId: post.id,
@@ -37,12 +44,9 @@ exports.importFromFirebasePost = async (req, res) => {
     });
 
     await newProduct.save();
-    res.status(201).json(newProduct);
+    res.status(201).json(newProduct); // ✅ Newly created
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({ message: "Post already imported" });
-    }
-    console.error("Error importing post:", err);
+    console.error("🚨 Error importing post:", err);
     res.status(500).json({ message: "Failed to import post" });
   }
 };

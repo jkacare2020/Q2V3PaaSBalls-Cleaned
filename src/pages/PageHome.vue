@@ -1,4 +1,5 @@
 <template>
+  <!--PageHome.vue--->
   <q-page class="constrain q-pa-md">
     <transition
       appear
@@ -223,9 +224,10 @@
       </div>
       <!-- RIGHT: Presence + Comment input -->
       <div class="col-4 large-screen-only">
-        <q-badge color="primary" align="top right">
+        <q-badge color="primary" floating>
           Comments: {{ commentCount }}
         </q-badge>
+
         <q-scroll-area style="height: calc(100vh - 100px)">
           <q-card class="q-pa-md">
             <!---------------------comments list------------------------>

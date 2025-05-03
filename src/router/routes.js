@@ -240,6 +240,11 @@ const routes = [
         name: "ProductList",
         component: () => import("pages/feature/ProductList.vue"),
       },
+      {
+        path: "/products/:id",
+        name: "ProductDetails",
+        component: () => import("pages/feature/PostProduct.vue"), // ✅ or your correct file
+      },
     ],
   },
 

@@ -78,6 +78,18 @@
       </div>
 
       <template v-if="postDetails">
+        <div>
+          <q-card v-if="postDetails">
+            <q-card-section>
+              <div class="text-h6">{{ postDetails.caption }}</div>
+              <div class="text-subtitle2">By {{ postDetails.displayName }}</div>
+            </q-card-section>
+            <q-img :src="postDetails.imageUrl" v-if="postDetails.imageUrl" />
+            <!-- More fields here -->
+          </q-card>
+
+          <q-skeleton v-else height="200px" />
+        </div>
         <div class="row items-center q-gutter-sm">
           <q-input
             v-if="isEditingDescription"
@@ -132,62 +144,47 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch, watchEffect, onMounted } from "vue";
 import { Platform, useQuasar } from "quasar";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { apiNode } from "boot/apiNode";
 import { auth, db } from "src/firebase/init"; // ✅ import your initialized Firebase Auth
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // 🔄 Re-fetch roles, presence, or data
-    fetchUserRoles();
-    fetchProductDetails(); // if applicable
-    console.log("🧠 User reloaded:", user.uid);
-  } else {
-    console.warn("⚠️ User signed out");
-  }
-});
-
-const currentUserId = auth.currentUser?.uid;
-
 const route = useRoute();
+const router = useRouter();
+const postId = ref(null);
 
+const postDetails = ref(null);
+const token = ref(null);
+const productMongoId = ref(null);
 //---------------------------------------
 const ownerPosts = ref([]);
 const ownerVideos = ref([]);
-const postDetails = ref(null); // ✅ define the ref
+
 const userRoles = ref([]);
 
 const marketingPosts = ref([]);
 const marketingVideos = ref([]);
+
+const isEditingDescription = ref(false);
+const editedDescription = ref("");
+
+const isEditingName = ref(false);
+const isEditingPrice = ref(false);
+const editedName = ref("");
+const editedPrice = ref(0);
+
+const currentUserId = auth.currentUser?.uid;
+
 //--------------------------------------
 
-const fetchMarketingMedia = async () => {
-  try {
-    const res = await apiNode.get(`/api/products/marketing/by-user/${userId}`);
-    marketingPosts.value = res.data.posts || [];
-    marketingVideos.value = res.data.videos || [];
-  } catch (err) {
-    console.error("Failed to fetch marketing content:", err);
-  }
-};
 //--------------------------------
 
 const isMerchant = computed(() => userRoles.value.includes("merchant"));
 const isAdmin = computed(() => userRoles.value.includes("admin"));
 const canEditProduct = computed(() => isMerchant.value || isAdmin.value);
 //------------------------------------------------------------------------
-const isEditingDescription = ref(false);
-const editedDescription = ref("");
-const productMongoId = ref(""); // already assigned when importing
-
-const isEditingName = ref(false);
-const isEditingPrice = ref(false);
-const editedName = ref("");
-const editedPrice = ref(0);
 
 const startEditingDescription = () => {
   isEditingDescription.value = true;
