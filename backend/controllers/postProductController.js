@@ -7,6 +7,10 @@ const dbFirestore = admin.firestore();
 exports.importFromFirebasePost = async (req, res) => {
   const postId = req.params.postId;
 
+  console.log("🔍 postId:", postId);
+  console.log("🔐 req.user:", req.user);
+  console.log("📥 Request body:", req.body);
+
   try {
     // Check if this postId already exists in MongoDB
     const existing = await PostProduct.findOne({ postId });
@@ -35,7 +39,7 @@ exports.importFromFirebasePost = async (req, res) => {
     // Create and save new product
     const newProduct = new PostProduct({
       userId: post.userId,
-      postId: post.id,
+      postId: postId,
       name: post.caption || "No name",
       description: "No description",
       price: 0,
