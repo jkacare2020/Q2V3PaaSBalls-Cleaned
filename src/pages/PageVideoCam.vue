@@ -81,7 +81,7 @@
     <div class="row justify-center q-ma-md">
       <q-select
         v-model="post.tags"
-        :options="['public', 'private', 'certification', 'market']"
+        :options="['public', 'private', 'certification', 'marketplace']"
         multiple
         label="Tags"
         outlined

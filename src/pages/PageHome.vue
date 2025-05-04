@@ -1,6 +1,6 @@
 <template>
   <!--PageHome.vue--->
-  <q-page class="constrain q-pa-md">
+  <q-page class="constrain q-pa-md q-mt-md">
     <transition
       appear
       enter-active-class="animated fadeIn"
@@ -104,6 +104,7 @@
                   </q-btn>
 
                   <q-btn
+                    v-if="post.tags && post.tags.includes('marketplace')"
                     flat
                     round
                     dense
@@ -165,7 +166,7 @@
                   <q-card-actions align="right">
                     <q-select
                       v-model="post.visibilityTag"
-                      :options="['public', 'private']"
+                      :options="['public', 'private', 'marketplace']"
                       label="Visibility"
                       dense
                       emit-value
@@ -227,9 +228,12 @@
         <q-badge color="primary" floating>
           Comments: {{ commentCount }}
         </q-badge>
-
-        <q-scroll-area style="height: calc(100vh - 100px)">
-          <q-card class="q-pa-md">
+        <q-card class="q-pa-md column full-height">
+          <q-scroll-area
+            ref="pageScrollRef"
+            class="col"
+            style="max-height: 100%"
+          >
             <!---------------------comments list------------------------>
             <q-list bordered class="q-mb-md" v-if="comments.length">
               <q-item
@@ -401,29 +405,30 @@
               </q-item>
             </q-list>
 
-            <!-----------------------------------general commend input--------------------------------------------------->
+            <!-----------------------------------Large screen General commend input--------------------------------------------------->
             <div v-else class="text-caption q-mt-sm">❌ No comments yet.</div>
-            <!-- Comment input -->
-            <div class="q-mt-md">
-              <q-input
-                filled
-                v-model="commentText"
-                label="Leave a comment..."
-                dense
-                type="textarea"
-                autogrow
-                @keyup.enter="sendComment"
-              />
-              <q-btn
-                class="q-mt-sm"
-                label="Send"
-                color="primary"
-                @click="sendComment"
-                :disable="!commentText"
-              />
-            </div>
-          </q-card>
-        </q-scroll-area>
+          </q-scroll-area>
+          <!-- Comment input -->
+          <!-- Sticky input section -->
+          <div class="q-mt-sm" style="border-top: 1px solid #eee">
+            <q-input
+              filled
+              v-model="commentText"
+              label="Leave a comment..."
+              dense
+              type="textarea"
+              autogrow
+              @keyup.enter="sendComment"
+            />
+            <q-btn
+              class="q-mt-sm"
+              label="Send"
+              color="primary"
+              @click="sendComment"
+              :disable="!commentText"
+            />
+          </div>
+        </q-card>
       </div>
     </div>
 
@@ -461,154 +466,147 @@
           <q-btn dense flat icon="close" @click="showCommentModal = false" />
         </q-bar>
 
-        <!-- Modal Comment Feed -->
-        <q-page class="constrain q-pa-md">
-          <q-scroll-area style="height: calc(100vh - 100px)">
-            <q-card class="q-pa-md">
-              <q-toolbar class="bg-grey-2 text-primary">
-                <q-toolbar-title>
-                  💬 Comments
-                  <q-badge color="primary" align="top right">
-                    {{ commentCount }}
-                  </q-badge></q-toolbar-title
-                >
-              </q-toolbar>
+        <!----------------------- Modal Comment Feed ----------------------->
+        <q-scroll-area ref="modalScrollRef" class="col">
+          <q-card-section class="q-pa-sm">
+            <q-toolbar class="bg-grey-2 text-primary">
+              <q-toolbar-title>
+                💬 Comments
+                <q-badge color="primary" align="top right">
+                  {{ commentCount }}
+                </q-badge></q-toolbar-title
+              >
+            </q-toolbar>
 
-              <!-- Comments List -->
-              <q-list v-if="comments.length">
-                <q-item
-                  v-for="(comment, idx) in comments"
-                  :key="comment?.id || idx"
-                >
-                  <q-item-section avatar>
-                    <q-avatar size="32px">
-                      <img :src="comment.avatarUrl || defaultAvatar" />
-                      <q-badge
-                        rounded
-                        floating
-                        :color="comment.online ? 'green' : 'red'"
-                        class="presence-dot"
-                      />
-                    </q-avatar>
-                  </q-item-section>
+            <!-- Comments List -->
+            <q-list v-if="comments.length">
+              <q-item
+                v-for="(comment, idx) in comments"
+                :key="comment?.id || idx"
+              >
+                <q-item-section avatar>
+                  <q-avatar size="32px">
+                    <img :src="comment.avatarUrl || defaultAvatar" />
+                    <q-badge
+                      rounded
+                      floating
+                      :color="comment.online ? 'green' : 'red'"
+                      class="presence-dot"
+                    />
+                  </q-avatar>
+                </q-item-section>
 
-                  <q-item-section>
-                    <q-item-label class="text-bold">
-                      {{ comment.userName || comment.displayName || "User" }}
-                    </q-item-label>
+                <q-item-section>
+                  <q-item-label class="text-bold">
+                    {{ comment.userName || comment.displayName || "User" }}
+                  </q-item-label>
 
-                    <!-- Reply indicator -->
-                    <template v-if="comment.replyTo">
-                      <q-item-label caption>
-                        🧵 Reply to another comment
-                      </q-item-label>
-                      <q-btn
-                        flat
-                        dense
-                        label="View thread"
-                        color="primary"
-                        size="sm"
-                        @click="
-                          $router.push(
-                            `/replies/${comment.postId}/${comment.replyTo}`
-                          )
-                        "
-                      />
-                    </template>
-
-                    <!-- Render mentions as inline chips with popovers -->
+                  <!-- Reply indicator -->
+                  <template v-if="comment.replyTo">
                     <q-item-label caption>
-                      <template
-                        v-for="(part, i) in comment.parsedText"
-                        :key="i"
-                      >
-                        <span v-if="part.isMention">
-                          <q-chip
-                            clickable
-                            square
-                            class="mention-chip"
-                            @click="goToProfile(part.text)"
-                          >
-                            <q-tooltip
-                              >View profile of {{ part.text }}</q-tooltip
-                            >
-                            {{ part.text }}
-                          </q-chip>
-                        </span>
-                        <span v-else>{{ part.text }}</span>
-                      </template>
+                      🧵 Reply to another comment
                     </q-item-label>
+                    <q-btn
+                      flat
+                      dense
+                      label="View thread"
+                      color="primary"
+                      size="sm"
+                      @click="
+                        $router.push(
+                          `/replies/${comment.postId}/${comment.replyTo}`
+                        )
+                      "
+                    />
+                  </template>
 
-                    <q-item-label caption class="text-grey-6">
-                      {{ new Date(comment.timestamp).toLocaleString() }}
-                      <span v-if="comment.edited">(edited)</span>
-                    </q-item-label>
-                  </q-item-section>
+                  <!-- Render mentions as inline chips with popovers -->
+                  <q-item-label caption>
+                    <template v-for="(part, i) in comment.parsedText" :key="i">
+                      <span v-if="part.isMention">
+                        <q-chip
+                          clickable
+                          square
+                          class="mention-chip"
+                          @click="goToProfile(part.text)"
+                        >
+                          <q-tooltip>View profile of {{ part.text }}</q-tooltip>
+                          {{ part.text }}
+                        </q-chip>
+                      </span>
+                      <span v-else>{{ part.text }}</span>
+                    </template>
+                  </q-item-label>
 
-                  <!-- ⋯ Action dropdown menu (always shown) -->
-                  <q-item-section side>
-                    <q-btn round dense flat icon="more_vert" color="primary">
-                      <q-menu>
-                        <q-list style="min-width: 140px">
-                          <q-item
-                            v-if="comment.userId === storeAuth.user?.uid"
-                            clickable
-                            v-close-popup
-                            @click="startEditingComment(comment)"
-                          >
-                            <q-item-section avatar
-                              ><q-icon name="edit"
-                            /></q-item-section>
-                            <q-item-section>Edit</q-item-section>
-                          </q-item>
+                  <q-item-label caption class="text-grey-6">
+                    {{ new Date(comment.timestamp).toLocaleString() }}
+                    <span v-if="comment.edited">(edited)</span>
+                  </q-item-label>
+                </q-item-section>
 
-                          <q-item
-                            v-if="comment.userId === storeAuth.user?.uid"
-                            clickable
-                            v-close-popup
-                            @click="confirmDeleteComment(comment.id)"
-                          >
-                            <q-item-section avatar
-                              ><q-icon name="delete"
-                            /></q-item-section>
-                            <q-item-section>Delete</q-item-section>
-                          </q-item>
+                <!-- ⋯ Action dropdown menu (always shown) -->
+                <q-item-section side>
+                  <q-btn round dense flat icon="more_vert" color="primary">
+                    <q-menu>
+                      <q-list style="min-width: 140px">
+                        <q-item
+                          v-if="comment.userId === storeAuth.user?.uid"
+                          clickable
+                          v-close-popup
+                          @click="startEditingComment(comment)"
+                        >
+                          <q-item-section avatar
+                            ><q-icon name="edit"
+                          /></q-item-section>
+                          <q-item-section>Edit</q-item-section>
+                        </q-item>
 
-                          <q-item
-                            v-if="comment.userId === storeAuth.user?.uid"
-                            clickable
-                            v-close-popup
-                            @click="toggleCommentOffline(comment)"
-                          >
-                            <q-item-section avatar
-                              ><q-icon name="visibility_off"
-                            /></q-item-section>
-                            <q-item-section>
-                              {{ comment.online ? "Set Offline" : "Go Online" }}
-                            </q-item-section>
-                          </q-item>
+                        <q-item
+                          v-if="comment.userId === storeAuth.user?.uid"
+                          clickable
+                          v-close-popup
+                          @click="confirmDeleteComment(comment.id)"
+                        >
+                          <q-item-section avatar
+                            ><q-icon name="delete"
+                          /></q-item-section>
+                          <q-item-section>Delete</q-item-section>
+                        </q-item>
 
-                          <q-item
-                            v-if="storeAuth.user"
-                            clickable
-                            v-close-popup
-                            @click="goToReplies(comment)"
-                          >
-                            <q-item-section avatar
-                              ><q-icon name="reply"
-                            /></q-item-section>
-                            <q-item-section>Reply</q-item-section>
-                          </q-item>
-                        </q-list>
-                      </q-menu>
-                    </q-btn>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-              <div v-else class="text-caption">❌ No comments yet.</div>
-            </q-card>
-          </q-scroll-area>
-        </q-page>
+                        <q-item
+                          v-if="comment.userId === storeAuth.user?.uid"
+                          clickable
+                          v-close-popup
+                          @click="toggleCommentOffline(comment)"
+                        >
+                          <q-item-section avatar
+                            ><q-icon name="visibility_off"
+                          /></q-item-section>
+                          <q-item-section>
+                            {{ comment.online ? "Set Offline" : "Go Online" }}
+                          </q-item-section>
+                        </q-item>
+
+                        <q-item
+                          v-if="storeAuth.user"
+                          clickable
+                          v-close-popup
+                          @click="goToReplies(comment)"
+                        >
+                          <q-item-section avatar
+                            ><q-icon name="reply"
+                          /></q-item-section>
+                          <q-item-section>Reply</q-item-section>
+                        </q-item>
+                      </q-list>
+                    </q-menu>
+                  </q-btn>
+                </q-item-section>
+              </q-item>
+            </q-list>
+            <div v-else class="text-caption">❌ No comments yet.</div>
+          </q-card-section>
+        </q-scroll-area>
 
         <!-- Modal Input Section -->
         <q-separator />
@@ -638,7 +636,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, nextTick, watch } from "vue";
 import { auth, dbRealtime, db } from "src/firebase/init";
 import {
   onValue,
@@ -661,19 +659,37 @@ import {
 import { useStoreAuth } from "src/stores/storeAuth";
 import { apiNode } from "boot/apiNode";
 
-import { watch } from "vue";
 import { onAuthStateChanged } from "firebase/auth";
 import defaultAvatar from "src/assets/avatar.png";
 import { useRouter } from "vue-router";
 
-import { nextTick } from "vue";
-
 import { useQuasar } from "quasar";
 
-const currentUserId = auth.currentUser?.uid;
-const hasUnreadComments = computed(() => {
-  return comments.value.length > 0 && !showCommentModal.value;
-});
+const commentScrollRef = ref(null);
+//---------------------------------------
+const pageScrollRef = ref(null);
+const modalScrollRef = ref(null);
+
+function scrollToBottom(scrollRef) {
+  nextTick(() => {
+    if (scrollRef?.value?.setScrollPosition) {
+      console.log("✅ Scrolling to bottom");
+      scrollRef.value.setScrollPosition("vertical", 9999, 300);
+    } else {
+      console.warn(
+        "⚠️ scrollRef not ready or not a QScrollArea:",
+        scrollRef?.value
+      );
+    }
+  });
+}
+//-------------------------------------
+
+// const hasUnreadComments = computed(() => {
+//   return comments.value.length > 0 && !showCommentModal.value;
+// });
+
+const hasUnreadComments = ref(false);
 
 const router = useRouter();
 const storeAuth = useStoreAuth();
@@ -861,10 +877,19 @@ const niceDate = (value) => {
     minute: "numeric",
   });
 };
+//-----------------------------------------------------
+function isNearBottom(scrollRef, threshold = 100) {
+  const el = scrollRef?.value?.getScrollTarget?.();
+  if (!el) return true; // fallback: assume already at bottom
+  const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+  return distanceFromBottom < threshold;
+}
+
 //--------------------fetch comments----------------------
-function fetchComments(postId = "global") {
+function fetchComments(postId = "global", scrollRef = pageScrollRef) {
   console.log("📡 Fetching comments from DB...");
   const commentsRef = dbRef(dbRealtime, `comments/${postId}`);
+
   onValue(commentsRef, async (snapshot) => {
     const data = snapshot.val();
     console.log("🪵 Raw snapshot:", data);
@@ -895,19 +920,23 @@ function fetchComments(postId = "global") {
         })
       );
 
-      comments.value = parsed.sort((a, b) => b.timestamp - a.timestamp);
+      const wasAtBottom = isNearBottom(scrollRef); // before updating UI
+
+      comments.value = parsed.sort((a, b) => a.timestamp - b.timestamp);
       commentCount.value = comments.value.length;
+
+      // 🧠 If not already at bottom, show red dot
+      if (!wasAtBottom && !showCommentModal.value) {
+        hasUnreadComments.value = true;
+      } else {
+        hasUnreadComments.value = false;
+      }
     } else {
       comments.value = [];
+      hasUnreadComments.value = false;
     }
 
     console.log("🧾 Parsed comments:", comments.value);
-
-    // ✅ Auto-scroll to latest comment
-    nextTick(() => {
-      const scrollEl = document.querySelector(".q-scrollarea__container");
-      if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
-    });
   });
 }
 

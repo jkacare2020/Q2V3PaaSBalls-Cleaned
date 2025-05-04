@@ -52,6 +52,18 @@
                 >
                   <q-tooltip>Delete video</q-tooltip>
                 </q-btn>
+
+                <!-- <q-btn
+                  v-if="post.tags && post.tags.includes('marketplace')"
+                  flat
+                  round
+                  dense
+                  icon="shopping_cart"
+                  color="orange"
+                  @click="goToProductPage(post.id)"
+                >
+                  <q-tooltip>View Product</q-tooltip>
+                </q-btn> -->
               </div>
 
               <q-item>
