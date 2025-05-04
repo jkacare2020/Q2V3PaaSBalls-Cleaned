@@ -11,17 +11,6 @@ const nodeApiBaseURL =
 
 console.log("🧠 Node API base URL:", nodeApiBaseURL);
 
-// const apiNode = axios.create({
-//   baseURL: nodeApiBaseURL,
-// });
-
-// export default boot(({ app }) => {
-//   app.config.globalProperties.$apiNode = apiNode;
-// });
-
-// export { apiNode, nodeApiBaseURL };
-// src/boot/apiNode.js
-
 const apiNode = axios.create({
   baseURL: nodeApiBaseURL,
 });

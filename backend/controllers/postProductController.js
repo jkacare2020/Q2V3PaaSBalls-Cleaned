@@ -12,14 +12,19 @@ exports.importFromFirebasePost = async (req, res) => {
   console.log("📥 Request body:", req.body);
 
   try {
-    // Check if this postId already exists in MongoDB
-    const existing = await PostProduct.findOne({ postId });
-    if (existing) {
-      console.log("✅ Post already imported, skipping insert.");
-      return res.status(200).json(existing); // ✅ return existing post
+    // 1. Validate postId format (simple UUID v4 format check)
+    if (!/^[\w-]{36}$/.test(postId)) {
+      return res.status(400).json({ message: "Invalid postId format" });
     }
 
-    // Get post from Firestore
+    // 2. Check if post already exists in MongoDB
+    const existing = await PostProduct.findOne({ postId });
+    if (existing) {
+      console.log("✅ Post already imported, returning existing product.");
+      return res.status(200).json(existing);
+    }
+
+    // 3. Fetch the post from Firestore
     const doc = await dbFirestore.collection("posts").doc(postId).get();
     if (!doc.exists) {
       return res.status(404).json({ message: "Post not found in Firestore" });
@@ -27,31 +32,49 @@ exports.importFromFirebasePost = async (req, res) => {
 
     const post = doc.data();
 
-    // Fetch user data for role-based tags
+    // 4. Validate post fields
+    if (!post.userId || typeof post.userId !== "string") {
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing userId in post" });
+    }
+    if (!post.caption || typeof post.caption !== "string") {
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing caption in post" });
+    }
+
+    // 5. Fetch user metadata
     const userDoc = await dbFirestore
       .collection("users")
       .doc(post.userId)
       .get();
     const userData = userDoc.exists ? userDoc.data() : {};
     const userRoles = Array.isArray(userData.role) ? userData.role : [];
+
+    // 6. Combine tags
     const combinedTags = Array.from(new Set(["public", ...userRoles]));
 
-    // Create and save new product
+    // 7. Create product document
     const newProduct = new PostProduct({
       userId: post.userId,
       postId: postId,
       name: post.caption || "No name",
-      description: "No description",
+      description: "No description", // Optional: pull from post if it exists
       price: 0,
-      imageUrl: post.imageUrl,
+      imageUrl: post.imageUrl || "", // fallback if missing
       tags: combinedTags,
     });
 
     await newProduct.save();
-    res.status(201).json(newProduct); // ✅ Newly created
+    console.log("✅ New product saved:", newProduct._id);
+    return res.status(201).json(newProduct);
   } catch (err) {
-    console.error("🚨 Error importing post:", err);
-    res.status(500).json({ message: "Failed to import post" });
+    console.error("🚨 Error importing post:", err.message);
+    console.error(err.stack);
+    return res
+      .status(500)
+      .json({ message: "Failed to import post", error: err.message });
   }
 };
 

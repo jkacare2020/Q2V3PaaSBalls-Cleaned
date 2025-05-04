@@ -26,12 +26,13 @@
         />
 
         <q-btn
-          v-if="canEditProduct && !isEditingName"
+          v-if="rolesLoaded && canEditProduct && !isEditingName"
           flat
           dense
           icon="edit"
           @click="startEditingName"
         />
+
         <q-btn
           v-if="isEditingName"
           dense
@@ -62,12 +63,13 @@
         />
 
         <q-btn
-          v-if="canEditProduct && !isEditingPrice"
+          v-if="rolesLoaded && canEditProduct && !isEditingPrice"
           flat
           dense
           icon="edit"
           @click="startEditingPrice"
         />
+
         <q-btn
           v-if="isEditingPrice"
           dense
@@ -112,7 +114,7 @@
           />
 
           <q-btn
-            v-if="canEditProduct && !isEditingDescription"
+            v-if="rolesLoaded && canEditProduct && !isEditingDescription"
             flat
             dense
             icon="edit"
@@ -146,26 +148,34 @@
 <script setup>
 import { ref, computed, watch, watchEffect, onMounted } from "vue";
 import { Platform, useQuasar } from "quasar";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { apiNode } from "boot/apiNode";
 import { auth, db } from "src/firebase/init"; // ✅ import your initialized Firebase Auth
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-const route = useRoute();
-const router = useRouter();
-const postId = ref(null);
 
-const postDetails = ref(null);
-const token = ref(null);
+const user = auth.currentUser; // ✅ Already initialized
+const currentUserId = auth.currentUser?.uid;
+
+const route = useRoute();
+
+const postDetails = ref({
+  name: "",
+  description: "",
+  price: 0,
+  imageUrl: "",
+  caption: "",
+  displayName: "",
+});
+
 const productMongoId = ref(null);
 //---------------------------------------
-const ownerPosts = ref([]);
-const ownerVideos = ref([]);
+const form = ref({ name: "", description: "", price: 0, image: "" });
+const products = ref([]);
 
 const userRoles = ref([]);
-
-const marketingPosts = ref([]);
-const marketingVideos = ref([]);
+const isLoadingRoles = ref(true);
+const rolesLoaded = ref(false);
 
 const isEditingDescription = ref(false);
 const editedDescription = ref("");
@@ -175,16 +185,20 @@ const isEditingPrice = ref(false);
 const editedName = ref("");
 const editedPrice = ref(0);
 
-const currentUserId = auth.currentUser?.uid;
-
-//--------------------------------------
-
-//--------------------------------
+watch(userRoles, (val) => {
+  console.log("👥 Loaded userRoles:", val);
+});
 
 const isMerchant = computed(() => userRoles.value.includes("merchant"));
 const isAdmin = computed(() => userRoles.value.includes("admin"));
 const canEditProduct = computed(() => isMerchant.value || isAdmin.value);
 //------------------------------------------------------------------------
+
+watchEffect(() => {
+  console.log("🧠 postDetails loaded:", postDetails.value);
+  console.log("✏️ canEditProduct:", canEditProduct.value);
+});
+//--------------------------------
 
 const startEditingDescription = () => {
   isEditingDescription.value = true;
@@ -256,73 +270,95 @@ const fetchProductDetails = async () => {
 };
 
 // After fetching post from MongoDB, assign it:
-onMounted(async () => {
+onMounted(() => {
   const postId = route.params.postId;
   if (!postId) return;
 
-  try {
-    const res = await apiNode.post(`/api/products/import-from-post/${postId}`);
-    const data = res.data;
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      console.warn("User is not authenticated");
+      return;
+    }
 
-    productMongoId.value = data._id; // ✅ assign MongoDB ID
-    console.log("productMongoId", productMongoId);
+    try {
+      const token = await user.getIdToken();
 
-    // Optionally preload product list:
-    products.value.unshift(data);
+      const res = await apiNode.post(
+        `/api/products/import-from-post/${postId}`,
+        {}, // empty body
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    // ✅ now fetch full detail using MongoDB _id
-    await fetchProductDetails();
-  } catch (err) {
-    console.error("❌ Failed to import post as product:", err);
-  }
+      const data = res.data;
+      form.value.name = data.name || "";
+      form.value.description = data.description || "";
+      form.value.price = data.price || 0;
+      form.value.image = data.imageUrl || "";
+      productMongoId.value = data._id;
+      products.value.unshift(data);
+
+      await fetchProductDetails();
+    } catch (err) {
+      console.error("❌ Failed to import post as product:", err);
+    }
+  });
 });
 
 //-------------------------------------
 const fetchUserRoles = async () => {
-  if (!currentUserId) return;
-  const userSnap = await getDoc(doc(db, "users", currentUserId));
-  if (userSnap.exists()) {
-    userRoles.value = userSnap.data().role || [];
-  }
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    const userSnap = await getDoc(doc(db, "users", user.uid));
+    if (userSnap.exists()) {
+      userRoles.value = userSnap.data().role || [];
+      rolesLoaded.value = true; // ✅ mark as ready
+    }
+  });
 };
-
 onMounted(fetchUserRoles);
-onMounted(async () => {
+//-----------------------------------------------------
+onMounted(() => {
   const postId = route.params.postId;
   if (!postId) return;
 
-  try {
-    const res = await apiNode.post(`/api/products/import-from-post/${postId}`);
-    const data = res.data;
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      console.warn("User is not authenticated");
+      return;
+    }
 
-    // Autofill form
-    form.value.name = data.name || "";
-    form.value.description = data.description || "";
-    form.value.price = data.price || 0;
-    form.value.image = data.imageUrl || "";
+    try {
+      const token = await user.getIdToken();
 
-    products.value.unshift(data); // optional: show in product list
-  } catch (err) {
-    console.error("❌ Failed to import post as product:", err);
-    $q.notify({ type: "negative", message: "Failed to import product." });
-  }
+      const res = await apiNode.post(
+        `/api/products/import-from-post/${postId}`,
+        {}, // ✅ required body
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = res.data;
+      form.value.name = data.name || "";
+      form.value.description = data.description || "";
+      form.value.price = data.price || 0;
+      form.value.image = data.imageUrl || "";
+      productMongoId.value = data._id;
+      products.value.unshift(data);
+      await fetchProductDetails?.();
+    } catch (err) {
+      console.error("❌ Failed to import post as product:", err);
+      $q.notify({ type: "negative", message: "Failed to import product." });
+    }
+  });
 });
 
 const $q = useQuasar();
 const isMobile = Platform.is.mobile;
 
 const defaultImage = "https://via.placeholder.com/400x200?text=No+Image";
-
-// Form data
-const form = ref({
-  name: "",
-  description: "",
-  price: 0,
-  image: null, // base64 or download URL
-});
-
-// Dummy product list
-const products = ref([]);
 
 // Columns for desktop table
 const columns = [
