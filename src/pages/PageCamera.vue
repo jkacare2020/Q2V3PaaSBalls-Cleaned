@@ -13,23 +13,39 @@
       />
 
       <div class="camera-frame">
+        <!-- Live video stream -->
         <video
-          v-show="!imageCaptured"
+          v-show="!imageCaptured && hasCameraSupport"
           ref="video"
           class="full-width"
           autoplay
           playsinline
           muted
         />
+
+        <!-- Canvas snapshot -->
         <canvas
           v-show="imageCaptured"
           ref="canvas"
           class="full-width"
           height="240"
         />
+
+        <!-- Error fallback if camera failed -->
+        <div v-if="!hasCameraSupport" class="text-negative text-center q-mt-md">
+          🚫 Camera not available. Please check browser permissions.
+          <q-btn
+            color="primary"
+            class="q-mt-sm"
+            label="Retry Camera"
+            @click="retryCamera"
+          />
+        </div>
       </div>
+
       <div class="text-center q-pa-md">
         <q-btn
+          v-if="hasCameraSupport"
           color="primary"
           icon="flip_camera_android"
           @click="flipCamera"
@@ -37,9 +53,8 @@
           round
         >
           <q-tooltip>Flip Camera</q-tooltip>
-          <!-- 🧠 Tooltip here -->
         </q-btn>
-        <!-- 📸 Capture Image Button (Icon only) -->
+
         <q-btn
           v-if="hasCameraSupport"
           @click="captureImage"
@@ -51,10 +66,10 @@
           class="q-ml-md"
         >
           <q-tooltip>Capture Photo</q-tooltip>
-          <!-- 🧠 Tooltip here -->
         </q-btn>
+
         <q-file
-          v-else
+          v-if="!hasCameraSupport"
           v-model="imageUpload"
           @input="captureImageFallback"
           label="Choose an image"
@@ -65,6 +80,7 @@
             <q-icon name="eva-attach-outline" />
           </template>
         </q-file>
+
         <div class="row justify-center q-ma-md">
           <q-input
             v-model="post.caption"
@@ -99,22 +115,16 @@
         </div>
         <div class="row justify-center q-ma-md">
           <q-select
+            ref="tagSelectRef"
             v-model="post.tags"
-            :options="[
-              'avatar',
-              'public',
-              'private',
-              'marketplace',
-              'logo',
-              'certification',
-            ]"
+            :options="['public', 'private', 'certification', 'marketplace']"
             multiple
+            use-chips
             label="Tags"
             outlined
             dense
             class="col col-sm-6"
-            use-chips
-            hide-dropdown-after-select
+            @update:model-value="onTagSelect"
           />
         </div>
         <div class="row justify-center q-mt-lg">
@@ -133,7 +143,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, watch, onMounted } from "vue";
 import { uid, useQuasar } from "quasar";
 import { auth } from "src/firebase/init";
 import axios from "axios";
@@ -150,7 +160,7 @@ const post = reactive({
   date: Date.now(),
   tags: [], // ✅ Add this field
 });
-
+const cameraReady = ref(false); // New flag
 const video = ref(null);
 const canvas = ref(null);
 const imageCaptured = ref(false);
@@ -160,6 +170,7 @@ const locationLoading = ref(false);
 const locationSupported = computed(() => "geolocation" in navigator);
 const selectedResolution = ref("1280x720");
 const cameraFacingMode = ref("environment"); // default: back camera
+const usingRearCamera = ref(false);
 
 const resolutionOptions = [
   { label: "HD 1280x720", value: "1280x720" },
@@ -167,26 +178,55 @@ const resolutionOptions = [
   { label: "Full HD 1920x1080", value: "1920x1080" },
 ];
 
+const tagSelectRef = ref(null);
+
+function onTagSelect() {
+  // ✅ Force close dropdown
+  if (tagSelectRef.value) {
+    tagSelectRef.value.hidePopup();
+  }
+}
+
+watch(
+  () => post.tags,
+  (newTags) => {
+    if (newTags.includes("public") && newTags.includes("private")) {
+      // Only keep the latest one selected
+      const last = newTags[newTags.length - 1];
+      post.tags = [last];
+    }
+  }
+);
+
+// onMounted(() => {
+//   initCamera();
+// });
 onMounted(() => {
-  initCamera();
+  // Add delay for iOS WebView readiness
+  setTimeout(() => {
+    initCamera();
+  }, 500); // or 1000 if needed
 });
 
-function initCamera() {
-  navigator.mediaDevices
-    .getUserMedia({
+async function initCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         width: selectedResolution.value.width,
         height: selectedResolution.value.height,
         facingMode: cameraFacingMode.value,
       },
       audio: false,
-    })
-    .then((stream) => {
-      video.value.srcObject = stream;
-    })
-    .catch(() => {
-      hasCameraSupport.value = false;
     });
+
+    if (video.value) {
+      video.value.srcObject = stream;
+      await video.value.play(); // Ensure it starts
+    }
+  } catch (err) {
+    console.warn("🚫 Camera init failed:", err);
+    hasCameraSupport.value = false;
+  }
 }
 
 const captureImage = () => {
@@ -373,7 +413,6 @@ function addPostError() {
   $q.dialog({ title: "Error", message: "Sorry, could not create post!" });
 }
 
-const usingRearCamera = ref(true);
 let currentStream = null;
 
 const startCamera = async () => {
@@ -383,15 +422,19 @@ const startCamera = async () => {
   try {
     const constraints = {
       video: {
-        facingMode: usingRearCamera.value ? { exact: "environment" } : "user",
+        facingMode: usingRearCamera.value ? "environment" : "user",
       },
       audio: false,
     };
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.value.srcObject = stream;
     currentStream = stream;
+    hasCameraSupport.value = true;
+    cameraReady.value = true;
   } catch (err) {
     console.error("Error starting camera:", err);
+    hasCameraSupport.value = false;
+    cameraReady.value = false;
   }
 };
 
@@ -400,8 +443,11 @@ const flipCamera = async () => {
   await startCamera();
 };
 
-// Call startCamera() once initially:
-startCamera();
+const retryCamera = () => {
+  setTimeout(() => {
+    startCamera();
+  }, 500);
+};
 </script>
 
 <style lang="sass">

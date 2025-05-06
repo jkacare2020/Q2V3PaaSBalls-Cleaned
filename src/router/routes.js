@@ -8,7 +8,7 @@ const routes = [
     children: [
       {
         path: "",
-        component: () => import("pages/PageEntries.vue"),
+        component: () => import("pages/PageFront.vue"),
         meta: { requiresAuth: true },
       },
       {
@@ -23,6 +23,11 @@ const routes = [
       {
         path: "/signup",
         component: () => import("pages/Signup.vue"),
+      },
+      {
+        path: "/front-page",
+        name: "front-page",
+        component: () => import("pages/PageFront.vue"),
       },
       {
         path: "/user/:username",
@@ -135,6 +140,13 @@ const routes = [
         component: () => import("pages/RetieveTranHistory.vue"),
         meta: { requiresAuth: true },
       },
+
+      {
+        path: "/ledger",
+        component: () => import("pages/PageEntries.vue"),
+        meta: { requiresAuth: true },
+      },
+
       {
         path: "/CartPage",
         name: "CartPage",
@@ -241,9 +253,19 @@ const routes = [
         component: () => import("pages/feature/ProductList.vue"),
       },
       {
+        path: "/marketplace",
+        name: "marketplace",
+        component: () => import("pages/feature/PageMarketplace.vue"),
+      },
+      {
         path: "/products/:id",
         name: "ProductDetails",
         component: () => import("pages/feature/PostProduct.vue"), // ✅ or your correct file
+      },
+
+      {
+        path: "/product-view/:id",
+        component: () => import("pages/feature/PostProductMongo.vue"),
       },
     ],
   },

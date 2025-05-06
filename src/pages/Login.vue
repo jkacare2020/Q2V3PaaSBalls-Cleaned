@@ -91,7 +91,7 @@ async function login() {
       lastSeen: Date.now(),
     });
 
-    router.push("/"); // Redirect after successful login
+    router.push("/front-page"); // Redirect after successful login
     $q.notify({
       color: "positive",
       message: "Login successful! Welcome back.",

@@ -9,14 +9,26 @@
         height="300"
         autoplay
         playsinline
+        muted
       />
       <div v-show="videoCaptured" class="q-pa-md">
         <video controls class="full-width" :src="videoURL"></video>
       </div>
     </div>
 
-    <!-- Controls -->
+    <!--Record/Stop Controls -->
     <div class="text-center q-pa-md">
+      <q-btn
+        color="primary"
+        icon="flip_camera_android"
+        @click="flipCamera"
+        size="lg"
+        round
+        class="q-mr-md"
+      >
+        <q-tooltip>Flip Camera</q-tooltip>
+        <!-- 🧠 Tooltip here -->
+      </q-btn>
       <q-btn
         v-if="hasCameraSupport && !recording"
         @click="startRecording"
@@ -80,14 +92,16 @@
     <!---Tag input---->
     <div class="row justify-center q-ma-md">
       <q-select
+        ref="tagSelectRef"
         v-model="post.tags"
         :options="['public', 'private', 'certification', 'marketplace']"
         multiple
+        use-chips
         label="Tags"
         outlined
         dense
         class="col col-sm-6"
-        use-chips
+        @update:model-value="onTagSelect"
       />
     </div>
 
@@ -107,7 +121,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, watch, onMounted } from "vue";
 import { uid, useQuasar } from "quasar";
 import axios from "axios";
 import { auth } from "src/firebase/init";
@@ -116,6 +130,9 @@ import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to impo
 
 const router = useRouter();
 const $q = useQuasar();
+
+const isFrontCamera = ref(true);
+let mediaStream = null;
 
 // Reactive states
 const post = reactive({
@@ -136,7 +153,26 @@ const videoURL = ref(null);
 const hasCameraSupport = ref(true);
 const locationLoading = ref(false);
 const locationSupported = computed(() => "geolocation" in navigator);
-const commentCount = ref(0);
+
+const tagSelectRef = ref(null);
+
+function onTagSelect() {
+  // ✅ Force close dropdown
+  if (tagSelectRef.value) {
+    tagSelectRef.value.hidePopup();
+  }
+}
+
+watch(
+  () => post.tags,
+  (newTags) => {
+    if (newTags.includes("public") && newTags.includes("private")) {
+      // Only keep the latest one selected
+      const last = newTags[newTags.length - 1];
+      post.tags = [last];
+    }
+  }
+);
 
 // Initialize camera
 onMounted(() => {
@@ -256,6 +292,32 @@ function locationSuccess(result) {
 function locationError() {
   $q.dialog({ title: "Error", message: "Could not find your location." });
   locationLoading.value = false;
+}
+
+async function flipCamera() {
+  isFrontCamera.value = !isFrontCamera.value;
+
+  // Stop old stream
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((track) => track.stop());
+  }
+
+  // Start new stream with flipped camera
+  const facingMode = isFrontCamera.value ? "user" : "environment";
+
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode },
+      audio: true, // ✅ include microphone
+    });
+
+    const videoElement = document.querySelector("video");
+    if (videoElement) {
+      videoElement.srcObject = mediaStream;
+    }
+  } catch (err) {
+    console.error("Camera access failed:", err);
+  }
 }
 </script>
 

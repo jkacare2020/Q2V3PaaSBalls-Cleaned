@@ -35,12 +35,15 @@
           @click="toggleLeftDrawer"
         />
 
-        <q-toolbar-title>
-          <div class="absolute-center">
-            <div class="toolbar-title-text">
-              <q-icon name="savings" />
-              PaaS-Balls
-            </div>
+        <q-toolbar-title class="q-pa-none">
+          <div class="row items-center justify-center no-wrap">
+            <img
+              src="icons/favicon-32x32.png"
+              alt="IsmeHr Logo"
+              style="height: 32px; width: 32px"
+              class="q-mr-sm"
+            />
+            <span class="text-weight-bold">PaaSbot</span>
           </div>
         </q-toolbar-title>
 
@@ -257,10 +260,7 @@ const navLinks = [
   {
     category: "General",
     icon: "apps",
-    links: [
-      { title: "$ Entries", icon: "savings", link: "/" },
-      { title: "Settings", icon: "settings", link: "/settings" },
-    ],
+    links: [{ title: "Settings", icon: "settings", link: "/settings" }],
   },
 
   {
@@ -352,6 +352,7 @@ const navLinks = [
         link: "/mongo-mytransacts",
       },
       { title: "Create Transaction", icon: "add", link: "/new-transaction" },
+      { title: "$ Ledger ", icon: "savings", link: "/ledger" },
     ],
   },
 ];

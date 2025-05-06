@@ -467,18 +467,19 @@
         </q-bar>
 
         <!----------------------- Modal Comment Feed ----------------------->
+
+        <q-toolbar class="bg-grey-2 text-primary">
+          <q-toolbar-title>
+            💬 Comments
+            <q-badge color="primary" align="top right">
+              {{ commentCount }}
+            </q-badge></q-toolbar-title
+          >
+        </q-toolbar>
+
+        <!-- Comments List -->
         <q-scroll-area ref="modalScrollRef" class="col">
           <q-card-section class="q-pa-sm">
-            <q-toolbar class="bg-grey-2 text-primary">
-              <q-toolbar-title>
-                💬 Comments
-                <q-badge color="primary" align="top right">
-                  {{ commentCount }}
-                </q-badge></q-toolbar-title
-              >
-            </q-toolbar>
-
-            <!-- Comments List -->
             <q-list v-if="comments.length">
               <q-item
                 v-for="(comment, idx) in comments"
@@ -670,24 +671,7 @@ const commentScrollRef = ref(null);
 const pageScrollRef = ref(null);
 const modalScrollRef = ref(null);
 
-function scrollToBottom(scrollRef) {
-  nextTick(() => {
-    if (scrollRef?.value?.setScrollPosition) {
-      console.log("✅ Scrolling to bottom");
-      scrollRef.value.setScrollPosition("vertical", 9999, 300);
-    } else {
-      console.warn(
-        "⚠️ scrollRef not ready or not a QScrollArea:",
-        scrollRef?.value
-      );
-    }
-  });
-}
 //-------------------------------------
-
-// const hasUnreadComments = computed(() => {
-//   return comments.value.length > 0 && !showCommentModal.value;
-// });
 
 const hasUnreadComments = ref(false);
 
@@ -717,12 +701,54 @@ const avatarUrl = ref(defaultAvatar);
 const $q = useQuasar();
 
 const serviceWorkerSupported = computed(() => "serviceWorker" in navigator);
-const pushNotificationsSupported = computed(() => "PushManager" in window);
+const isStandalone = computed(
+  () => window.matchMedia("(display-mode: standalone)").matches
+);
+
+const pushNotificationsSupported = computed(
+  () =>
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window &&
+    isStandalone.value
+);
+
+onMounted(() => {
+  console.log(
+    "Is standalone:",
+    window.matchMedia("(display-mode: standalone)").matches
+  );
+});
 
 const topLevelComments = computed(() =>
   comments.value.filter((c) => !c.replyTo)
 );
+//------------------------------------------------
 
+function scrollToBottom(scrollRef) {
+  nextTick(() => {
+    if (scrollRef?.value?.setScrollPosition) {
+      console.log("✅ Scrolling to bottom");
+      scrollRef.value.setScrollPosition("vertical", 9999, 300);
+    } else {
+      console.warn(
+        "⚠️ scrollRef not ready or not a QScrollArea:",
+        scrollRef?.value
+      );
+    }
+  });
+}
+//--------------------------------------
+watch(
+  () => showCommentModal.value,
+  (visible) => {
+    if (visible) {
+      nextTick(() => {
+        fetchComments("global", modalScrollRef);
+      });
+    }
+  }
+);
 //---------------------Modal open ---------------
 function openActionSheet() {
   $q.bottomSheet({
@@ -929,6 +955,7 @@ function fetchComments(postId = "global", scrollRef = pageScrollRef) {
       if (!wasAtBottom && !showCommentModal.value) {
         hasUnreadComments.value = true;
       } else {
+        scrollToBottom(scrollRef); // ← scrolls modal area
         hasUnreadComments.value = false;
       }
     } else {
