@@ -24,7 +24,7 @@ router.post(
 );
 
 // Delete a single post by ID
-router.delete("/:id", postProductController.deletePostProduct);
+// router.delete("/:id", postProductController.deletePostProduct);
 
 router.get("/by-user/:userId", postProductController.getMarketingMediaByUser);
 
