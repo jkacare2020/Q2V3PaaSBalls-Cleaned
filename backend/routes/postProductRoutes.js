@@ -9,6 +9,9 @@ router.post("/add", postProductController.createPostProduct);
 // Get all products (for dashboard)
 router.get("/", postProductController.getAllPostProducts);
 
+// routes/productRoutes.js
+router.get("/marketplace", postProductController.getAllMarketplaceProducts);
+
 // Get a single post by ID ---------------------------
 router.get("/:id", postProductController.getPostProduct);
 

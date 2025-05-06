@@ -181,3 +181,17 @@ exports.deletePostProduct = async (req, res) => {
     res.status(500).json({ message: "Failed to delete product" });
   }
 };
+
+// controllers/postProductController.js
+exports.getAllMarketplaceProducts = async (req, res) => {
+  try {
+    const products = await PostProduct.find({
+      tags: { $in: ["marketplace"] },
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Error fetching marketplace products:", error);
+    res.status(500).json({ message: "Failed to fetch marketplace products." });
+  }
+};

@@ -71,7 +71,8 @@ admin
 
 // 🔒 First: Firebase authentication middleware
 // ✅ Then apply it globally like this, for example:
-app.use("/api", authenticateAndAuthorize());
+
+// app.use("/api", authenticateAndAuthorize());
 
 // 🟢 Second: Presence updater middleware
 app.use(updatePresence);
@@ -82,18 +83,26 @@ app.use(updatePresence);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-// Mount Routes
-app.use("/api", userRoutes); // Mount user routes under /api
-app.use("/api", transactRoutes); // Uncomment if you have transact routes
-app.use("/api", postRoutes);
+// Public routes (no auth)
+app.use("/api/products", postProductRoutes); // Includes public marketplace
+
+app.use("/api", authenticateAndAuthorize());
+
+app.use("/api/bio", bioRoutes);
 app.use("/api/comments", commentsRoutes);
-app.use("/api/presence", userPresenceRoutes); // optional
-app.use("/api", videoRoutes);
-app.use("/api", audioRoutes); // Mount STT routes under /api
-app.use("/api", chatBotRoutes);
+
+// Mount Routes
+app.use("/api", authenticateAndAuthorize(), userRoutes); // Mount user routes under /api
+app.use("/api", authenticateAndAuthorize(), transactRoutes); // Uncomment if you have transact routes
+app.use("/api", authenticateAndAuthorize(), postRoutes);
+app.use("/api/comments", authenticateAndAuthorize(), commentsRoutes);
+app.use("/api/presence", authenticateAndAuthorize(), userPresenceRoutes); // optional
+app.use("/api", authenticateAndAuthorize(), videoRoutes);
+app.use("/api", authenticateAndAuthorize(), audioRoutes); // Mount STT routes under /api
+app.use("/api", authenticateAndAuthorize(), chatBotRoutes);
 app.use("/api/tenants", tenantRoutes);
 app.use("/api/bio", bioRoutes);
-app.use("/api/products", postProductRoutes); // will result in /api/products/add, etc.
+// app.use("/api/products", authenticateAndAuthorize(), postProductRoutes); // will result in /api/products/add, etc.
 // app.use("/api/image-process", imageProcessingRoutes); // Uncomment if you have image processing routes
 
 // Define other routes here if needed, e.g., app.get("/posts", ...), app.post("/createPost", ...), etc.
