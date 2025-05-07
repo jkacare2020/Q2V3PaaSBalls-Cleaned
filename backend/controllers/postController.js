@@ -83,7 +83,7 @@ exports.deletePost = async (req, res) => {
 };
 //---------------------------------------------
 exports.togglePostVisibility = async (req, res) => {
-  const { postId, makePublic } = req.body;
+  const { postId, visibility } = req.body;
 
   try {
     const authHeader = req.headers.authorization;
@@ -109,17 +109,16 @@ exports.togglePostVisibility = async (req, res) => {
     }
 
     // Update tags field
-    const tags = post.tags || [];
-    let updatedTags;
+    let updatedTags = [];
 
-    if (makePublic) {
-      updatedTags = Array.from(new Set([...tags, "public"])).filter(
-        (t) => t !== "private"
-      );
+    if (visibility === "public") {
+      updatedTags = ["public"];
+    } else if (visibility === "private") {
+      updatedTags = ["private"];
+    } else if (visibility === "marketplace") {
+      updatedTags = ["public", "marketplace"]; // always include 'public'
     } else {
-      updatedTags = Array.from(new Set([...tags, "private"])).filter(
-        (t) => t !== "public"
-      );
+      return res.status(400).send("Invalid visibility value");
     }
 
     await postRef.update({
