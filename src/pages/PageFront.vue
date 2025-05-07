@@ -21,7 +21,7 @@
         flat
         bordered
         clickable
-        @click="$router.push('/home')"
+        @click="$router.push('/photos')"
       >
         <q-card-section>
           <q-icon name="feed" size="xl" color="primary" />

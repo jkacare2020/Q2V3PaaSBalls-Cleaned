@@ -1191,7 +1191,7 @@ async function updateVisibility(postId, visibility) {
       "/api/posts/visibility",
       {
         postId,
-        makePublic: visibility === "public",
+        visibility, // send string: "public", "private", or "marketplace"
       },
       {
         headers: {
@@ -1206,7 +1206,7 @@ async function updateVisibility(postId, visibility) {
 
       // Optionally update tags for post too ------
       posts.value[index].tags =
-        visibility === "public" ? ["public"] : ["private"];
+        visibility === "marketplace" ? ["public", "marketplace"] : [visibility]; // 'public' or 'private'
     }
     $q.notify({ type: "positive", message: "Visibility updated" });
   } catch (err) {
