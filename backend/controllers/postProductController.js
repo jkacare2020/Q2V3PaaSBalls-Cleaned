@@ -44,6 +44,9 @@ exports.importFromFirebasePost = async (req, res) => {
         .json({ message: "Invalid or missing caption in post" });
     }
 
+    // ✅ Validate post.tags if needed
+    const postTags = Array.isArray(post.tags) ? post.tags : ["public"];
+
     // 5. Fetch user metadata
     const userDoc = await dbFirestore
       .collection("users")
@@ -63,13 +66,18 @@ exports.importFromFirebasePost = async (req, res) => {
       description: "No description", // Optional: pull from post if it exists
       price: 0,
       imageUrl: post.imageUrl || "", // fallback if missing
-      tags: combinedTags,
+      tags: postTags,
+      role: userRoles,
     });
 
     await newProduct.save();
     console.log("✅ New product saved:", newProduct._id);
     return res.status(201).json(newProduct);
   } catch (err) {
+    if (err.code === 11000) {
+      const existing = await PostProduct.findOne({ postId });
+      return res.status(200).json(existing);
+    }
     console.error("🚨 Error importing post:", err.message);
     console.error(err.stack);
     return res

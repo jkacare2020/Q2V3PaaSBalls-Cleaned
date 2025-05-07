@@ -1,4 +1,5 @@
 <template>
+  <!--PageFront.vue -->
   <q-page class="q-pa-lg column items-center justify-center">
     <div class="text-center q-mb-xl">
       <q-img

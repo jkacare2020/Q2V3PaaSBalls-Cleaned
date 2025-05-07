@@ -258,6 +258,17 @@ function toggleDropdown() {
 
 const navLinks = [
   {
+    category: "Marketplace",
+    icon: "storefront",
+    links: [
+      {
+        title: "Browse Marketplace",
+        icon: "shopping_cart",
+        link: "/marketplace",
+      },
+    ],
+  },
+  {
     category: "General",
     icon: "apps",
     links: [{ title: "Settings", icon: "settings", link: "/settings" }],
