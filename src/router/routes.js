@@ -267,6 +267,12 @@ const routes = [
         path: "/product-view/:id",
         component: () => import("pages/feature/PostProductMongo.vue"),
       },
+      {
+        path: "/new-transaction-cart",
+        name: "CartPage",
+        component: () => import("pages/NewTransactionCart.vue"),
+        meta: { requiresAuth: true },
+      },
     ],
   },
 

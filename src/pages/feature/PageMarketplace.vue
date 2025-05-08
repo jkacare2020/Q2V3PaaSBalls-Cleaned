@@ -39,7 +39,23 @@
         </q-item-section>
 
         <q-item-section side>
-          <q-btn icon="shopping_cart" flat color="primary" label="View" />
+          <!-- View Button (Product details page) -->
+          <q-btn
+            icon="visibility"
+            flat
+            color="primary"
+            label="View"
+            @click.stop="$router.push(`/product-view/${item._id}`)"
+          />
+
+          <!-- Cart Button (Go to transaction page) -->
+          <q-btn
+            icon="shopping_cart"
+            flat
+            color="orange"
+            label="Buy"
+            @click.stop="goToTransaction(item)"
+          />
         </q-item-section>
       </q-item>
     </q-list>
@@ -49,9 +65,27 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { apiNode } from "boot/apiNode";
+import { getDoc, doc } from "firebase/firestore";
+import { auth, db } from "src/firebase/init"; // Adjust path if needed
+import { useRouter } from "vue-router";
 
+const router = useRouter();
+
+const userData = ref({}); // Create the userData ref
 const posts = ref([]); // Assume you already fetched marketplace-tagged posts here
 const searchQuery = ref("");
+
+onMounted(async () => {
+  const currentUser = auth.currentUser;
+  if (currentUser) {
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    if (userDoc.exists()) {
+      userData.value = userDoc.data(); // Now it's available for goToTransaction
+    }
+  } else {
+    console.warn("No logged-in user");
+  }
+});
 
 onMounted(async () => {
   try {
@@ -78,4 +112,31 @@ function formatDate(dateString) {
     day: "numeric",
   });
 }
+
+function goToTransaction(product) {
+  const buyer = {
+    First_Name: userData.value.firstName || "",
+    Last_Name: userData.value.lastName || "",
+    Phone_Number: userData.value.phoneNo || "",
+    User_Email: userData.value.email || "",
+  };
+
+  const transactionPayload = {
+    ...buyer,
+    transact_amount: product.price,
+    description: product.name,
+    sellerId: product.userId,
+    imageUrl: product.imageUrl,
+    productId: product._id,
+  };
+
+  router.push({
+    path: "/new-transaction-cart",
+    query: {
+      transaction: JSON.stringify(transactionPayload),
+    },
+  });
+}
+
+//--------------------------------
 </script>

@@ -94,8 +94,7 @@
 
 <script setup>
 import { useStoreAuth } from "src/stores/storeAuth";
-import { ref, computed } from "vue";
-import axios from "axios";
+import { ref, computed, onMounted } from "vue";
 import { db, auth } from "src/firebase/init"; // Import Firestore
 import { collection, getDocs } from "firebase/firestore";
 import defaultAvatar from "src/assets/avatar.jpg";
@@ -128,6 +127,25 @@ async function fetchAvatar(userId) {
     console.error("Error fetching avatar: ", error);
   }
 }
+
+// ✅ 2. Now call it inside onMounted()
+onMounted(() => {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      console.log("User authenticated:", user);
+      username.value = user.displayName || "User Name";
+      email.value = user.email || "user@example.com";
+      isAuthenticated.value = true;
+      isLoading.value = true;
+      await fetchAvatar(user.uid);
+      await fetchTransactions();
+    } else {
+      console.log("User not logged in.");
+      isAuthenticated.value = false;
+      transacts.value = [];
+    }
+  });
+});
 
 // Fetch all transactions
 async function fetchTransactions() {
@@ -237,61 +255,40 @@ async function openEditForm(transactId) {
 
 // async function openDeleteForm(transactId) {
 async function openDeleteForm(transactId) {
-  console.log("openDeleteForm triggered with transactId:", transactId);
-
-  // Ensure the user is logged in and retrieve a fresh token if needed
   const currentUser = auth.currentUser;
-  if (!currentUser) {
-    console.error("User is not logged in.");
-    return;
-  }
+  if (!currentUser) return;
 
-  const idToken = await currentUser.getIdToken(true); // Get a fresh token
-  console.log("Authorization Token:", idToken);
-  localStorage.setItem("idToken", idToken); // Store token in localStorage
+  const idToken = await currentUser.getIdToken(true);
 
-  try {
-    // Show confirmation dialog
-    const result = await $q
-      .dialog({
-        title: "Confirm",
-        message: "Are you sure you want to delete this transaction?",
-        cancel: true,
-        persistent: true,
-      })
-      .onOk();
+  $q.dialog({
+    title: "Confirm",
+    message: "Are you sure you want to delete this transaction?",
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const response = await apiNode.delete(`/api/transactions/${transactId}`, {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
 
-    const response = await apiNode.delete(`/api/transactions/${transactId}`, {
-      headers: {
-        Authorization: `Bearer ${idToken}`, // Include token in request headers
-      },
-    });
+      console.log("✅ Transaction deleted:", response.data);
 
-    console.log("Transaction deleted successfully:", response.data);
+      $q.notify({
+        color: "positive",
+        message: "Transaction deleted successfully!",
+        icon: "check",
+      });
 
-    // Show success notification
-    $q.notify({
-      color: "positive",
-      message: "Transaction deleted successfully!",
-      icon: "check",
-    });
-
-    // Refresh the transaction list after successful deletion
-    fetchTransactions();
-  } catch (error) {
-    console.error("Error deleting transaction:", error);
-
-    // Show error notification
-    $q.notify({
-      color: "negative",
-      message: "Failed to delete transaction.",
-      icon: "error",
-    });
-
-    if (error.response) {
-      console.error("API Error Response:", error.response.data);
+      fetchTransactions(); // ✅ reload list
+    } catch (error) {
+      console.error("❌ Delete failed:", error);
+      $q.notify({
+        color: "negative",
+        message: "Failed to delete transaction.",
+        icon: "error",
+      });
     }
-  }
+  });
 }
 
 // Compute the total amount from all transactions

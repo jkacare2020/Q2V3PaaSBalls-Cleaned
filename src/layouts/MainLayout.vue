@@ -180,6 +180,10 @@ const $q = useQuasar();
 const leftDrawerOpen = ref(false);
 const dropdownOpen = ref(false); // Manage dropdown visibility
 const userAvatar = ref(""); // Avatar from Firestore
+const tenants = ref([]); // at the top
+
+const userIsAdmin = ref(false);
+
 const defaultAvatar = "src/assets/default-avatar.png"; // Local fallback
 // Computed properties for checking logged-in status, admin role, and signup page
 const isLoggedIn = computed(() => !!storeAuth.user); // True if a user is logged in
@@ -211,22 +215,18 @@ async function loadAvatar(uid) {
 }
 //----------------------------------------------------------
 
-const fetchTenants = async () => {
-  const token = await auth.currentUser?.getIdToken();
-  const response = await apiNode.get("/api/tenants", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  // ... store tenants
-};
-
 onMounted(() => {
-  onAuthStateChanged(auth, (user) => {
+  const userIsAdmin = ref(false);
+
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
-      fetchTenants();
-    } else {
-      console.warn("User not logged in");
+      const token = await user.getIdToken();
+      const decoded = JSON.parse(atob(token.split(".")[1]));
+      const role = decoded.role || [];
+
+      userIsAdmin.value = Array.isArray(role)
+        ? role.includes("admin")
+        : role === "admin";
     }
   });
 });
@@ -345,7 +345,12 @@ const navLinks = [
     icon: "connect_without_contact",
     links: [
       { title: "ChatBot", icon: "smart_toy", link: "/chatBot" },
-      { title: "Tenant", icon: "support_agent", link: "/tenants" },
+      {
+        title: "Tenant",
+        icon: "support_agent",
+        link: "/tenants",
+        adminOnly: true,
+      },
     ],
   },
   {

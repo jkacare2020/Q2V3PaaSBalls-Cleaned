@@ -39,6 +39,9 @@ import { useRouter } from "vue-router";
 import { apiNode } from "boot/apiNode";
 import { getAuth } from "firebase/auth";
 
+import { useQuasar } from "quasar";
+const $q = useQuasar();
+
 import { onAuthStateChanged } from "firebase/auth";
 const auth = getAuth();
 
@@ -100,6 +103,7 @@ const fetchTenants = async () => {
     console.error("Error fetching tenants:", error);
   }
 };
+//-----------------------------------------------------
 
 const addTenant = () => {
   // Navigate to the add tenant form
@@ -123,14 +127,28 @@ const deleteTenant = async (tenant) => {
   }
 };
 
-onMounted(fetchTenants);
-
 onMounted(() => {
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      console.warn("User not logged in");
+      return;
+    }
+
+    const token = await user.getIdTokenResult();
+    const roles = Array.isArray(token.claims.role)
+      ? token.claims.role
+      : [token.claims.role];
+
+    if (roles.includes("admin")) {
       fetchTenants();
     } else {
-      console.warn("User not logged in");
+      console.warn("❌ Access denied: Not an admin.");
+      $q.notify({
+        type: "warning",
+        message: "Access denied. Admins only.",
+        icon: "lock",
+        position: "top",
+      });
     }
   });
 });

@@ -1,4 +1,5 @@
 <template>
+  <!---NewTransactionCart -->
   <q-page>
     <q-card>
       <q-card-section>
@@ -67,7 +68,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import axios from "axios";
 import { useQuasar } from "quasar";
 import { getAuth } from "firebase/auth";
 import { useRouter } from "vue-router";
@@ -102,6 +102,14 @@ onMounted(() => {
     console.error("No transaction data passed to cart.");
   }
 
+  transactionData.value.req_date = formatDate(new Date());
+});
+
+onMounted(() => {
+  const queryData = route.query.transaction;
+  if (queryData) {
+    transactionData.value = JSON.parse(queryData);
+  }
   transactionData.value.req_date = formatDate(new Date());
 });
 

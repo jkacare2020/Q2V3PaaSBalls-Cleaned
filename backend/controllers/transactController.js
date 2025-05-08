@@ -1,24 +1,24 @@
-//----------------------------MongoDB Transactions Admin--------------------
+//-transactController.js---MongoDB Transactions Admin--------------------
 const Transact = require("../models/transacts/Transacts");
 // const admin = require("firebase-admin");
 
 const admin = require("../config/firebaseAdmin"); // Adjust the path as needed
 const db = admin.firestore(); // Initialize Firestore instance
-// Check if a user is an admin
-async function isAdmin(userId) {
+
+const isAdmin = async (userId) => {
   try {
-    const userRef = db.collection("users").doc(userId); // Firestore instance
-    const doc = await userRef.get();
-    if (!doc.exists) {
-      console.log("User not found in Firestore.");
-      return false;
-    }
-    return doc.data().role === "admin";
-  } catch (error) {
-    console.error("Failed to check admin status:", error);
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (!userDoc.exists) return false;
+
+    const userData = userDoc.data();
+    const roles = userData.role;
+
+    return Array.isArray(roles) && roles.includes("admin");
+  } catch (err) {
+    console.error("Error checking admin role:", err);
     return false;
   }
-}
+};
 
 // Controller for fetching All Transactions by Role --
 exports.getAllTransactions = async (req, res) => {
@@ -59,7 +59,7 @@ exports.getAllTransactions = async (req, res) => {
   }
 };
 
-// Controller for fetching transactions by Phone Number --
+// Controller for fetching transactions by Phone --
 exports.getTransactions = async (req, res) => {
   const { phone } = req.query;
   const authHeader = req.headers.authorization;
@@ -137,6 +137,12 @@ exports.getMyTransactions = async (req, res) => {
       req_date: -1,
       transact_number: -1,
     });
+    if (transacts.length === 0) {
+      return res.status(200).json({
+        message: "No transactions found for this user.",
+        transacts: [],
+      });
+    }
     res.status(200).json(transacts);
   } catch (error) {
     console.error("Error fetching transactions:", error);
@@ -201,7 +207,11 @@ exports.createNewTransaction = async (req, res) => {
     check_type,
     transact_amount,
     timestamp,
-    _id, // Destructure _id for explicit removal
+    _id,
+    sellerId, // ✅ Add this
+    productId, // ✅ Add this (optional but recommended)
+    imageUrl, // ✅ Add if used
+    description, // Optional, if passed separately
   } = req.body;
 
   // Ensure _id is not passed to the database
@@ -231,6 +241,7 @@ exports.createNewTransaction = async (req, res) => {
   try {
     const transactionDate = timestamp || new Date();
     const newTransaction = new Transact({
+      sellerId, // <- Add this field (must be passed in req.body)
       owner: uid, // Use the uid declared in the outer scope
       userId,
       First_Name,

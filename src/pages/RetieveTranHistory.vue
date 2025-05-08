@@ -1,4 +1,5 @@
 <template>
+  <!--RetieveTranHistory-->
   <q-page>
     <q-card>
       <q-card-section>
@@ -47,6 +48,9 @@
           />
           <q-btn label="Yes, Proceed to Cart" @click="proceedToCart" />
         </q-form>
+        <q-banner class="bg-grey-3 q-mb-md" v-if="loadedFromHistory">
+          Shipping and payment info pre-filled from your last transaction.
+        </q-banner>
       </q-card-section>
     </q-card>
   </q-page>
@@ -54,16 +58,18 @@
 
 <script setup>
 import { reactive, ref, watch, onMounted } from "vue";
-import axios from "axios";
 import { doc, getDoc } from "firebase/firestore";
 import { db, auth } from "src/firebase/init";
 import { useStoreAuth } from "src/stores/storeAuth";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "vue-router";
+import { useRoute } from "vue-router";
+
 import { apiNode } from "boot/apiNode";
 import { nodeApiBaseURL } from "boot/apiNode"; // ✅ Add at top
 
 const router = useRouter();
+const route = useRoute();
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
@@ -83,16 +89,18 @@ const userProfile = reactive({
   shippingAddress: "",
 });
 const transactionForm = reactive({
-  First_name: "",
+  First_Name: "",
   Last_Name: "",
   Phone_Number: "",
+  User_Email: "",
   Payer_address: "",
   Payer_address_city: "",
   Payer_address_state: "",
+  Payer_address_zip: "",
+  Payer_address_country: "",
   check_type: "",
   transact_amount: 0,
   tran_status: "",
-  User_Email: "",
   date: new Date(),
 });
 
@@ -117,6 +125,17 @@ watch(
     formatPhone(newPhone);
   }
 );
+
+//--------------------------------------------
+onMounted(() => {
+  const queryData = route.query.transaction;
+  if (queryData) {
+    const cartParams = JSON.parse(queryData);
+    Object.assign(transactionForm, cartParams); // includes sellerId, price, etc.
+  }
+});
+
+//-----------------------------------------------
 
 onMounted(async () => {
   loading.value = true; // Start loading

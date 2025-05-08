@@ -128,77 +128,76 @@ async function fetchAvatar(userId) {
     console.error("Error fetching avatar: ", error);
   }
 }
-onMounted(() => {
-  // Fetch all My transactions -------------------------------
-  async function getMyTransactions() {
-    console.log("ednpoint backend", nodeApiBaseURL);
-    try {
-      const idToken = await storeAuth.user?.getIdToken();
-      const response = await apiNode.get("/api/mongo-AllMyTransacts", {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
+// ✅ 1. Move this function OUTSIDE of onMounted()
+async function getMyTransactions() {
+  console.log("endpoint backend", nodeApiBaseURL);
+  try {
+    const idToken = await storeAuth.user?.getIdToken();
+    const response = await apiNode.get("/api/mongo-AllMyTransacts", {
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
 
-      if (response.data && response.data.length > 0) {
-        transacts.value = response.data;
-        $q.notify({
-          color: "positive",
-          message: "My Transactions fetched successfully!",
-          icon: "check",
-          position: "top",
-        });
-        isLoading.value = false; // Stop loading spinner
-      } else {
-        transacts.value = [];
-        $q.notify({
-          color: "warning",
-          message: "No transactions found.",
-          icon: "warning",
-          position: "top",
-        });
-      }
-    } catch (error) {
-      console.error(
-        "Error fetching transactions:",
-        error.response || error.message
-      );
-
-      const status = error.response?.status;
-      let message = "Failed to fetch transactions.";
-
-      if (status === 401) {
-        message = "Unauthorized access. Please log in again.";
-      } else if (status === 403) {
-        message = "Access denied. Admin privileges required.";
-      } else if (status === 500) {
-        message = "Server error. Please try again later.";
-      }
-
+    if (response.data && response.data.length > 0) {
+      transacts.value = response.data;
       $q.notify({
-        color: "negative",
-        message,
-        icon: "error",
-        position: "center",
+        color: "positive",
+        message: "My Transactions fetched successfully!",
+        icon: "check",
+        position: "top",
       });
-
-      isLoading.value = false; // Stop loading spinner
+      isLoading.value = false;
+    } else {
+      transacts.value = [];
+      $q.notify({
+        color: "warning",
+        message: "No transactions found.",
+        icon: "warning",
+        position: "top",
+      });
     }
-  }
+  } catch (error) {
+    console.error(
+      "Error fetching transactions:",
+      error.response || error.message
+    );
 
-  // Handle authentication state changes
+    const status = error.response?.status;
+    let message = "Failed to fetch transactions.";
+
+    if (status === 401) {
+      message = "Unauthorized access. Please log in again.";
+    } else if (status === 403) {
+      message = "Access denied. Admin privileges required.";
+    } else if (status === 500) {
+      message = "Server error. Please try again later.";
+    }
+
+    $q.notify({
+      color: "negative",
+      message,
+      icon: "error",
+      position: "center",
+    });
+
+    isLoading.value = false;
+  }
+}
+
+// ✅ 2. Now call it inside onMounted()
+onMounted(() => {
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       console.log("User authenticated:", user);
       username.value = user.displayName || "User Name";
       email.value = user.email || "user@example.com";
       isAuthenticated.value = true;
-      isLoading.value = true; // Start loading spinner
-      // // Fetch avatar and transactions
+      isLoading.value = true;
       await fetchAvatar(user.uid);
       await getMyTransactions();
     } else {
       console.log("User not logged in.");
       isAuthenticated.value = false;
-      transacts.value = []; // Clear transactions
+      transacts.value = [];
     }
   });
 });
@@ -251,48 +250,45 @@ async function openDeleteForm(transactId) {
   console.log("Authorization Token:", idToken);
   localStorage.setItem("idToken", idToken); // Store token in localStorage
 
-  try {
-    // Show confirmation dialog
-    const result = await $q
-      .dialog({
-        title: "Confirm",
-        message: "Are you sure you want to delete this transaction?",
-        cancel: true,
-        persistent: true,
-      })
-      .onOk();
+  $q.dialog({
+    title: "Confirm",
+    message: "Are you sure you want to delete this transaction?",
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const response = await apiNode.delete(`/api/transactions/${transactId}`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`, // Include token in request headers
+        },
+      });
 
-    const response = await apiNode.delete(`/api/transactions/${transactId}`, {
-      headers: {
-        Authorization: `Bearer ${idToken}`, // Include token in request headers
-      },
-    });
+      console.log("Transaction deleted successfully:", response.data);
 
-    console.log("Transaction deleted successfully:", response.data);
+      // Show success notification
+      $q.notify({
+        color: "positive",
+        message: "Transaction deleted successfully!",
+        icon: "check",
+      });
 
-    // Show success notification
-    $q.notify({
-      color: "positive",
-      message: "Transaction deleted successfully!",
-      icon: "check",
-    });
+      // Refresh the transaction list after successful deletion
+      getMyTransactions();
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
 
-    // Refresh the transaction list after successful deletion
-    getMyTransactions();
-  } catch (error) {
-    console.error("Error deleting transaction:", error);
+      // Show error notification
+      $q.notify({
+        color: "negative",
+        message: "Failed to delete transaction.",
+        icon: "error",
+      });
 
-    // Show error notification
-    $q.notify({
-      color: "negative",
-      message: "Failed to delete transaction.",
-      icon: "error",
-    });
-
-    if (error.response) {
-      console.error("API Error Response:", error.response.data);
+      if (error.response) {
+        console.error("API Error Response:", error.response.data);
+      }
     }
-  }
+  });
 }
 
 // Compute the total amount from all transactions
