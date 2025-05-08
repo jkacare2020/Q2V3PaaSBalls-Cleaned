@@ -9,8 +9,15 @@ const {
   deleteTransaction,
   getAllTransactions,
   getMyTransactions,
+  getTransactionsBySeller,
 } = require("../controllers/transactController");
 const authenticateAndAuthorize = require("../middlewares/authMiddleware");
+
+router.get(
+  "/transactions/seller",
+  authenticateAndAuthorize(["user", "admin"]),
+  getTransactionsBySeller
+);
 
 // Log transaction ID for debugging
 router.get("/transactions/:id", (req, res, next) => {

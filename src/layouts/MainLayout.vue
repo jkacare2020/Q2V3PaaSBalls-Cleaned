@@ -363,9 +363,14 @@ const navLinks = [
         link: "/mongo-AllTransacts",
       },
       {
-        title: "View My Transactions",
+        title: "Buyer Transactions",
         icon: "table_chart",
         link: "/mongo-mytransacts",
+      },
+      {
+        title: "Seller Transactions", // ✅ Add this one
+        icon: "storefront",
+        link: "/merchant-transactions",
       },
       { title: "Create Transaction", icon: "add", link: "/new-transaction" },
       { title: "$ Ledger ", icon: "savings", link: "/ledger" },

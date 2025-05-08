@@ -148,6 +148,12 @@ const routes = [
       },
 
       {
+        path: "/merchant-transactions",
+        component: () => import("pages/PageSellerTransacts.vue"),
+        meta: { requiresAuth: true },
+      },
+
+      {
         path: "/CartPage",
         name: "CartPage",
         component: () => import("pages/NewTransactionCart.vue"),

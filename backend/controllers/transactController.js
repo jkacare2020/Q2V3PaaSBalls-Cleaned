@@ -253,6 +253,9 @@ exports.createNewTransaction = async (req, res) => {
       Payer_address_state,
       check_type,
       transact_amount,
+      productId, // ✅ Add this (optional but recommended)
+      imageUrl, // ✅ Add if used
+      description, // Optional, if passed separately
       date: transactionDate,
     });
     console.log(newTransaction);
@@ -342,5 +345,22 @@ exports.deleteTransaction = async (req, res) => {
   } catch (error) {
     console.error("Error deleting transaction:", error);
     res.status(500).json({ message: "Error deleting transaction." });
+  }
+};
+
+exports.getTransactionsBySeller = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split("Bearer ")[1];
+    const decoded = await admin.auth().verifyIdToken(token);
+    const sellerId = decoded.uid;
+
+    const sellerTransactions = await Transact.find({ sellerId }).sort({
+      req_date: -1,
+    });
+
+    res.status(200).json(sellerTransactions);
+  } catch (error) {
+    console.error("Error fetching seller transactions:", error.message);
+    res.status(500).json({ message: "Failed to fetch seller transactions" });
   }
 };
