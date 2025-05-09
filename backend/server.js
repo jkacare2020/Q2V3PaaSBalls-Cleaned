@@ -24,7 +24,7 @@ const updatePresence = require("./middlewares/setPresence");
 const commentsRoutes = require("./routes/commentsRoutes");
 const userPresenceRoutes = require("./routes/userPresenceRoutes");
 
-const adminRoutes = require("./routes/adminRoutes");
+// const adminRoutes = require("./routes/adminRoutes");
 
 dotenv.config();
 
@@ -104,7 +104,7 @@ app.use("/api", authenticateAndAuthorize(), audioRoutes); // Mount STT routes un
 app.use("/api", authenticateAndAuthorize(), chatBotRoutes);
 app.use("/api/tenants", tenantRoutes);
 app.use("/api/bio", bioRoutes);
-app.use("/api/admin", adminRoutes);
+// app.use("/api/admin", adminRoutes);
 // app.use("/api/products", authenticateAndAuthorize(), postProductRoutes); // will result in /api/products/add, etc.
 // app.use("/api/image-process", imageProcessingRoutes); // Uncomment if you have image processing routes
 
