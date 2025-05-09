@@ -64,7 +64,7 @@ function getFriendlyErrorMessage(errorCode) {
     "Failed to login. Please check your credentials."
   );
 }
-
+//---------------------------------
 async function login() {
   try {
     await storeAuth.loginUser({ email: email.value, password: password.value });
