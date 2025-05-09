@@ -2,6 +2,8 @@
 const Transact = require("../models/transacts/Transacts");
 // const admin = require("firebase-admin");
 
+const PDFDocument = require("pdfkit");
+
 const admin = require("../config/firebaseAdmin"); // Adjust the path as needed
 const db = admin.firestore(); // Initialize Firestore instance
 
@@ -206,6 +208,8 @@ exports.createNewTransaction = async (req, res) => {
     Payer_address_state,
     check_type,
     transact_amount,
+    tran_status,
+    quantity,
     timestamp,
     _id,
     sellerId, // ✅ Add this
@@ -252,6 +256,8 @@ exports.createNewTransaction = async (req, res) => {
       Payer_address_city,
       Payer_address_state,
       check_type,
+      tran_status,
+      quantity,
       transact_amount,
       productId, // ✅ Add this (optional but recommended)
       imageUrl, // ✅ Add if used
@@ -347,7 +353,7 @@ exports.deleteTransaction = async (req, res) => {
     res.status(500).json({ message: "Error deleting transaction." });
   }
 };
-
+//---------------------------------Seller---------------------
 exports.getTransactionsBySeller = async (req, res) => {
   try {
     const token = req.headers.authorization?.split("Bearer ")[1];
@@ -358,9 +364,108 @@ exports.getTransactionsBySeller = async (req, res) => {
       req_date: -1,
     });
 
-    res.status(200).json(sellerTransactions);
+    return res.status(200).json(sellerTransactions);
   } catch (error) {
     console.error("Error fetching seller transactions:", error.message);
     res.status(500).json({ message: "Failed to fetch seller transactions" });
+  }
+};
+
+// backend/controllers/transactController.js
+exports.getUnpaidTransactions = async (req, res) => {
+  const token = req.headers.authorization?.split("Bearer ")[1];
+  const decoded = await admin.auth().verifyIdToken(token);
+  const userId = decoded.uid;
+
+  const unpaid = await Transact.find({ owner: userId, tran_status: "unpaid" });
+  res.status(200).json(unpaid);
+};
+//------------------------------------------------------------------------
+
+const fs = require("fs");
+const path = require("path");
+
+exports.generateInvoice = async (req, res) => {
+  try {
+    const { transactId } = req.params;
+    const transact = await Transact.findById(transactId);
+    if (!transact) return res.status(404).send("Transaction not found");
+
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=invoice.pdf");
+    doc.pipe(res);
+
+    // Optional: Add platform logo
+    const logoPath = path.join(__dirname, "../assets/logo.png");
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 50, 45, { width: 100 });
+    }
+
+    doc.fontSize(20).text("INVOICE", 275, 50, { align: "right" }).moveDown();
+
+    // Buyer and Seller Info
+    doc
+      .fontSize(10)
+      .text(`Invoice Number: ${transact.transact_number}`, { align: "right" })
+      .text(`Date: ${new Date(transact.req_date).toLocaleDateString()}`, {
+        align: "right",
+      })
+      .moveDown();
+
+    doc.font("Helvetica-Bold").text("Bill To:", 50).font("Helvetica");
+    doc.text(`${transact.First_Name} ${transact.Last_Name}`);
+    doc.text(`${transact.Phone_Number}`);
+    doc.text(`${transact.User_Email}`);
+    doc.moveDown();
+
+    doc.font("Helvetica-Bold").text("Seller Info:", 50).font("Helvetica");
+    doc.text(`Seller UID: ${transact.sellerId}`);
+    doc.moveDown();
+
+    // Table header
+    doc
+      .font("Helvetica-Bold")
+      .text("Description", 50, doc.y)
+      .text("Qty", 250, doc.y)
+      .text("Unit Price", 300, doc.y)
+      .text("Total", 400, doc.y);
+
+    doc
+      .moveTo(50, doc.y + 5)
+      .lineTo(550, doc.y + 5)
+      .stroke();
+
+    // Table row
+    doc
+      .font("Helvetica")
+      .text(transact.description || "Product/Service", 50, doc.y + 10)
+      .text(transact.quantity.toString(), 250, doc.y)
+      .text(`$${transact.transact_amount.toFixed(2)}`, 300, doc.y)
+      .text(
+        `$${(transact.transact_amount * transact.quantity).toFixed(2)}`,
+        400,
+        doc.y
+      );
+
+    doc.moveDown(2);
+
+    // Subtotal, Tax, and Grand Total
+    const subtotal = transact.transact_amount * transact.quantity;
+    const taxRate = 0.1; // 10% tax
+    const tax = subtotal * taxRate;
+    const grandTotal = subtotal + tax;
+
+    doc
+      .font("Helvetica-Bold")
+      .text(`Subtotal: $${subtotal.toFixed(2)}`, 400)
+      .text(`Tax (10%): $${tax.toFixed(2)}`, 400)
+      .text(`Total: $${grandTotal.toFixed(2)}`, 400)
+      .moveDown();
+
+    doc.end();
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    res.status(500).send("Could not generate invoice");
   }
 };

@@ -10,34 +10,13 @@ const {
   getAllTransactions,
   getMyTransactions,
   getTransactionsBySeller,
+  getUnpaidTransactions,
+  generateInvoice,
 } = require("../controllers/transactController");
+
 const authenticateAndAuthorize = require("../middlewares/authMiddleware");
 
-router.get(
-  "/transactions/seller",
-  authenticateAndAuthorize(["user", "admin"]),
-  getTransactionsBySeller
-);
-
-// Log transaction ID for debugging
-router.get("/transactions/:id", (req, res, next) => {
-  console.log(
-    "transactRoutes GET request received for transaction ID:",
-    req.params.id
-  );
-  next(); // Pass control to the next middleware or controller
-});
-
-// Route to get a single transaction by ID url params
-router.get("/transactions/:id", authenticateAndAuthorize(), getTransactionById); // This handles the actual logic
-// Route to update a single transaction by ID
-router.put("/transactions/:id", authenticateAndAuthorize(), updateTransaction);
-// DELETE route for deleting a transaction by ID
-router.delete(
-  "/transactions/:id",
-  authenticateAndAuthorize(),
-  deleteTransaction
-);
+router.get("/transactions/seller", getTransactionsBySeller);
 
 // get transactions routes by user profile phone No. -----------------------
 router.get("/mongo-transacts", authenticateAndAuthorize(), getTransactions);
@@ -69,6 +48,39 @@ router.post(
   "/transactions/new",
   // authenticateAndAuthorize(),
   createNewTransaction
+);
+
+//shopping  cart  : Add route in transactRoutes.js
+router.get(
+  "/transactions/unpaid",
+  authenticateAndAuthorize(),
+  getUnpaidTransactions
+);
+//-single item invoice ----------
+router.get(
+  "/transactions/invoice/:transactId",
+  authenticateAndAuthorize(),
+  generateInvoice
+);
+
+// Log transaction ID for debugging
+router.get("/transactions/:id", (req, res, next) => {
+  console.log(
+    "transactRoutes GET request received for transaction ID:",
+    req.params.id
+  );
+  next(); // Pass control to the next middleware or controller
+});
+
+// Route to get a single transaction by ID url params
+router.get("/transactions/:id", authenticateAndAuthorize(), getTransactionById); // This handles the actual logic
+// Route to update a single transaction by ID
+router.put("/transactions/:id", authenticateAndAuthorize(), updateTransaction);
+// DELETE route for deleting a transaction by ID
+router.delete(
+  "/transactions/:id",
+  authenticateAndAuthorize(),
+  deleteTransaction
 );
 
 module.exports = router;

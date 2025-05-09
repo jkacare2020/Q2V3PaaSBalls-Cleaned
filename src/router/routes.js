@@ -279,6 +279,12 @@ const routes = [
         component: () => import("pages/NewTransactionCart.vue"),
         meta: { requiresAuth: true },
       },
+      {
+        path: "/transactions-unpaid",
+        name: "CartPage",
+        component: () => import("pages/PageCart.vue"),
+        meta: { requiresAuth: true },
+      },
     ],
   },
 

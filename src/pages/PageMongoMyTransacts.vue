@@ -1,21 +1,25 @@
 <template>
-  <div class="col-4 large-screen-only">
-    <q-item class="fixed">
-      <q-item-section>
-        <q-item-label class="text-bold">{{ username }}</q-item-label>
-        <q-item-label caption> {{ email }} </q-item-label>
-      </q-item-section>
-    </q-item>
-  </div>
+  <!--PageMongoMyTransacts-->
+  <div class="q-gutter-md row q-mt-md">
+    <div class="col-4 large-screen-only">
+      <q-item>
+        <q-item-section>
+          <q-item-label class="text-bold">{{ username }}</q-item-label>
+          <q-item-label caption> {{ email }} </q-item-label>
+        </q-item-section>
+      </q-item>
+    </div>
 
-  <div>
-    <!-- Loading spinner -->
-    <q-spinner
-      v-if="isLoading"
-      color="primary"
-      size="3em"
-      class="q-mt-lg q-ml-md"
-    />
+    <div class="col-8">
+      <q-input
+        v-model="searchQuery"
+        filled
+        dense
+        debounce="300"
+        placeholder="Search transactions..."
+        class="q-ml-sm"
+      />
+    </div>
   </div>
 
   <!-- Transactions Table -->
@@ -36,10 +40,12 @@
         <th class="text-left">RequestDate</th>
         <th class="text-left">Edit</th>
         <th class="text-left">Delete</th>
+        <th class="text-left">Invoice</th>
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(transact, index) in transacts" :key="index">
+      <!-- <tr v-for="(transact, index) in transacts" :key="index"> -->
+      <tr v-for="(transact, index) in filteredTransacts" :key="index">
         <td class="text-left">{{ transact.transact_number }}</td>
         <td class="text-left">{{ transact.First_Name }}</td>
         <td class="text-left">{{ transact.Last_Name }}</td>
@@ -48,7 +54,15 @@
         <td class="text-left">
           {{ formatCurrency(transact.transact_amount) }}
         </td>
-        <td class="text-left">{{ transact.tran_status }}</td>
+        <td class="text-left">
+          <q-badge
+            :color="transact.tran_status === 'unpaid' ? 'red' : 'green'"
+            outline
+          >
+            {{ transact.tran_status }}
+          </q-badge>
+        </td>
+
         <td class="text-left">{{ formatDate(transact.req_date) }}</td>
 
         <td class="text-left">
@@ -79,6 +93,16 @@
               }
             "
             aria-label="Delete Transaction"
+          />
+        </td>
+        <td class="text-left">
+          <q-btn
+            dense
+            flat
+            icon="picture_as_pdf"
+            color="secondary"
+            @click="downloadInvoice(transact._id)"
+            aria-label="Download Invoice"
           />
         </td>
       </tr>
@@ -114,6 +138,34 @@ const email = ref("user@example.com");
 const isAuthenticated = ref(false);
 const transacts = ref([]);
 const isLoading = ref(false);
+const searchQuery = ref("");
+
+const downloadInvoice = async (transactId) => {
+  const user = auth.currentUser;
+  if (!user) {
+    $q.notify({ color: "negative", message: "Please log in first." });
+    return;
+  }
+
+  const token = await user.getIdToken();
+  const url = `${nodeApiBaseURL}/api/transactions/invoice/${transactId}`; // ✅ fixed
+
+  try {
+    const res = await apiNode.get(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: "blob",
+    });
+
+    const blob = new Blob([res.data], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "invoice.pdf";
+    link.click();
+  } catch (error) {
+    console.error("❌ Failed to download invoice:", error);
+    $q.notify({ color: "negative", message: "Download failed." });
+  }
+};
 
 // Fetch avatar -----------------------------------------
 async function fetchAvatar(userId) {
@@ -313,6 +365,20 @@ const formatCurrency = (amount) => {
     minimumFractionDigits: 2,
   }).format(amount);
 };
+
+const filteredTransacts = computed(() => {
+  if (!searchQuery.value) return transacts.value;
+  const q = searchQuery.value.toLowerCase();
+  return transacts.value.filter((t) => {
+    return (
+      String(t.transact_number).includes(q) ||
+      (t.First_Name && t.First_Name.toLowerCase().includes(q)) ||
+      (t.Last_Name && t.Last_Name.toLowerCase().includes(q)) ||
+      (t.User_Email && t.User_Email.toLowerCase().includes(q)) ||
+      (t.tran_status && t.tran_status.toLowerCase().includes(q))
+    );
+  });
+});
 </script>
 
 <style scoped>
