@@ -3,6 +3,7 @@ const Transact = require("../models/transacts/Transacts");
 // const admin = require("firebase-admin");
 
 const PDFDocument = require("pdfkit");
+const getEffectiveTaxRate = require("../utils/getEffectiveTaxRate");
 
 const admin = require("../config/firebaseAdmin"); // Adjust the path as needed
 const db = admin.firestore(); // Initialize Firestore instance
@@ -423,45 +424,74 @@ exports.generateInvoice = async (req, res) => {
     doc.text(`Seller UID: ${transact.sellerId}`);
     doc.moveDown();
 
-    // Table header
+    // ----------------Table header --------------
+    const tableTop = doc.y;
+
+    // Table Header
     doc
       .font("Helvetica-Bold")
-      .text("Description", 50, doc.y)
-      .text("Qty", 250, doc.y)
-      .text("Unit Price", 300, doc.y)
-      .text("Total", 400, doc.y);
-
+      .text("Description", 50, tableTop)
+      .text("Qty", 250, tableTop)
+      .text("Unit Price", 300, tableTop)
+      .text("Total", 400, tableTop);
     doc
-      .moveTo(50, doc.y + 5)
-      .lineTo(550, doc.y + 5)
-      .stroke();
+      .moveTo(50, tableTop + 15)
+      .lineTo(550, tableTop + 15)
+      .stroke(); // separator
 
     // Table row
+    // Table Row
+    const quantity = parseInt(transact.quantity || "1", 10) || 1;
+    const rowY = tableTop + 25;
+
     doc
       .font("Helvetica")
-      .text(transact.description || "Product/Service", 50, doc.y + 10)
-      .text(transact.quantity.toString(), 250, doc.y)
-      .text(`$${transact.transact_amount.toFixed(2)}`, 300, doc.y)
+      .text(transact.description || "Product/Service", 50, rowY)
+      .text(quantity.toString(), 250, rowY)
       .text(
-        `$${(transact.transact_amount * transact.quantity).toFixed(2)}`,
+        typeof transact.transact_amount === "number"
+          ? `$${transact.transact_amount.toFixed(2)}`
+          : "$0.00",
+        300,
+        rowY
+      )
+      .text(
+        typeof transact.transact_amount === "number"
+          ? `$${(transact.transact_amount * quantity).toFixed(2)}`
+          : "$0.00",
         400,
-        doc.y
+        rowY
       );
 
     doc.moveDown(2);
 
-    // Subtotal, Tax, and Grand Total
-    const subtotal = transact.transact_amount * transact.quantity;
-    const taxRate = 0.1; // 10% tax
+    // 🧠 Compute tax rate based on buyer's city/state
+    const buyerCity = (transact.Payer_address_city || "").trim();
+    const buyerState = (transact.Payer_address_state || "").trim();
+
+    let taxRate = await getEffectiveTaxRate(
+      transact.sellerId,
+      buyerState,
+      buyerCity
+    );
+    if (typeof taxRate !== "number" || isNaN(taxRate)) {
+      taxRate = 0.0825; // fallback
+    }
+
+    // const quantity = parseInt(transact.quantity || "1", 10) || 1;
+    const subtotal = transact.transact_amount * quantity;
     const tax = subtotal * taxRate;
     const grandTotal = subtotal + tax;
+
+    // 🧾 Render in PDF
+    doc;
+    doc.moveDown(2);
 
     doc
       .font("Helvetica-Bold")
       .text(`Subtotal: $${subtotal.toFixed(2)}`, 400)
-      .text(`Tax (10%): $${tax.toFixed(2)}`, 400)
-      .text(`Total: $${grandTotal.toFixed(2)}`, 400)
-      .moveDown();
+      .text(`Tax (${(taxRate * 100).toFixed(2)}%): $${tax.toFixed(2)}`, 400)
+      .text(`Total: $${grandTotal.toFixed(2)}`, 400);
 
     doc.end();
   } catch (error) {

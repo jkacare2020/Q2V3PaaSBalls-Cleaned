@@ -1,21 +1,25 @@
 <template>
-  <div class="col-4 large-screen-only">
-    <q-item class="fixed">
-      <q-item-section>
-        <q-item-label class="text-bold">{{ username }}</q-item-label>
-        <q-item-label caption> {{ email }} </q-item-label>
-      </q-item-section>
-    </q-item>
-  </div>
+  <!--PageMongoMyTransacts-->
+  <div class="q-gutter-md row q-mt-md">
+    <div class="col-4 large-screen-only">
+      <q-item>
+        <q-item-section>
+          <q-item-label class="text-bold">{{ username }}</q-item-label>
+          <q-item-label caption> {{ email }} </q-item-label>
+        </q-item-section>
+      </q-item>
+    </div>
 
-  <div>
-    <!-- Loading spinner -->
-    <q-spinner
-      v-if="isLoading"
-      color="primary"
-      size="3em"
-      class="q-mt-lg q-ml-md"
-    />
+    <div class="col-8">
+      <q-input
+        v-model="searchQuery"
+        filled
+        dense
+        debounce="300"
+        placeholder="Search Merchant transactions..."
+        class="q-ml-sm"
+      />
+    </div>
   </div>
 
   <!-- Transactions Table -->
@@ -39,7 +43,8 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(transact, index) in transacts" :key="index">
+      <!-- <tr v-for="(transact, index) in transacts" :key="index"> -->
+      <tr v-for="(transact, index) in filteredTransacts" :key="index">
         <td class="text-left">{{ transact.transact_number }}</td>
         <td class="text-left">{{ transact.First_Name }}</td>
         <td class="text-left">{{ transact.Last_Name }}</td>
@@ -114,6 +119,7 @@ const isAuthenticated = ref(false);
 const transacts = ref([]);
 const isLoading = ref(false);
 const sellerTransacts = ref([]); // 👈 Declare it
+const searchQuery = ref("");
 
 // Fetch avatar -----------------------------------------
 async function fetchAvatar(userId) {
@@ -314,6 +320,20 @@ const formatCurrency = (amount) => {
     minimumFractionDigits: 2,
   }).format(amount);
 };
+
+const filteredTransacts = computed(() => {
+  if (!searchQuery.value) return transacts.value;
+  const q = searchQuery.value.toLowerCase();
+  return transacts.value.filter((t) => {
+    return (
+      String(t.transact_number).includes(q) ||
+      (t.First_Name && t.First_Name.toLowerCase().includes(q)) ||
+      (t.Last_Name && t.Last_Name.toLowerCase().includes(q)) ||
+      (t.User_Email && t.User_Email.toLowerCase().includes(q)) ||
+      (t.tran_status && t.tran_status.toLowerCase().includes(q))
+    );
+  });
+});
 </script>
 
 <style scoped>

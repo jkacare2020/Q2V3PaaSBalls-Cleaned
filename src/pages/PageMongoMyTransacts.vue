@@ -16,8 +16,18 @@
         filled
         dense
         debounce="300"
-        placeholder="Search transactions..."
+        placeholder="Search Buyer transactions..."
         class="q-ml-sm"
+      />
+    </div>
+
+    <div>
+      <!-- Loading spinner -->
+      <q-spinner
+        v-if="isLoading"
+        color="primary"
+        size="3em"
+        class="q-mt-lg q-ml-md"
       />
     </div>
   </div>
@@ -119,7 +129,6 @@
 <script setup>
 import { useStoreAuth } from "src/stores/storeAuth";
 import { ref, computed, onMounted } from "vue";
-import axios from "axios";
 import { db, auth } from "src/firebase/init"; // Import Firestore
 import { collection, getDocs } from "firebase/firestore";
 import defaultAvatar from "src/assets/avatar.jpg";
