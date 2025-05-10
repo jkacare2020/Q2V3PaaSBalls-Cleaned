@@ -145,23 +145,45 @@ async function fetchAvatar(userId) {
 }
 
 // ✅ 2. Now call it inside onMounted()
-onMounted(() => {
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      console.log("User authenticated:", user);
-      username.value = user.displayName || "User Name";
-      email.value = user.email || "user@example.com";
-      isAuthenticated.value = true;
-      isLoading.value = true;
-      await fetchAvatar(user.uid);
-      await fetchTransactions();
-    } else {
-      console.log("User not logged in.");
-      isAuthenticated.value = false;
-      transacts.value = [];
-    }
-  });
-});
+// onMounted(() => {
+//   onAuthStateChanged(auth, async (user) => {
+//     if (user) {
+//       console.log("User authenticated:", user);
+//       username.value = user.displayName || "User Name";
+//       email.value = user.email || "user@example.com";
+//       isAuthenticated.value = true;
+//       isLoading.value = true;
+//       await fetchAvatar(user.uid);
+//       await fetchTransactions();
+//     } else {
+//       console.log("User not logged in.");
+//       isAuthenticated.value = false;
+//       transacts.value = [];
+//     }
+//   });
+// });
+// onMounted(() => {
+//   onAuthStateChanged(auth, async (user) => {
+//     if (user) {
+//       console.log("User authenticated:", user);
+//       username.value = user.displayName || "User Name";
+//       email.value = user.email || "user@example.com";
+//       isAuthenticated.value = true;
+//       isLoading.value = true;
+//       await fetchAvatar(user.uid);
+
+//       const token = await user.getIdTokenResult();
+//       const roles = token.claims.role || [];
+//       if (Array.isArray(roles) && roles.includes("admin")) {
+//         await fetchTransactions(); // ✅ only admin gets this
+//       }
+//     } else {
+//       console.log("User not logged in.");
+//       isAuthenticated.value = false;
+//       transacts.value = [];
+//     }
+//   });
+// });
 
 // Fetch all transactions
 async function fetchTransactions() {

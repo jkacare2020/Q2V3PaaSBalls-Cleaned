@@ -5,12 +5,47 @@ import {
   updateProfile,
   signInWithEmailAndPassword,
   onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence,
 } from "firebase/auth";
 import { db, auth } from "../firebase/init";
 import { doc, setDoc } from "firebase/firestore";
-import { LocalStorage } from "quasar";
+
+//------------------------------------------------------------
+export const useStoreUsers = defineStore("storeUsers", {
+  state: () => ({
+    profile: null,
+    avatarUrl: null,
+  }),
+  actions: {
+    async fetchUserProfile(uid) {
+      try {
+        const userDoc = await getDoc(doc(db, "users", uid));
+        if (userDoc.exists()) {
+          this.profile = userDoc.data();
+          console.log("✅ Profile loaded:", this.profile);
+        } else {
+          console.warn("⚠️ No user profile found in Firestore.");
+        }
+      } catch (error) {
+        console.error("❌ Error loading user profile:", error);
+      }
+    },
+    async fetchAvatar(uid) {
+      try {
+        const snapshot = await getDoc(doc(db, "users", uid, "avatar", "meta"));
+        if (snapshot.exists()) {
+          this.avatarUrl = snapshot.data().imageUrl;
+          console.log("✅ Avatar URL loaded:", this.avatarUrl);
+        } else {
+          this.avatarUrl = null;
+          console.warn("⚠️ No avatar found.");
+        }
+      } catch (error) {
+        console.error("❌ Error loading avatar:", error);
+      }
+    },
+  },
+});
+//-----------------------------------------------------------
 
 export const useStoreAuth = defineStore("storeAuth", {
   state: () => ({

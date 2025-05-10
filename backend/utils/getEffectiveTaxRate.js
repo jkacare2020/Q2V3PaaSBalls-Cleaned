@@ -1,4 +1,4 @@
-const taxRates = require("../taxRates.json");
+const taxRates = require("./taxRates.json");
 const admin = require("../config/firebaseAdmin");
 
 async function getEffectiveTaxRate(sellerId, state = "", city = "") {

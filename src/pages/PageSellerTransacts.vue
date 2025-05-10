@@ -191,23 +191,23 @@ async function getSellerTransactions() {
 }
 
 // ✅ 2. Now call it inside onMounted()
-onMounted(() => {
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      console.log("User authenticated:", user);
-      username.value = user.displayName || "User Name";
-      email.value = user.email || "user@example.com";
-      isAuthenticated.value = true;
-      isLoading.value = true;
-      await fetchAvatar(user.uid);
-      await getSellerTransactions();
-    } else {
-      console.log("User not logged in.");
-      isAuthenticated.value = false;
-      sellerTransacts.value = [];
-    }
-  });
-});
+// onMounted(() => {
+//   onAuthStateChanged(auth, async (user) => {
+//     if (user) {
+//       console.log("User authenticated:", user);
+//       username.value = user.displayName || "User Name";
+//       email.value = user.email || "user@example.com";
+//       isAuthenticated.value = true;
+//       isLoading.value = true;
+//       await fetchAvatar(user.uid);
+//       await getSellerTransactions();
+//     } else {
+//       console.log("User not logged in.");
+//       isAuthenticated.value = false;
+//       sellerTransacts.value = [];
+//     }
+//   });
+// });
 
 //------------------------------------------------------
 
