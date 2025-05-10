@@ -9,7 +9,7 @@ import {
 import { db, auth } from "../firebase/init";
 import { doc, setDoc } from "firebase/firestore";
 
-//------------------------------------------------------------
+//-----------------------------Add user Profile Data retrieve -------------------------------
 export const useStoreUsers = defineStore("storeUsers", {
   state: () => ({
     profile: null,
