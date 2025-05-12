@@ -1,0 +1,19 @@
+{
+  "CA": {
+    "Los Angeles": 0.1025,
+    "San Francisco": 0.0875,
+    "San Diego": 0.0775,
+    "default": 0.0725
+  },
+  "NY": {
+    "New York": 0.08875,
+    "Buffalo": 0.0875,
+    "default": 0.04
+  },
+  "TX": {
+    "Austin": 0.0825,
+    "Houston": 0.0825,
+    "default": 0.0625
+  },
+  "default": 0.05
+}
