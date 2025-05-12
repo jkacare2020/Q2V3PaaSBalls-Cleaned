@@ -59,7 +59,31 @@ app.use(
   })
 );
 
-app.options("*", cors());
+app.options(
+  "*",
+  cors({
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "http://localhost:9000",
+        "http://localhost:9200",
+        "http://localhost:9201",
+        "http://localhost:9202",
+        "https://q2v3paasapp.web.app",
+        "https://q2v3backup.web.app",
+      ];
+      if (!origin || allowedOrigins.includes(origin)) {
+        console.log("✅ CORS preflight allowed for:", origin);
+        callback(null, true);
+      } else {
+        console.warn("❌ CORS preflight blocked for:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: "GET,POST,PUT,DELETE",
+    allowedHeaders: "Content-Type, Authorization",
+    credentials: true,
+  })
+);
 // Example: Check Firebase connectivity
 admin
   .auth()

@@ -11,7 +11,7 @@ const {
   getMyTransactions,
   getTransactionsBySeller,
   getUnpaidTransactions,
-  // generateInvoice,
+  generateInvoice,
 } = require("../controllers/transactController");
 
 const authenticateAndAuthorize = require("../middlewares/authMiddleware");
@@ -57,11 +57,11 @@ router.get(
   getUnpaidTransactions
 );
 //-single item invoice ----------
-// router.get(
-//   "/transactions/invoice/:transactId",
-//   authenticateAndAuthorize(),
-//   generateInvoice
-// );
+router.get(
+  "/transactions/invoice/:transactId",
+  authenticateAndAuthorize(),
+  generateInvoice
+);
 
 // Log transaction ID for debugging
 router.get("/transactions/:id", (req, res, next) => {

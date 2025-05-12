@@ -386,116 +386,116 @@ exports.getUnpaidTransactions = async (req, res) => {
 const fs = require("fs");
 const path = require("path");
 
-// exports.generateInvoice = async (req, res) => {
-//   try {
-//     const { transactId } = req.params;
-//     const transact = await Transact.findById(transactId);
-//     if (!transact) return res.status(404).send("Transaction not found");
+exports.generateInvoice = async (req, res) => {
+  try {
+    const { transactId } = req.params;
+    const transact = await Transact.findById(transactId);
+    if (!transact) return res.status(404).send("Transaction not found");
 
-//     const doc = new PDFDocument({ margin: 50 });
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader("Content-Disposition", "attachment; filename=invoice.pdf");
-//     doc.pipe(res);
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=invoice.pdf");
+    doc.pipe(res);
 
-//     // Optional: Add platform logo
-//     const logoPath = path.join(__dirname, "../assets/logo.png");
-//     if (fs.existsSync(logoPath)) {
-//       doc.image(logoPath, 50, 45, { width: 100 });
-//     }
+    // Optional: Add platform logo
+    const logoPath = path.join(__dirname, "../assets/logo.png");
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 50, 45, { width: 100 });
+    }
 
-//     doc.fontSize(20).text("INVOICE", 275, 50, { align: "right" }).moveDown();
+    doc.fontSize(20).text("INVOICE", 275, 50, { align: "right" }).moveDown();
 
-//     // Buyer and Seller Info
-//     doc
-//       .fontSize(10)
-//       .text(`Invoice Number: ${transact.transact_number}`, { align: "right" })
-//       .text(`Date: ${new Date(transact.req_date).toLocaleDateString()}`, {
-//         align: "right",
-//       })
-//       .moveDown();
+    // Buyer and Seller Info
+    doc
+      .fontSize(10)
+      .text(`Invoice Number: ${transact.transact_number}`, { align: "right" })
+      .text(`Date: ${new Date(transact.req_date).toLocaleDateString()}`, {
+        align: "right",
+      })
+      .moveDown();
 
-//     doc.font("Helvetica-Bold").text("Bill To:", 50).font("Helvetica");
-//     doc.text(`${transact.First_Name} ${transact.Last_Name}`);
-//     doc.text(`${transact.Phone_Number}`);
-//     doc.text(`${transact.User_Email}`);
-//     doc.moveDown();
+    doc.font("Helvetica-Bold").text("Bill To:", 50).font("Helvetica");
+    doc.text(`${transact.First_Name} ${transact.Last_Name}`);
+    doc.text(`${transact.Phone_Number}`);
+    doc.text(`${transact.User_Email}`);
+    doc.moveDown();
 
-//     doc.font("Helvetica-Bold").text("Seller Info:", 50).font("Helvetica");
-//     doc.text(`Seller UID: ${transact.sellerId}`);
-//     doc.moveDown();
+    doc.font("Helvetica-Bold").text("Seller Info:", 50).font("Helvetica");
+    doc.text(`Seller UID: ${transact.sellerId}`);
+    doc.moveDown();
 
-//     // ----------------Table header --------------
-//     const tableTop = doc.y;
+    // ----------------Table header --------------
+    const tableTop = doc.y;
 
-//     // Table Header
-//     doc
-//       .font("Helvetica-Bold")
-//       .text("Description", 50, tableTop)
-//       .text("Qty", 250, tableTop)
-//       .text("Unit Price", 300, tableTop)
-//       .text("Total", 400, tableTop);
-//     doc
-//       .moveTo(50, tableTop + 15)
-//       .lineTo(550, tableTop + 15)
-//       .stroke(); // separator
+    // Table Header
+    doc
+      .font("Helvetica-Bold")
+      .text("Description", 50, tableTop)
+      .text("Qty", 250, tableTop)
+      .text("Unit Price", 300, tableTop)
+      .text("Total", 400, tableTop);
+    doc
+      .moveTo(50, tableTop + 15)
+      .lineTo(550, tableTop + 15)
+      .stroke(); // separator
 
-//     // Table row
-//     // Table Row
-//     const quantity = parseInt(transact.quantity || "1", 10) || 1;
-//     const rowY = tableTop + 25;
+    // Table row
+    // Table Row
+    const quantity = parseInt(transact.quantity || "1", 10) || 1;
+    const rowY = tableTop + 25;
 
-//     doc
-//       .font("Helvetica")
-//       .text(transact.description || "Product/Service", 50, rowY)
-//       .text(quantity.toString(), 250, rowY)
-//       .text(
-//         typeof transact.transact_amount === "number"
-//           ? `$${transact.transact_amount.toFixed(2)}`
-//           : "$0.00",
-//         300,
-//         rowY
-//       )
-//       .text(
-//         typeof transact.transact_amount === "number"
-//           ? `$${(transact.transact_amount * quantity).toFixed(2)}`
-//           : "$0.00",
-//         400,
-//         rowY
-//       );
+    doc
+      .font("Helvetica")
+      .text(transact.description || "Product/Service", 50, rowY)
+      .text(quantity.toString(), 250, rowY)
+      .text(
+        typeof transact.transact_amount === "number"
+          ? `$${transact.transact_amount.toFixed(2)}`
+          : "$0.00",
+        300,
+        rowY
+      )
+      .text(
+        typeof transact.transact_amount === "number"
+          ? `$${(transact.transact_amount * quantity).toFixed(2)}`
+          : "$0.00",
+        400,
+        rowY
+      );
 
-//     doc.moveDown(2);
+    doc.moveDown(2);
 
-//     // 🧠 Compute tax rate based on buyer's city/state
-//     const buyerCity = (transact.Payer_address_city || "").trim();
-//     const buyerState = (transact.Payer_address_state || "").trim();
+    // 🧠 Compute tax rate based on buyer's city/state
+    const buyerCity = (transact.Payer_address_city || "").trim();
+    const buyerState = (transact.Payer_address_state || "").trim();
 
-//     let taxRate = await getEffectiveTaxRate(
-//       transact.sellerId,
-//       buyerState,
-//       buyerCity
-//     );
-//     if (typeof taxRate !== "number" || isNaN(taxRate)) {
-//       taxRate = 0.0825; // fallback
-//     }
+    let taxRate = await getEffectiveTaxRate(
+      transact.sellerId,
+      buyerState,
+      buyerCity
+    );
+    if (typeof taxRate !== "number" || isNaN(taxRate)) {
+      taxRate = 0.0825; // fallback
+    }
 
-//     // const quantity = parseInt(transact.quantity || "1", 10) || 1;
-//     const subtotal = transact.transact_amount * quantity;
-//     const tax = subtotal * taxRate;
-//     const grandTotal = subtotal + tax;
+    // const quantity = parseInt(transact.quantity || "1", 10) || 1;
+    const subtotal = transact.transact_amount * quantity;
+    const tax = subtotal * taxRate;
+    const grandTotal = subtotal + tax;
 
-//     // 🧾 Render in PDF
-//     doc;
-//     doc.moveDown(2);
+    // 🧾 Render in PDF
+    doc;
+    doc.moveDown(2);
 
-//     doc
-//       .font("Helvetica-Bold")
-//       .text(`Subtotal: $${subtotal.toFixed(2)}`, 400)
-//       .text(`Tax (${(taxRate * 100).toFixed(2)}%): $${tax.toFixed(2)}`, 400)
-//       .text(`Total: $${grandTotal.toFixed(2)}`, 400);
+    doc
+      .font("Helvetica-Bold")
+      .text(`Subtotal: $${subtotal.toFixed(2)}`, 400)
+      .text(`Tax (${(taxRate * 100).toFixed(2)}%): $${tax.toFixed(2)}`, 400)
+      .text(`Total: $${grandTotal.toFixed(2)}`, 400);
 
-//     doc.end();
-//   } catch (error) {
-//     console.error("PDF generation error:", error);
-//     res.status(500).send("Could not generate invoice");
-//   }
-// };
+    doc.end();
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    res.status(500).send("Could not generate invoice");
+  }
+};

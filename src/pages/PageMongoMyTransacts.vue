@@ -149,32 +149,32 @@ const transacts = ref([]);
 const isLoading = ref(false);
 const searchQuery = ref("");
 
-// const downloadInvoice = async (transactId) => {
-//   const user = auth.currentUser;
-//   if (!user) {
-//     $q.notify({ color: "negative", message: "Please log in first." });
-//     return;
-//   }
+const downloadInvoice = async (transactId) => {
+  const user = auth.currentUser;
+  if (!user) {
+    $q.notify({ color: "negative", message: "Please log in first." });
+    return;
+  }
 
-//   const token = await user.getIdToken();
-//   const url = `${nodeApiBaseURL}/api/transactions/invoice/${transactId}`; // ✅ fixed
+  const token = await user.getIdToken();
+  const url = `${nodeApiBaseURL}/api/transactions/invoice/${transactId}`; // ✅ fixed
 
-//   try {
-//     const res = await apiNode.get(url, {
-//       headers: { Authorization: `Bearer ${token}` },
-//       responseType: "blob",
-//     });
+  try {
+    const res = await apiNode.get(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: "blob",
+    });
 
-//     const blob = new Blob([res.data], { type: "application/pdf" });
-//     const link = document.createElement("a");
-//     link.href = URL.createObjectURL(blob);
-//     link.download = "invoice.pdf";
-//     link.click();
-//   } catch (error) {
-//     console.error("❌ Failed to download invoice:", error);
-//     $q.notify({ color: "negative", message: "Download failed." });
-//   }
-// };
+    const blob = new Blob([res.data], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "invoice.pdf";
+    link.click();
+  } catch (error) {
+    console.error("❌ Failed to download invoice:", error);
+    $q.notify({ color: "negative", message: "Download failed." });
+  }
+};
 
 // Fetch avatar -----------------------------------------
 async function fetchAvatar(userId) {
