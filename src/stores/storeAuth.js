@@ -1,3 +1,4 @@
+//----storeAuth.js--------------------
 import { defineStore } from "pinia";
 import {
   getAuth,
