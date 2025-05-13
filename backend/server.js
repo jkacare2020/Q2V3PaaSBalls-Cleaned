@@ -60,29 +60,29 @@ app.use(
   })
 );
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      "http://localhost:9000",
-      "http://localhost:9200",
-      "http://localhost:9201",
-      "http://localhost:9202",
-      "https://q2v3paasapp.web.app",
-      "https://q2v3backup.web.app",
-      "https://www.ismehr.com", // ✅ ADD THIS Domain
-    ];
-    if (!origin || allowedOrigins.includes(origin)) {
-      console.log("✅ CORS allowed for:", origin);
-      callback(null, true);
-    } else {
-      console.warn("❌ CORS blocked for:", origin);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: "GET,POST,PUT,DELETE,OPTIONS",
-  allowedHeaders: "Content-Type, Authorization",
-  credentials: true,
-};
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     const allowedOrigins = [
+//       "http://localhost:9000",
+//       "http://localhost:9200",
+//       "http://localhost:9201",
+//       "http://localhost:9202",
+//       "https://q2v3paasapp.web.app",
+//       "https://q2v3backup.web.app",
+//       "https://www.ismehr.com", // ✅ ADD THIS Domain
+//     ];
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       console.log("✅ CORS allowed for:", origin);
+//       callback(null, true);
+//     } else {
+//       console.warn("❌ CORS blocked for:", origin);
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   methods: "GET,POST,PUT,DELETE,OPTIONS",
+//   allowedHeaders: "Content-Type, Authorization",
+//   credentials: true,
+// };
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions)); // this is the key fix
