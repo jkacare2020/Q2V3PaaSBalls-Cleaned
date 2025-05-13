@@ -44,6 +44,7 @@ app.use(
         "http://localhost:9201",
         "http://localhost:9202",
         "https://q2v3paasapp.web.app",
+        "https://www.ismehr.com", // ✅ ADD THIS Domain
       ];
       if (!origin || allowedOrigins.includes(origin)) {
         console.log("✅ CORS allowed for origin:", origin);
