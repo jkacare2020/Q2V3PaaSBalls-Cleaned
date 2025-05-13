@@ -202,8 +202,16 @@ module.exports = configure(function () {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxPluginMode: "GenerateSW", // or 'InjectManifest' if you're customizing
-      workboxOptions: {}, // Can leave empty or customize
+      // workboxPluginMode: "GenerateSW", // or 'InjectManifest' if you're customizing
+
+      // workboxOptions: {
+      //   skipWaiting: true,
+      //   clientsClaim: true,
+      // }, // Can leave empty or customize
+      workboxPluginMode: "InjectManifest",
+      workboxOptions: {
+        swSrc: "src-pwa/custom-service-worker.js",
+      },
       injectPwaMetaTags: true, // ✅ Recommended for automatic `<meta>` tags
       manifest: {
         name: "PaaS-Balls",

@@ -68,6 +68,7 @@ const corsOptions = {
       "http://localhost:9202",
       "https://q2v3paasapp.web.app",
       "https://q2v3backup.web.app",
+      "https://www.ismehr.com", // ✅ ADD THIS Domain
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       console.log("✅ CORS allowed for:", origin);
