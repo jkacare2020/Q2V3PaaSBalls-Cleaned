@@ -35,6 +35,7 @@
         <th class="text-left">LastName</th>
         <th class="text-left">Phone No.</th>
         <th class="text-left">Email</th>
+        <th class="text-left">Description</th>
         <th class="text-left">TranAmount</th>
         <th class="text-left">TranStatus</th>
         <th class="text-left">RequestDate</th>
@@ -51,6 +52,7 @@
         <td class="text-left">{{ transact.Last_Name }}</td>
         <td class="text-left">{{ transact.Phone_Number }}</td>
         <td class="text-left">{{ transact.User_Email }}</td>
+        <td class="text-left">{{ transact.description }}</td>
         <td class="text-left">
           {{ formatCurrency(transact.transact_amount) }}
         </td>
@@ -131,7 +133,35 @@ const transacts = ref([]);
 const isLoading = ref(false);
 const sellerTransacts = ref([]); // 👈 Declare it
 const searchQuery = ref("");
+//-------------------------------------------------
+const downloadInvoice = async (transactId) => {
+  const user = auth.currentUser;
+  if (!user) {
+    $q.notify({ color: "negative", message: "Please log in first." });
+    return;
+  }
 
+  const token = await user.getIdToken();
+
+  // 🔹 This is the line you're asking about
+  const url = `${nodeApiBaseURL}/api/transactions/invoice/${transactId}`;
+
+  try {
+    const res = await apiNode.get(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: "blob",
+    });
+
+    const blob = new Blob([res.data], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "invoice.pdf";
+    link.click();
+  } catch (error) {
+    console.error("❌ Failed to download invoice:", error);
+    $q.notify({ color: "negative", message: "Download failed." });
+  }
+};
 // Fetch avatar -----------------------------------------
 async function fetchAvatar(userId) {
   try {
@@ -202,23 +232,23 @@ async function getSellerTransactions() {
 }
 
 // ✅ 2. Now call it inside onMounted()
-// onMounted(() => {
-//   onAuthStateChanged(auth, async (user) => {
-//     if (user) {
-//       console.log("User authenticated:", user);
-//       username.value = user.displayName || "User Name";
-//       email.value = user.email || "user@example.com";
-//       isAuthenticated.value = true;
-//       isLoading.value = true;
-//       await fetchAvatar(user.uid);
-//       await getSellerTransactions();
-//     } else {
-//       console.log("User not logged in.");
-//       isAuthenticated.value = false;
-//       sellerTransacts.value = [];
-//     }
-//   });
-// });
+onMounted(() => {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      console.log("User authenticated:", user);
+      username.value = user.displayName || "User Name";
+      email.value = user.email || "user@example.com";
+      isAuthenticated.value = true;
+      isLoading.value = true;
+      await fetchAvatar(user.uid);
+      await getSellerTransactions();
+    } else {
+      console.log("User not logged in.");
+      isAuthenticated.value = false;
+      sellerTransacts.value = [];
+    }
+  });
+});
 
 //------------------------------------------------------
 

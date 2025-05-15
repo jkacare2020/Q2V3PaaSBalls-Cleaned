@@ -142,7 +142,7 @@ const isAuthenticated = ref(false);
 const transacts = ref([]);
 const isLoading = ref(false);
 const searchQuery = ref("");
-
+//-----------------------------------------------------
 const downloadInvoice = async (transactId) => {
   const user = auth.currentUser;
   if (!user) {

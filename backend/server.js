@@ -89,29 +89,20 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 // Public routes (no auth)
 app.use("/api/products", postProductRoutes); // Includes public marketplace
 
+// 🔐 Global Firebase Auth Middleware (protect everything below)
 app.use("/api", authenticateAndAuthorize());
-
-app.use("/api/bio", bioRoutes);
-app.use("/api/comments", commentsRoutes);
-
+// 🛠 Protected routes (must be placed AFTER the auth middleware)
 // Mount Routes
-app.use("/api", authenticateAndAuthorize(), userRoutes); // Mount user routes under /api
-app.use("/api", authenticateAndAuthorize(), transactRoutes); // Uncomment if you have transact routes
-app.use("/api", authenticateAndAuthorize(), postRoutes);
-app.use("/api/comments", authenticateAndAuthorize(), commentsRoutes);
-app.use("/api/presence", authenticateAndAuthorize(), userPresenceRoutes); // optional
-app.use("/api", authenticateAndAuthorize(), videoRoutes);
-app.use("/api", authenticateAndAuthorize(), audioRoutes); // Mount STT routes under /api
-app.use("/api", authenticateAndAuthorize(), chatBotRoutes);
+app.use("/api", userRoutes); // Mount user routes under /api
+app.use("/api", transactRoutes); // Uncomment if you have transact routes
+app.use("/api", postRoutes);
+app.use("/api", videoRoutes);
+app.use("/api", audioRoutes); // Mount STT routes under /api
+app.use("/api", chatBotRoutes);
 app.use("/api/tenants", tenantRoutes);
-app.use("/api/bio", bioRoutes);
-app.use("/api", postProductRoutes);
-
-// app.use("/api/admin", adminRoutes);
-// app.use("/api/products", authenticateAndAuthorize(), postProductRoutes); // will result in /api/products/add, etc.
-// app.use("/api/image-process", imageProcessingRoutes); // Uncomment if you have image processing routes
-
-// Define other routes here if needed, e.g., app.get("/posts", ...), app.post("/createPost", ...), etc.
+app.use("/api/bio", bioRoutes); // ✅ Now protected
+app.use("/api/comments", commentsRoutes); // ✅ Now protected
+app.use("/api/presence", userPresenceRoutes); // optional
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
