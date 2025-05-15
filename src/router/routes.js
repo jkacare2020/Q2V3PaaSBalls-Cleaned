@@ -271,7 +271,7 @@ const routes = [
       {
         path: "/CartPage",
         name: "CartPage",
-        component: () => import("pages/featur/NewTransactionCart.vue"),
+        component: () => import("pages/feature/NewTransactionCart.vue"),
         meta: { requiresAuth: true },
       },
 
