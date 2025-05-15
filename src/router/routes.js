@@ -154,12 +154,6 @@ const routes = [
       },
 
       {
-        path: "/CartPage",
-        name: "CartPage",
-        component: () => import("pages/NewTransactionCart.vue"),
-        meta: { requiresAuth: true },
-      },
-      {
         path: "/tenants",
         component: () => import("pages/feature/PageTenantList.vue"),
       },
@@ -272,6 +266,13 @@ const routes = [
       {
         path: "/product-view/:id",
         component: () => import("pages/feature/PostProductMongo.vue"),
+      },
+
+      {
+        path: "/CartPage",
+        name: "CartPage",
+        component: () => import("pages/featur/NewTransactionCart.vue"),
+        meta: { requiresAuth: true },
       },
 
       {
