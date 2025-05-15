@@ -2,6 +2,8 @@
 const express = require("express");
 const router = express.Router();
 const postProductController = require("../controllers/postProductController");
+const { verifyFirebaseToken } = require("../middlewares/authMiddleware");
+const { deletePostProduct } = require("../controllers/postProductController");
 
 // Create new post
 router.post("/add", postProductController.createPostProduct);
@@ -27,5 +29,7 @@ router.post(
 // router.delete("/:id", postProductController.deletePostProduct);
 
 router.get("/by-user/:userId", postProductController.getMarketingMediaByUser);
+
+router.delete("/products/:id", deletePostProduct);
 
 module.exports = router;

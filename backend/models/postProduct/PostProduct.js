@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const PostProductSchema = new mongoose.Schema(
   {
     userId: { type: String, required: true },
+    userName: { type: String }, // ✅ Add seller's username
+    displayName: { type: String }, // ✅ Add seller's display name
     tenantId: { type: String },
     name: { type: String, required: true },
     description: { type: String },

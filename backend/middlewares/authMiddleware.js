@@ -37,6 +37,7 @@ const admin = require("../config/firebaseAdmin"); // Adjust path as needed
 
 const authenticateAndAuthorize = (allowedRoles = []) => {
   return async (req, res, next) => {
+    console.log("🔐 Auth middleware hit");
     const authHeader = req.headers.authorization;
 
     // Check if the Authorization header is present

@@ -1,5 +1,7 @@
 //-transactController.js---MongoDB Transactions Admin--------------------
 const Transact = require("../models/transacts/Transacts");
+const PostProduct = require("../models/postProduct/PostProduct");
+
 // const admin = require("firebase-admin");
 
 const PDFDocument = require("pdfkit");
@@ -219,6 +221,12 @@ exports.createNewTransaction = async (req, res) => {
     description, // Optional, if passed separately
   } = req.body;
 
+  const product = await PostProduct.findById(productId);
+
+  if (!product) {
+    return res.status(404).json({ message: "Product not found." });
+  }
+
   // Ensure _id is not passed to the database
   if (_id) {
     console.warn("Unexpected _id in request payload, removing it.");
@@ -246,7 +254,9 @@ exports.createNewTransaction = async (req, res) => {
   try {
     const transactionDate = timestamp || new Date();
     const newTransaction = new Transact({
-      sellerId, // <- Add this field (must be passed in req.body)
+      sellerId: product.userId,
+      sellerUserName: product.userName || "N/A",
+      sellerDisplayName: product.displayName || "N/A", // <- Add this field (must be passed in req.body)
       owner: uid, // Use the uid declared in the outer scope
       userId,
       First_Name,
@@ -257,12 +267,12 @@ exports.createNewTransaction = async (req, res) => {
       Payer_address_city,
       Payer_address_state,
       check_type,
-      tran_status,
-      quantity,
+      tran_status: tran_status || "unpaid",
+      quantity: quantity || 1,
       transact_amount,
       productId, // ✅ Add this (optional but recommended)
       imageUrl, // ✅ Add if used
-      description, // Optional, if passed separately
+      description: description || product.description,
       date: transactionDate,
     });
     console.log(newTransaction);

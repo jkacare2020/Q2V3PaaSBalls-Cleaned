@@ -34,32 +34,6 @@ connectDB();
 // Initialize Express app
 const app = express();
 
-// CORS Configuration
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       const allowedOrigins = [
-//         "http://localhost:9000",
-//         "http://localhost:9200",
-//         "http://localhost:9201",
-//         "http://localhost:9202",
-//         "https://q2v3paasapp.web.app",
-//         "https://www.ismehr.com", // ✅ ADD THIS Domain
-//       ];
-//       if (!origin || allowedOrigins.includes(origin)) {
-//         console.log("✅ CORS allowed for origin:", origin);
-//         callback(null, true);
-//       } else {
-//         console.warn("❌ CORS blocked for origin:", origin);
-//         callback(new Error("Not allowed by CORS"));
-//       }
-//     },
-//     methods: "GET,POST,PUT,DELETE",
-//     allowedHeaders: "Content-Type, Authorization",
-//     credentials: true,
-//   })
-// );
-
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
@@ -131,6 +105,8 @@ app.use("/api", authenticateAndAuthorize(), audioRoutes); // Mount STT routes un
 app.use("/api", authenticateAndAuthorize(), chatBotRoutes);
 app.use("/api/tenants", tenantRoutes);
 app.use("/api/bio", bioRoutes);
+app.use("/api", postProductRoutes);
+
 // app.use("/api/admin", adminRoutes);
 // app.use("/api/products", authenticateAndAuthorize(), postProductRoutes); // will result in /api/products/add, etc.
 // app.use("/api/image-process", imageProcessingRoutes); // Uncomment if you have image processing routes

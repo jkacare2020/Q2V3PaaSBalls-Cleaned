@@ -68,6 +68,8 @@ exports.importFromFirebasePost = async (req, res) => {
       imageUrl: post.imageUrl || "", // fallback if missing
       tags: postTags,
       role: userRoles,
+      userName: userData.userName || "", // ✅ ADD THIS
+      displayName: userData.displayName || "", // ✅ AND THIS
     });
 
     await newProduct.save();
@@ -89,7 +91,19 @@ exports.importFromFirebasePost = async (req, res) => {
 // CREATE
 exports.createPostProduct = async (req, res) => {
   try {
-    const { userId, tenantId, name, price, description, imageUrl } = req.body;
+    const {
+      userId,
+      tenantId,
+      name,
+      price,
+      description,
+      imageUrl,
+      userName,
+      displayName,
+      postId,
+      tags,
+      category,
+    } = req.body;
 
     const newProduct = new PostProduct({
       userId,
@@ -98,6 +112,8 @@ exports.createPostProduct = async (req, res) => {
       price,
       description,
       imageUrl,
+      userName,
+      displayName, // Include seller info directly
     });
 
     await newProduct.save();
@@ -181,8 +197,20 @@ exports.updatePostProduct = async (req, res) => {
 // DELETE
 exports.deletePostProduct = async (req, res) => {
   try {
-    const deleted = await PostProduct.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Product not found" });
+    const product = await PostProduct.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // ✅ Only allow the owner to delete
+    if (product.userId !== req.user.uid) {
+      return res
+        .status(403)
+        .json({ message: "You are not allowed to delete this product." });
+    }
+
+    await PostProduct.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {
     console.error("Error deleting product:", error);
