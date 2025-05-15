@@ -56,6 +56,14 @@
             label="Buy"
             @click.stop="goToTransaction(item)"
           />
+          <q-btn
+            icon="delete"
+            flat
+            color="negative"
+            label="Delete"
+            @click.stop="deleteProduct(item)"
+            v-if="item.userId === auth.currentUser?.uid"
+          />
         </q-item-section>
       </q-item>
     </q-list>
@@ -126,6 +134,8 @@ function goToTransaction(product) {
     transact_amount: product.price,
     description: product.name,
     sellerId: product.userId,
+    sellerUserName: product.userName || "", // ✅ add this
+    sellerDisplayName: product.displayName || "", // ✅ add this
     imageUrl: product.imageUrl,
     productId: product._id,
   };
@@ -137,6 +147,29 @@ function goToTransaction(product) {
     },
   });
 }
+//--------------------------------
+async function deleteProduct(item) {
+  const confirmed = confirm(`Delete "${item.name}"?`);
+  if (!confirmed) return;
 
+  const user = auth.currentUser;
+  if (!user) {
+    alert("You must be logged in.");
+    return;
+  }
+
+  try {
+    const token = await user.getIdToken();
+    await apiNode.delete(`/api/products/${item._id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    posts.value = posts.value.filter((p) => p._id !== item._id);
+    console.log(`✅ Deleted product: ${item._id}`);
+  } catch (err) {
+    console.error("❌ Failed to delete product:", err);
+    alert("Failed to delete product.");
+  }
+}
 //--------------------------------
 </script>

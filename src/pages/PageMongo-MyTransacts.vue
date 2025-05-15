@@ -45,6 +45,7 @@
         <th class="text-left">LastName</th>
         <th class="text-left">Phone No.</th>
         <th class="text-left">Email</th>
+        <th class="text-left">Product Description</th>
         <th class="text-left">TranAmount</th>
         <th class="text-left">TranStatus</th>
         <th class="text-left">RequestDate</th>
@@ -54,13 +55,13 @@
       </tr>
     </thead>
     <tbody>
-      <!-- <tr v-for="(transact, index) in transacts" :key="index"> -->
       <tr v-for="(transact, index) in filteredTransacts" :key="index">
         <td class="text-left">{{ transact.transact_number }}</td>
         <td class="text-left">{{ transact.First_Name }}</td>
         <td class="text-left">{{ transact.Last_Name }}</td>
         <td class="text-left">{{ transact.Phone_Number }}</td>
         <td class="text-left">{{ transact.User_Email }}</td>
+        <td class="text-left">{{ transact.description }}</td>
         <td class="text-left">
           {{ formatCurrency(transact.transact_amount) }}
         </td>
@@ -81,12 +82,7 @@
             flat
             icon="edit"
             color="primary"
-            @click="
-              () => {
-                console.log('Edit button clicked');
-                openEditForm(transact._id);
-              }
-            "
+            @click="() => openEditForm(transact._id)"
             aria-label="Edit Transaction"
           />
         </td>
@@ -96,12 +92,7 @@
             flat
             icon="delete"
             color="warning"
-            @click="
-              () => {
-                console.log('Delete button clicked');
-                openDeleteForm(transact._id);
-              }
-            "
+            @click="() => openDeleteForm(transact._id)"
             aria-label="Delete Transaction"
           />
         </td>
@@ -111,6 +102,7 @@
             flat
             icon="picture_as_pdf"
             color="secondary"
+            :label="'Invoice'"
             @click="downloadInvoice(transact._id)"
             aria-label="Download Invoice"
           />
@@ -118,10 +110,12 @@
       </tr>
     </tbody>
   </q-markup-table>
+
   <div v-else-if="!isLoading" class="q-mt-md q-ml-sm"></div>
+
   <!-- Total Amount -->
   <div v-if="transacts.length > 0" class="q-mt-md q-ml-sm">
-    <strong> Total Transaction Amount:</strong>
+    <strong>Total Transaction Amount:</strong>
     {{ formatCurrency(totalAmount) }}
   </div>
 </template>
@@ -157,7 +151,9 @@ const downloadInvoice = async (transactId) => {
   }
 
   const token = await user.getIdToken();
-  const url = `${nodeApiBaseURL}/api/transactions/invoice/${transactId}`; // ✅ fixed
+
+  // 🔹 This is the line you're asking about
+  const url = `${nodeApiBaseURL}/api/transactions/invoice/${transactId}`;
 
   try {
     const res = await apiNode.get(url, {

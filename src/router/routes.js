@@ -120,12 +120,12 @@ const routes = [
       },
       {
         path: "/mongo-mytransacts",
-        component: () => import("pages/PageMongoMyTransacts.vue"),
+        component: () => import("pages/PageMongo-MyTransacts.vue"),
         meta: { requiresAuth: true },
       },
       {
         path: "/mongo-AllTransacts",
-        component: () => import("pages/PageMongoAllTransacts.vue"),
+        component: () => import("pages/PageMongo-AllTransacts.vue"),
         meta: { requiresAuth: true },
       },
       {
@@ -273,15 +273,15 @@ const routes = [
         path: "/product-view/:id",
         component: () => import("pages/feature/PostProductMongo.vue"),
       },
+
       {
-        path: "/new-transaction-cart",
-        name: "CartPage",
-        component: () => import("pages/NewTransactionCart.vue"),
-        meta: { requiresAuth: true },
+        path: "new-transaction-cart", // 🚫 no leading slash
+        name: "CartPage_NewTransaction",
+        component: () => import("pages/feature/PageNewTransactionCart.vue"),
       },
       {
         path: "/transactions-unpaid",
-        name: "CartPage",
+        name: "CartPage_Unpaid",
         component: () => import("pages/PageCart.vue"),
         meta: { requiresAuth: true },
       },

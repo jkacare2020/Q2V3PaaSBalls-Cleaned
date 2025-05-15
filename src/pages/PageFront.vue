@@ -34,6 +34,19 @@
         flat
         bordered
         clickable
+        @click="$router.push('/marketplace')"
+      >
+        <q-card-section>
+          <q-icon name="storefront" size="xl" color="primary" />
+          <div class="text-h6 q-mt-sm">Marketplace</div>
+        </q-card-section>
+      </q-card>
+
+      <q-card
+        class="my-card"
+        flat
+        bordered
+        clickable
         @click="$router.push('/camera')"
       >
         <q-card-section>
@@ -47,7 +60,7 @@
         flat
         bordered
         clickable
-        @click="$router.push('/profile')"
+        @click="$router.push('/profile/edit/')"
       >
         <q-card-section>
           <q-icon name="person" size="xl" color="primary" />

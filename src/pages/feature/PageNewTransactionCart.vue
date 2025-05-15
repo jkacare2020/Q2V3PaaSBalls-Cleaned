@@ -1,5 +1,5 @@
 <template>
-  <!---NewTransactionCart -->
+  <!---PageNewTransactionCart -->
   <q-page>
     <q-card>
       <q-card-section>
@@ -39,6 +39,12 @@
             v-model="transactionData.Payer_address_state"
             label="Shipping Address State"
             outlined
+          />
+          <q-input
+            v-model="transactionData.description"
+            label="Product Description"
+            outlined
+            type="text"
           />
           <q-input
             v-model="transactionData.transact_amount"
@@ -81,7 +87,16 @@ const route = useRoute();
 // const transactionData = ref({});
 
 const transactionData = ref({
-  req_date: "", // Initialize as empty
+  First_Name: "",
+  Last_Name: "",
+  Phone_Number: "",
+  User_Email: "",
+  Payer_address: "",
+  Payer_address_city: "",
+  Payer_address_state: "",
+  transact_amount: 0,
+  check_type: "cash", // or another default
+  req_date: "",
 });
 
 function formatDate(date) {
@@ -92,18 +107,6 @@ function formatDate(date) {
   const day = String(d.getDate()).padStart(2, "0"); // Add leading zero
   return `${year}-${month}-${day}`;
 }
-
-onMounted(() => {
-  const queryData = route.query.transaction;
-  if (queryData) {
-    transactionData.value = JSON.parse(queryData);
-    console.log("Loaded transaction data:", transactionData.value);
-  } else {
-    console.error("No transaction data passed to cart.");
-  }
-
-  transactionData.value.req_date = formatDate(new Date());
-});
 
 onMounted(() => {
   const queryData = route.query.transaction;

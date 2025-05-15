@@ -117,7 +117,13 @@
           <q-select
             ref="tagSelectRef"
             v-model="post.tags"
-            :options="['public', 'private', 'certification', 'marketplace']"
+            :options="[
+              'public',
+              'avatar',
+              'private',
+              'certification',
+              'marketplace',
+            ]"
             multiple
             use-chips
             label="Tags"

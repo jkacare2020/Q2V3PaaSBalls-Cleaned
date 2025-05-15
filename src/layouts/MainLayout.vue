@@ -37,13 +37,35 @@
 
         <q-toolbar-title class="q-pa-none">
           <div class="row items-center justify-center no-wrap">
-            <img
-              src="icons/favicon-32x32.png"
-              alt="IsmeHr Logo"
-              style="height: 32px; width: 32px"
-              class="q-mr-sm"
+            <!-- ⬅ Back Icon -->
+            <q-btn
+              flat
+              dense
+              round
+              icon="arrow_back"
+              :disable="!canGoBack"
+              @click="goBack()"
             />
-            <span class="text-weight-bold">PaaSbot</span>
+
+            <span class="text-weight-bold"
+              >Ismehr
+              <img
+                src="icons/favicon-32x32.png"
+                alt="IsmeHr Logo"
+                style="height: 32px; width: 32px"
+                class="logo-link q-mr-sm"
+                @click="$router.push('/front-page')"
+              />PaaSbot</span
+            >
+            <!-- ➡ Forward Icon -->
+            <q-btn
+              flat
+              dense
+              round
+              icon="arrow_forward"
+              :disable="!canGoForward"
+              @click="goForward()"
+            />
           </div>
         </q-toolbar-title>
 
@@ -181,6 +203,9 @@ const leftDrawerOpen = ref(false);
 const dropdownOpen = ref(false); // Manage dropdown visibility
 const userAvatar = ref(""); // Avatar from Firestore
 const tenants = ref([]); // at the top
+
+const historyStack = ref([]);
+const currentIndex = ref(-1);
 
 const userIsAdmin = ref(false);
 
@@ -512,5 +537,55 @@ onMounted(() => {
   });
 });
 
+//-----------------------------------
+
+onMounted(() => {
+  // Initialize once
+  if (historyStack.value.length === 0) {
+    historyStack.value.push(route.fullPath);
+    currentIndex.value = 0;
+  }
+
+  // Use beforeEach to intercept navigation early
+  router.beforeEach((to, from, next) => {
+    const last = historyStack.value[currentIndex.value];
+
+    if (last !== to.fullPath) {
+      // If user is in middle of stack and navigates, trim forward history
+      historyStack.value = historyStack.value.slice(0, currentIndex.value + 1);
+
+      historyStack.value.push(to.fullPath);
+      currentIndex.value++;
+    }
+
+    next(); // continue navigation
+  });
+});
+
+const canGoBack = computed(() => currentIndex.value > 0);
+const canGoForward = computed(
+  () => currentIndex.value < historyStack.value.length - 1
+);
+
+const goBack = () => {
+  if (canGoBack.value) {
+    currentIndex.value--;
+    router.push(historyStack.value[currentIndex.value]);
+  }
+};
+
+const goForward = () => {
+  if (canGoForward.value) {
+    currentIndex.value++;
+    router.push(historyStack.value[currentIndex.value]);
+  }
+};
 //----------------------------
 </script>
+<style lang="scss" scoped>
+.logo-link {
+  height: 32px;
+  width: 32px;
+  cursor: pointer;
+}
+</style>

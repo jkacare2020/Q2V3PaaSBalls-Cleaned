@@ -545,7 +545,7 @@
                   </q-item-label>
                 </q-item-section>
 
-                <!-- ⋯ Action dropdown menu (always shown) -->
+                <!------------  Action dropdown menu (always shown) --------------------->
                 <q-item-section side>
                   <q-btn round dense flat icon="more_vert" color="primary">
                     <q-menu>

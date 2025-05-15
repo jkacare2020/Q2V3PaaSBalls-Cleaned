@@ -1,5 +1,5 @@
 <template>
-  <!--PageMongoMyTransacts-->
+  <!--PageSellerTransacts.vue -->
   <div class="q-gutter-md row q-mt-md">
     <div class="col-4 large-screen-only">
       <q-item>
@@ -40,6 +40,7 @@
         <th class="text-left">RequestDate</th>
         <th class="text-left">Edit</th>
         <th class="text-left">Delete</th>
+        <th class="text-left">Invoice</th>
       </tr>
     </thead>
     <tbody>
@@ -84,6 +85,16 @@
               }
             "
             aria-label="Delete Transaction"
+          />
+        </td>
+        <td class="text-left">
+          <q-btn
+            dense
+            flat
+            icon="picture_as_pdf"
+            color="secondary"
+            @click="downloadInvoice(transact._id)"
+            aria-label="Download Invoice"
           />
         </td>
       </tr>
