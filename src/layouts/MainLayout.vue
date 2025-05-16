@@ -291,8 +291,14 @@ const navLinks = [
         icon: "shopping_cart",
         link: "/marketplace",
       },
+      {
+        title: "My Private Posts",
+        icon: "lock",
+        link: "/private-posts",
+      },
     ],
   },
+
   {
     category: "General",
     icon: "apps",

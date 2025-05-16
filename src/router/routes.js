@@ -257,6 +257,12 @@ const routes = [
         name: "marketplace",
         component: () => import("pages/feature/PageMarketplace.vue"),
       },
+
+      {
+        path: "/private-posts",
+        component: () => import("pages/PagePrivatePosts.vue"),
+      },
+
       {
         path: "/products/:id",
         name: "ProductDetails",

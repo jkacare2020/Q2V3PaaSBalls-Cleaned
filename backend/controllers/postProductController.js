@@ -20,8 +20,25 @@ exports.importFromFirebasePost = async (req, res) => {
     // 2. Check if post already exists in MongoDB
     const existing = await PostProduct.findOne({ postId });
     if (existing) {
-      console.log("✅ Post already imported, returning existing product.");
-      return res.status(200).json(existing);
+      // 🔹 Check for SendTo data
+      if (req.body?.email && req.body?.passcode) {
+        const alreadyGranted = existing.privateAccess?.some(
+          (entry) => entry.email === req.body.email
+        );
+
+        if (!alreadyGranted) {
+          existing.privateAccess.push({
+            email: req.body.email,
+            phone: req.body.phone,
+            passcode: req.body.passcode,
+            grantedBy: req.user?.uid || "unknown",
+            grantedAt: new Date(),
+          });
+          await existing.save();
+        }
+      }
+
+      return res.status(200).json(existing); // ✅ now with access list
     }
 
     // 3. Fetch the post from Firestore
@@ -58,6 +75,11 @@ exports.importFromFirebasePost = async (req, res) => {
     // 6. Combine tags
     const combinedTags = Array.from(new Set(["public", ...userRoles]));
 
+    //-------------------------------------------------------
+    if (postTags.includes("private") && postTags.includes("marketplace")) {
+      console.warn("⚠️ Auto-correcting conflicting tags");
+      postTags = postTags.filter((tag) => tag !== "marketplace"); // keep private only
+    }
     // 7. Create product document
     const newProduct = new PostProduct({
       userId: post.userId,
@@ -70,8 +92,25 @@ exports.importFromFirebasePost = async (req, res) => {
       role: userRoles,
       userName: userData.userName || "", // ✅ ADD THIS
       displayName: userData.displayName || "", // ✅ AND THIS
+      //--------------------
+      visibility: postTags.includes("private") ? "private" : "public",
+
+      // ✅ Add this to capture access
+      privateAccess:
+        req.body?.email && req.body?.passcode
+          ? [
+              {
+                email: req.body.email,
+                phone: req.body.phone,
+                passcode: req.body.passcode,
+                grantedBy: req.user?.uid || "unknown",
+                grantedAt: new Date(),
+              },
+            ]
+          : [],
     });
 
+    //-------------------------------------------------------
     await newProduct.save();
     console.log("✅ New product saved:", newProduct._id);
     return res.status(201).json(newProduct);
@@ -123,6 +162,114 @@ exports.createPostProduct = async (req, res) => {
     res.status(500).json({ message: "Failed to save product." });
   }
 };
+//-----------------------------------------------------
+// ✅ Define and export the function in postProductController.js
+// ✅ Firestore-based controller
+exports.grantPrivateAccessToClientFirebase = async (req, res) => {
+  const { postId } = req.params;
+  const { email, passcode } = req.body;
+  const merchantId = req.user?.uid;
+
+  if (!merchantId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const postRef = admin.firestore().collection("posts").doc(postId);
+
+    await postRef.set(
+      {
+        privateAccess: admin.firestore.FieldValue.arrayUnion({
+          email,
+          passcode,
+          grantedBy: merchantId,
+          grantedAt: new Date(),
+        }),
+      },
+      { merge: true }
+    );
+
+    res.status(200).json({ message: "Access granted" });
+  } catch (err) {
+    console.error("Error granting access:", err);
+    res.status(500).json({ message: "Failed to grant access" });
+  }
+};
+
+exports.getPrivatePostsByClientFirebase = async (req, res) => {
+  const email = req.user?.email;
+  if (!email) return res.status(400).json({ message: "Missing email" });
+
+  try {
+    const snapshot = await admin.firestore().collection("posts").get();
+
+    const matched = snapshot.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .filter((doc) =>
+        doc.privateAccess?.some((entry) => entry.email === email)
+      );
+
+    res.status(200).json(matched);
+  } catch (err) {
+    console.error("Fetch error:", err);
+    res.status(500).json({ message: "Failed to fetch private posts" });
+  }
+};
+
+//----------------------------Mongo version-----------------------
+
+// POST /api/products/:id/grant-access
+exports.grantPrivateAccessToClient = async (req, res) => {
+  const { id } = req.params; // Mongo _id
+  const { email, phone } = req.body;
+  const merchantId = req.user?.uid;
+
+  try {
+    const product = await PostProduct.findById(id); // ✅ use real Mongo _id
+
+    if (!product) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (!product.privateAccess) product.privateAccess = [];
+
+    product.privateAccess.push({
+      email,
+      phone,
+      grantedBy: merchantId,
+      grantedAt: new Date(),
+    });
+
+    await product.save();
+    res.status(200).json({ message: "Access granted successfully" });
+  } catch (err) {
+    console.error("MongoDB - Error granting access:", err);
+    res.status(500).json({ message: "Failed to grant access" });
+  }
+};
+
+//------------------get from MongoDB------// postProductController.js
+exports.getPrivatePostsByClient = async (req, res) => {
+  const { email, passcode } = req.query;
+
+  if (!email || !passcode) {
+    return res.status(400).json({ message: "Email and passcode required." });
+  }
+
+  try {
+    const products = await PostProduct.find({
+      visibility: "private",
+      privateAccess: {
+        $elemMatch: { email, passcode },
+      },
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json(products);
+  } catch (err) {
+    console.error("Error fetching private posts for client:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+//--------------------------------------------------------------
 
 // READ - All
 exports.getAllPostProducts = async (req, res) => {
@@ -172,6 +319,20 @@ exports.getPostProduct = async (req, res) => {
   } catch (error) {
     console.error("Error fetching product:", error);
     res.status(500).json({ message: "Failed to fetch product" });
+  }
+};
+//--------------------------------------------------------------
+// Get posts created by the current user
+exports.getMyPosts = async (req, res) => {
+  try {
+    const userId = req.user.uid; // from authenticateAndAuthorize middleware
+
+    const myPosts = await PostProduct.find({ userId }).sort({ createdAt: -1 });
+
+    res.status(200).json(myPosts);
+  } catch (error) {
+    console.error("Error fetching my posts:", error);
+    res.status(500).json({ message: "Failed to fetch my posts" });
   }
 };
 

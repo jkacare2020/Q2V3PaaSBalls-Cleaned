@@ -102,7 +102,19 @@
                   >
                     <q-tooltip>Delete post</q-tooltip>
                   </q-btn>
-
+                  <!------------------Open Modal--------------------------------->
+                  <q-btn
+                    v-if="post.tags && post.tags.includes('private')"
+                    flat
+                    round
+                    dense
+                    icon="send"
+                    color="teal"
+                    @click="openSendToDialog(post)"
+                  >
+                    <q-tooltip>Send to client</q-tooltip>
+                  </q-btn>
+                  <!---------------------------------------------------->
                   <q-btn
                     v-if="post.tags && post.tags.includes('marketplace')"
                     flat
@@ -174,14 +186,38 @@
                       outlined
                       style="max-width: 140px"
                       @update:model-value="
-                        (value) => updateVisibility(post.id, value)
+                        (value) => confirmBeforeVisibilityChange(post.id, value)
                       "
-                      :disable="post.userId !== storeAuth.user?.uid"
+                      :disable="
+                        post.userId !== storeAuth.user?.uid ||
+                        post.tags?.includes('private')
+                      "
                     />
                   </q-card-actions>
                 </q-card-section>
+                <q-banner
+                  v-if="
+                    post.tags?.includes('private') &&
+                    post.userId === storeAuth.user?.uid
+                  "
+                  class="bg-orange-2 text-dark q-mb-sm"
+                  rounded
+                >
+                  ⚠️ This post is <strong>private</strong> and was likely shared
+                  with a specific client. To list this in the marketplace or
+                  make it public, please create a new post.
+                  <q-btn
+                    flat
+                    dense
+                    label="Create New Post"
+                    color="primary"
+                    class="q-ml-sm"
+                    @click="goToCreatePost"
+                  />
+                </q-banner>
               </q-card>
             </template>
+
             <template v-else-if="!loadingPosts && !posts.length">
               <h5 class="text-center text-grey">No posts yet.</h5>
             </template>
@@ -220,6 +256,49 @@
                 </q-card-section>
               </q-card>
             </template>
+            <!-----------Modal------------------>
+            <q-dialog v-model="showSendToDialog">
+              <q-card style="min-width: 300px">
+                <q-card-section>
+                  <div class="text-h6">Send Post Access</div>
+                </q-card-section>
+
+                <q-card-section>
+                  <q-input
+                    v-model="clientEmail"
+                    label="Client Email"
+                    dense
+                    outlined
+                    type="email"
+                  />
+                  <q-input
+                    v-model="clientPhone"
+                    label="Phone"
+                    dense
+                    outlined
+                    type="tel"
+                    class="q-mt-sm"
+                  />
+                  <q-input
+                    v-model="accessPasscode"
+                    label="Passcode"
+                    dense
+                    outlined
+                    class="q-mt-sm"
+                  />
+                </q-card-section>
+
+                <q-card-actions align="right">
+                  <q-btn flat label="Cancel" v-close-popup />
+                  <q-btn
+                    color="primary"
+                    label="Grant Access"
+                    @click="submitGrantAccess"
+                  />
+                </q-card-actions>
+              </q-card>
+            </q-dialog>
+            <!-------------------------------->
           </q-scroll-area>
         </div>
       </div>
@@ -666,6 +745,11 @@ import { useRouter } from "vue-router";
 
 import { useQuasar } from "quasar";
 
+//----------------------------------------------------
+function goToCreatePost() {
+  router.push("/camera"); // Or your post creation page
+}
+
 const commentScrollRef = ref(null);
 //---------------------------------------
 const pageScrollRef = ref(null);
@@ -695,6 +779,16 @@ const loadingPosts = ref(false);
 const showNotificationsBanner = ref(false);
 const isAuthenticated = ref(false);
 const showCommentModal = ref(false);
+
+// State refs
+const showSendToDialog = ref(false);
+// Refs used in your modal
+
+const selectedPost = ref(null); // ✅ this line is missing
+const clientEmail = ref("");
+const clientPhone = ref("");
+const accessPasscode = ref("");
+const selectedPostId = ref(null); // already populated in openSendToDialog()
 
 const avatarUrl = ref(defaultAvatar);
 
@@ -1183,6 +1277,31 @@ async function toggleCommentOffline(comment) {
   comment.online = !comment.online;
 }
 
+//----------------------------------------------------------
+function confirmBeforeVisibilityChange(postId, visibility) {
+  const post = posts.value.find((p) => p.id === postId || p._id === postId);
+
+  if (!post) return;
+
+  // Only prompt if switching to 'private' and not already private
+  if (visibility === "private" && !post.tags?.includes("private")) {
+    $q.dialog({
+      title: "Make Post Private?",
+      message:
+        "Once a post is marked as private, it cannot be changed to public or marketplace.\nThis is intended for client-specific sharing only.",
+      cancel: true,
+      persistent: true,
+    }).onOk(() => {
+      updateVisibility(postId, visibility); // Proceed on confirmation
+    });
+
+    return; // Stop further action until dialog resolves
+  }
+
+  // No confirmation needed for other transitions
+  updateVisibility(postId, visibility);
+}
+
 //---------------updateVisibility post-----------------------
 async function updateVisibility(postId, visibility) {
   const token = await auth.currentUser.getIdToken();
@@ -1334,6 +1453,73 @@ const goToProductPage = async (postId) => {
     router.push(`/post-product/${postId}`);
   }
 };
+
+//------------------------
+
+function openSendToDialog(post) {
+  selectedPost.value = post;
+  selectedPostId.value = post._id || post.id || post.postId || null;
+  showSendToDialog.value = true;
+}
+
+// Open the dialog with selected post
+async function submitGrantAccess() {
+  if (!clientEmail.value || !accessPasscode.value || !clientPhone.value) {
+    $q.notify({ type: "negative", message: "All fields are required." });
+    return;
+  }
+
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      $q.notify({ type: "negative", message: "Please log in first." });
+      return;
+    }
+
+    const token = await user.getIdToken();
+
+    const url = `/api/products/import-from-post/${selectedPostId.value}`;
+
+    await apiNode.post(
+      url,
+      {
+        email: clientEmail.value,
+        phone: clientPhone.value,
+        passcode: accessPasscode.value,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    $q.notify({ type: "positive", message: "Private access granted." });
+
+    // ✅ Save before reset
+    const postIdToRedirect = selectedPostId.value;
+    resetSendToForm();
+
+    // ✅ Now it's safe
+    router.push(`/post-product/${postIdToRedirect}`);
+  } catch (err) {
+    console.error("Grant access failed:", err);
+    $q.notify({
+      type: "negative",
+      message: err?.response?.data?.message || "Failed to grant access",
+    });
+  }
+}
+
+// Optional: reset fields after submission
+function resetSendToForm() {
+  clientEmail.value = "";
+  clientPhone.value = "";
+  accessPasscode.value = "";
+  selectedPostId.value = null;
+}
+
+//-------------------------
 </script>
 
 <style scoped lang="scss">

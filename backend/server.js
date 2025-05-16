@@ -23,6 +23,7 @@ const updatePresence = require("./middlewares/setPresence");
 
 const commentsRoutes = require("./routes/commentsRoutes");
 const userPresenceRoutes = require("./routes/userPresenceRoutes");
+const accessRoutes = require("./routes/accessRoutes");
 
 // const adminRoutes = require("./routes/adminRoutes");
 
@@ -103,6 +104,7 @@ app.use("/api/tenants", tenantRoutes);
 app.use("/api/bio", bioRoutes); // ✅ Now protected
 app.use("/api/comments", commentsRoutes); // ✅ Now protected
 app.use("/api/presence", userPresenceRoutes); // optional
+app.use("/api/access", accessRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

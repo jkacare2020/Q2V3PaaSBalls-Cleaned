@@ -26,30 +26,55 @@ const isAdmin = async (userId) => {
 };
 
 // Controller for fetching All Transactions by Role --
+// exports.getAllTransactions = async (req, res) => {
+//   const authHeader = req.headers.authorization;
+
+//   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+//     return res.status(401).json({ message: "Unauthorized access" });
+//   }
+
+//   const idToken = authHeader.split("Bearer ")[1];
+//   let userId;
+
+//   try {
+//     const decodedToken = await admin.auth().verifyIdToken(idToken);
+//     userId = decodedToken.uid;
+//   } catch (error) {
+//     console.error("Error verifying ID token:", error);
+//     return res.status(401).json({ message: "Invalid or expired token" });
+//   }
+
+//   try {
+//     const userIsAdmin = await isAdmin(userId);
+//     if (!userIsAdmin) {
+//       return res
+//         .status(403)
+//         .json({ message: "Forbidden: Admin access required." });
+//     }
+
+//     const transacts = await Transact.find().sort({
+//       req_date: -1,
+//       transact_number: -1,
+//     });
+
+//     res.status(200).json(transacts);
+//   } catch (error) {
+//     console.error("Error fetching all transactions:", error);
+//     res.status(500).json({ message: "Error fetching all transactions." });
+//   }
+// };
+
 exports.getAllTransactions = async (req, res) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Unauthorized access" });
-  }
-
-  const idToken = authHeader.split("Bearer ")[1];
-  let userId;
-
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    userId = decodedToken.uid;
-  } catch (error) {
-    console.error("Error verifying ID token:", error);
-    return res.status(401).json({ message: "Invalid or expired token" });
-  }
+    const userId = req.user?.uid;
 
-  try {
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const userIsAdmin = await isAdmin(userId);
     if (!userIsAdmin) {
-      return res
-        .status(403)
-        .json({ message: "Forbidden: Admin access required." });
+      return res.status(403).json({ message: "Admin access required" });
     }
 
     const transacts = await Transact.find().sort({
@@ -57,10 +82,10 @@ exports.getAllTransactions = async (req, res) => {
       transact_number: -1,
     });
 
-    res.status(200).json(transacts);
+    return res.status(200).json(transacts);
   } catch (error) {
     console.error("Error fetching all transactions:", error);
-    res.status(500).json({ message: "Error fetching all transactions." });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
