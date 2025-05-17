@@ -191,7 +191,13 @@ watch(userRoles, (val) => {
 
 const isMerchant = computed(() => userRoles.value.includes("merchant"));
 const isAdmin = computed(() => userRoles.value.includes("admin"));
-const canEditProduct = computed(() => isMerchant.value || isAdmin.value);
+// const canEditProduct = computed(() => isMerchant.value || isAdmin.value);
+
+const isOwner = computed(() => postDetails.value.userId === currentUserId);
+
+const canEditProduct = computed(
+  () => isOwner.value || isMerchant.value || isAdmin.value
+);
 //------------------------------------------------------------------------
 
 watchEffect(() => {

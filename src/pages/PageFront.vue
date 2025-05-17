@@ -60,11 +60,11 @@
         flat
         bordered
         clickable
-        @click="$router.push('/profile/edit/')"
+        @click="$router.push('/private-posts')"
       >
         <q-card-section>
           <q-icon name="person" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">My Profile</div>
+          <div class="text-h6 q-mt-sm">My Private Post</div>
         </q-card-section>
       </q-card>
 

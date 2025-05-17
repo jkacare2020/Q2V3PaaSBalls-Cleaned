@@ -45,6 +45,8 @@
 // router.delete("/products/:id", deletePostProduct);
 
 // module.exports = router;
+
+// //---- app.use("/api/products", postProductRoutes); ----//
 const express = require("express");
 const router = express.Router();
 // Correct import at the top
@@ -128,6 +130,6 @@ router.get(
 );
 
 // 🔐 Delete post (by ID)
-router.delete("/products/:id", authenticateAndAuthorize(), deletePostProduct);
+router.delete("/:id", authenticateAndAuthorize(), deletePostProduct);
 
 module.exports = router;

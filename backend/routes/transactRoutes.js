@@ -58,12 +58,7 @@ router.get(
   authenticateAndAuthorize(),
   getUnpaidTransactions
 );
-//-single item invoice ----------
-// router.get(
-//   "/transactions/invoice/:transactId",
-//   authenticateAndAuthorize(),
-//   generateInvoice
-// );
+
 //------------------------------------------------------------
 router.get(
   "/transactions/invoice/:transactId",
