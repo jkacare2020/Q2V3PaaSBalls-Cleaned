@@ -24,46 +24,7 @@ const isAdmin = async (userId) => {
     return false;
   }
 };
-
-// Controller for fetching All Transactions by Role --
-// exports.getAllTransactions = async (req, res) => {
-//   const authHeader = req.headers.authorization;
-
-//   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-//     return res.status(401).json({ message: "Unauthorized access" });
-//   }
-
-//   const idToken = authHeader.split("Bearer ")[1];
-//   let userId;
-
-//   try {
-//     const decodedToken = await admin.auth().verifyIdToken(idToken);
-//     userId = decodedToken.uid;
-//   } catch (error) {
-//     console.error("Error verifying ID token:", error);
-//     return res.status(401).json({ message: "Invalid or expired token" });
-//   }
-
-//   try {
-//     const userIsAdmin = await isAdmin(userId);
-//     if (!userIsAdmin) {
-//       return res
-//         .status(403)
-//         .json({ message: "Forbidden: Admin access required." });
-//     }
-
-//     const transacts = await Transact.find().sort({
-//       req_date: -1,
-//       transact_number: -1,
-//     });
-
-//     res.status(200).json(transacts);
-//   } catch (error) {
-//     console.error("Error fetching all transactions:", error);
-//     res.status(500).json({ message: "Error fetching all transactions." });
-//   }
-// };
-
+//---------Get all transaction -----------------------
 exports.getAllTransactions = async (req, res) => {
   try {
     const userId = req.user?.uid;
@@ -223,7 +184,110 @@ exports.getTransactionHistoryByPhone = async (req, res) => {
 };
 
 // ---------------Create a new transaction -----
-// ---------------Create a new transaction -----
+// // ---------------Create a new transaction -----
+// exports.createNewTransaction = async (req, res) => {
+//   let {
+//     userId,
+//     First_Name,
+//     Last_Name,
+//     Phone_Number,
+//     User_Email,
+//     Payer_address,
+//     Payer_address_city,
+//     Payer_address_state,
+//     check_type,
+//     transact_amount,
+//     tran_status,
+//     quantity,
+//     timestamp,
+//     _id,
+//     sellerId, // ✅ Add this
+//     productId, // ✅ Add this (optional but recommended)
+//     imageUrl, // ✅ Add if used
+//     description, // Optional, if passed separately
+//   } = req.body;
+
+//   console.log("📦 Incoming request to create transaction:", req.body);
+
+//   const product = await PostProduct.findById(productId);
+
+//   if (!product) {
+//     console.error("❌ Product not found for ID:", productId);
+//     return res.status(404).json({ message: "Product not found." });
+//   }
+
+//   if (_id) {
+//     console.warn("⚠️ Unexpected _id in request payload, removing it.");
+//     _id = undefined;
+//   }
+
+//   let uid;
+
+//   try {
+//     const authHeader = req.headers.authorization;
+//     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+//       return res
+//         .status(401)
+//         .json({ error: "Authorization header missing or invalid." });
+//     }
+
+//     const token = authHeader.split("Bearer ")[1];
+//     const decodedToken = await admin.auth().verifyIdToken(token);
+//     uid = decodedToken.uid;
+//     console.log("✅ Firebase token decoded, uid:", uid);
+//   } catch (error) {
+//     console.error("❌ Error verifying ID token:", error.message);
+//     return res.status(401).json({ error: "Invalid or expired token." });
+//   }
+
+//   try {
+//     const clientDoc = await admin
+//       .firestore()
+//       .collection("users")
+//       .doc(uid)
+//       .get();
+//     const clientData = clientDoc.exists ? clientDoc.data() : {};
+//     const assignedMerchant = clientData.assignedMerchant || null;
+
+//     console.log("👤 Client data loaded:", clientData);
+//     console.log("🔗 Assigned Merchant:", assignedMerchant);
+
+//     const transactionDate = timestamp || new Date();
+//     const newTransaction = new Transact({
+//       sellerId: product.userId,
+//       sellerUserName: product.userName || "N/A",
+//       sellerDisplayName: product.displayName || "N/A",
+//       assignedMerchant,
+//       owner: uid,
+//       userId,
+//       First_Name,
+//       Last_Name,
+//       Phone_Number,
+//       User_Email,
+//       Payer_address,
+//       Payer_address_city,
+//       Payer_address_state,
+//       check_type,
+//       tran_status: tran_status || "unpaid",
+//       quantity: quantity || 1,
+//       transact_amount,
+//       productId,
+//       imageUrl,
+//       description: description || product.description,
+//       date: transactionDate,
+//     });
+
+//     console.log("📝 Saving new transaction:", newTransaction);
+//     await newTransaction.save();
+//     res.status(201).json({ success: true, transaction: newTransaction });
+//   } catch (error) {
+//     console.error("❌ Error saving transaction:", error.message);
+//     res.status(500).json({ message: "Error saving transaction." });
+//   }
+// };
+//--------------------------------------------------------------------------
+// /controller/transactsController.js
+
 exports.createNewTransaction = async (req, res) => {
   let {
     userId,
@@ -234,31 +298,29 @@ exports.createNewTransaction = async (req, res) => {
     Payer_address,
     Payer_address_city,
     Payer_address_state,
+    Payer_address_zip,
+    Payer_address_country,
     check_type,
     transact_amount,
     tran_status,
     quantity,
     timestamp,
     _id,
-    sellerId, // ✅ Add this
-    productId, // ✅ Add this (optional but recommended)
-    imageUrl, // ✅ Add if used
-    description, // Optional, if passed separately
+    __v,
+    sellerId,
+    sellerUserName,
+    sellerDisplayName,
+    productId,
+    imageUrl,
+    description,
+    owner, // may be missing
   } = req.body;
 
-  const product = await PostProduct.findById(productId);
+  console.log("📦 Incoming request to create transaction:", req.body);
 
-  if (!product) {
-    return res.status(404).json({ message: "Product not found." });
-  }
-
-  // Ensure _id is not passed to the database
-  if (_id) {
-    console.warn("Unexpected _id in request payload, removing it.");
-    _id = undefined;
-  }
-
-  let uid; // Declare uid in the outer scope
+  let uid;
+  let product = null;
+  let buyerUid = null;
 
   try {
     const authHeader = req.headers.authorization;
@@ -270,19 +332,76 @@ exports.createNewTransaction = async (req, res) => {
 
     const token = authHeader.split("Bearer ")[1];
     const decodedToken = await admin.auth().verifyIdToken(token);
-    uid = decodedToken.uid; // Assign the Firebase UID to the outer-scope variable
+    uid = decodedToken.uid;
+    console.log("✅ Firebase token decoded, uid:", uid);
   } catch (error) {
-    console.error("Error verifying ID token:", error.message);
+    console.error("❌ Error verifying ID token:", error.message);
     return res.status(401).json({ error: "Invalid or expired token." });
   }
 
   try {
+    const clientDoc = await admin
+      .firestore()
+      .collection("users")
+      .doc(uid)
+      .get();
+    const clientData = clientDoc.exists ? clientDoc.data() : {};
+    const assignedMerchant = clientData.assignedMerchant || null;
+
+    console.log("👤 Client data loaded:", clientData);
+    console.log("🔗 Assigned Merchant:", assignedMerchant);
+
+    // Optional product lookup
+    if (productId) {
+      try {
+        product = await PostProduct.findById(productId);
+      } catch (err) {
+        console.warn("⚠️ Invalid product ID format, skipping product lookup.");
+      }
+      if (!product) {
+        console.warn("⚠️ Product not found for ID:", productId);
+      }
+    }
+
+    // 🔥 Strip MongoDB control fields
+    _id = undefined;
+    __v = undefined;
+
+    // 🔁 Reverse-lookup buyer UID if owner not provided
+    if (!owner && (Phone_Number || User_Email)) {
+      const userRef = admin.firestore().collection("users");
+      let buyerQuery = null;
+
+      if (Phone_Number) {
+        buyerQuery = userRef.where("phoneNo", "==", Phone_Number);
+      } else if (User_Email) {
+        buyerQuery = userRef.where("email", "==", User_Email);
+      }
+
+      if (buyerQuery) {
+        const snapshot = await buyerQuery.limit(1).get();
+        if (!snapshot.empty) {
+          buyerUid = snapshot.docs[0].id;
+          console.log("🔎 Found buyer UID from phone/email:", buyerUid);
+        } else {
+          console.warn("⚠️ Buyer not found by phone/email.");
+        }
+      }
+    }
+
     const transactionDate = timestamp || new Date();
+
     const newTransaction = new Transact({
-      sellerId: product.userId,
-      sellerUserName: product.userName || "N/A",
-      sellerDisplayName: product.displayName || "N/A", // <- Add this field (must be passed in req.body)
-      owner: uid, // Use the uid declared in the outer scope
+      owner: buyerUid || owner || null,
+      sellerId: product?.userId || sellerId || uid,
+      sellerUserName:
+        product?.userName || sellerUserName || clientData.userName || "N/A",
+      sellerDisplayName:
+        product?.displayName ||
+        sellerDisplayName ||
+        clientData.displayName ||
+        "N/A",
+      assignedMerchant,
       userId,
       First_Name,
       Last_Name,
@@ -291,20 +410,25 @@ exports.createNewTransaction = async (req, res) => {
       Payer_address,
       Payer_address_city,
       Payer_address_state,
+      Payer_address_zip,
+      Payer_address_country,
       check_type,
+      transact_amount,
       tran_status: tran_status || "unpaid",
       quantity: quantity || 1,
-      transact_amount,
-      productId, // ✅ Add this (optional but recommended)
-      imageUrl, // ✅ Add if used
-      description: description || product.description,
-      date: transactionDate,
+      productId: productId || null,
+      imageUrl: product?.imageUrl || imageUrl,
+      description: description || product?.description || "",
+      req_date: transactionDate,
+      createdAt: transactionDate,
+      updatedAt: transactionDate,
     });
-    console.log(newTransaction);
+
+    console.log("📝 Saving new transaction:", newTransaction);
     await newTransaction.save();
     res.status(201).json({ success: true, transaction: newTransaction });
   } catch (error) {
-    console.error("Error saving transaction:", error.message);
+    console.error("❌ Error saving transaction:", error.message);
     res.status(500).json({ message: "Error saving transaction." });
   }
 };

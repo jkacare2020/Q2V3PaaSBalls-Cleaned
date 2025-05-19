@@ -197,8 +197,15 @@
           <q-btn
             label="Save"
             color="primary"
-            class="q-mt-lg full-width"
+            class="q-mt-xm full-width"
             type="submit"
+          />
+          <q-btn
+            label="Assign Client"
+            icon="person_add"
+            color="primary"
+            @click="router.push('/assign-client')"
+            class="q-mt-md"
           />
         </q-form>
       </q-card-section>
@@ -354,7 +361,7 @@ const saveProfile = async () => {
       userName: proposedUserName || "", // Save empty string if blank
       role: editableUser.value.role,
       email: editableUser.value.email,
-      bio: editableUser.value.bio,
+      bio: editableUser.value.bio ?? "", // ✅ specifically fix this
     });
 
     console.log("✅ Profile updated successfully");

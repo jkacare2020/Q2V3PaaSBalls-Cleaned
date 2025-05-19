@@ -12,6 +12,13 @@
             type="number"
           />
           <q-input
+            v-model="transactInfo.sellerUserName"
+            label="Merchnat Name"
+            outlined
+            dense
+            class="q-mb-md"
+          />
+          <q-input
             v-model="transactInfo.First_Name"
             label="Customer First Name"
             outlined

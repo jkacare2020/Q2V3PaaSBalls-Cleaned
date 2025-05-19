@@ -403,6 +403,11 @@ const navLinks = [
         icon: "storefront",
         link: "/merchant-transactions",
       },
+      {
+        title: "Search by Phone# ", // ✅ Add this one
+        icon: "search",
+        link: "/mongo-transacts",
+      },
       { title: "Create Transaction", icon: "add", link: "/new-transaction" },
       { title: "$ Ledger ", icon: "savings", link: "/ledger" },
     ],

@@ -85,8 +85,8 @@ import { useStoreAuth } from "src/stores/storeAuth";
 import { useRouter } from "vue-router";
 import { usePhoneFormat } from "src/use/formatPhone";
 import { useQuasar } from "quasar"; // Import Quasar Notify
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "src/firebase/init";
+// import { collection, query, where, getDocs } from "firebase/firestore";
+// import { db } from "src/firebase/init";
 
 const authStore = useStoreAuth();
 const router = useRouter();

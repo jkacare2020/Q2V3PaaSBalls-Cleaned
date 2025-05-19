@@ -1,27 +1,14 @@
 <template>
+  <!---PageMongoTran.vue--->
   <div class="col-4 large-screen-only">
     <q-item class="fixed">
-      <!-- <q-item-section avatar>
-        <q-avatar size="48px">
-          <img :src="avatarUrl" :alt="username" />
-        </q-avatar>
-      </q-item-section> -->
-
       <q-item-section>
         <q-item-label class="text-bold">{{ username }}</q-item-label>
         <q-item-label caption> {{ email }} </q-item-label>
       </q-item-section>
     </q-item>
-    <div v-if="!isAuthenticated" class="q-pa-md q-mt-lg">
-      <!-- <q-btn
-        @click="goToSignup"
-        label="Sign Up"
-        color="primary"
-        class="q-mt-md full-width"
-      /> -->
-    </div>
+    <div v-if="!isAuthenticated" class="q-pa-md q-mt-lg"></div>
   </div>
-
   <!-- Search transactions by phone number -->
   <div class="q-mt-xl q-ml-sm q-mr-sm">
     <q-input
@@ -118,7 +105,6 @@
 <script setup>
 import { useStoreAuth } from "src/stores/storeAuth";
 import { ref, onMounted, computed, watch } from "vue";
-import axios from "axios";
 import { db, storage } from "src/firebase/init"; // Import Firestore and Storage instances
 import { collection, getDocs } from "firebase/firestore"; // Import Firestore functions
 import defaultAvatar from "src/assets/avatar.jpg"; // Import default avatar

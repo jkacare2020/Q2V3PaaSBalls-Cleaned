@@ -262,6 +262,14 @@ const routes = [
         path: "/private-posts",
         component: () => import("pages/PagePrivatePosts.vue"),
       },
+      {
+        path: "/assign-client",
+        component: () => import("pages/PageAssignClient.vue"),
+      },
+      {
+        path: "/preSignup",
+        component: () => import("pages/PageRegisterClient.vue"),
+      },
 
       {
         path: "/products/:id",

@@ -1,5 +1,5 @@
 <template>
-  <!---PageNewTransactionCart -->
+  <!---PageNewTransactionCart.vue -->
   <q-page>
     <q-card>
       <q-card-section>
@@ -115,7 +115,7 @@ onMounted(() => {
   }
   transactionData.value.req_date = formatDate(new Date());
 });
-
+//-------------------------------------------------
 const isSubmitting = ref(false);
 
 async function submitTransaction() {
