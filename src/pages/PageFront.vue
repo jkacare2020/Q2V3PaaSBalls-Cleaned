@@ -80,6 +80,19 @@
           <div class="text-h6 q-mt-sm">HR Bot</div>
         </q-card-section>
       </q-card>
+      <q-card
+        class="my-card"
+        flat
+        bordered
+        clickable
+        @click="$router.push('/vision-submit')"
+      >
+        <q-card-section>
+          <q-icon name="smart_toy" size="xl" color="primary" />
+          <div class="text-h6 q-mt-sm">AI Cleaning Score</div>
+        </q-card-section>
+        <q-tooltip>Upload before & after images for AI evaluation</q-tooltip>
+      </q-card>
     </div>
 
     <div class="text-caption text-grey-6 q-mt-xl">
