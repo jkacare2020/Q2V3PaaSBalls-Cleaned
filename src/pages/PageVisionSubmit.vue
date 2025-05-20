@@ -25,6 +25,7 @@
           autogrow
           outlined
           :rules="[(val) => !!val || 'Prompt is required']"
+          class="q-mt-md"
         />
 
         <q-btn
@@ -62,7 +63,24 @@ import { apiNode } from "boot/apiNode";
 const $q = useQuasar();
 const dirtyImage = ref(null);
 const cleanedImage = ref(null);
-const prompt = ref("Compare the cleaning result of this item.");
+// const prompt = ref("Compare the cleaning result of this item.");
+const prompt = ref(`Please evaluate the cleaning result of this leather bag.
+
+The first image shows the condition before cleaning, and the second image shows it after cleaning.
+
+In your response, return a JSON object with the following fields:
+
+{
+  "dirtyAreas": number,
+  "cleaningSuccess": "string description",
+  "cleaningScore": number (0-100),
+  "colorRestoration": number (0-100),
+  "scuffVisibility": "string description",
+  "textureAndShine": "string description",
+  "damageDetected": boolean,
+  "summary": "string"
+}`);
+
 const aiResponse = ref(null);
 const isSubmitting = ref(false);
 
@@ -71,7 +89,6 @@ async function submitToAI() {
     $q.notify({ type: "negative", message: "Please upload both images." });
     return;
   }
-
   try {
     isSubmitting.value = true;
     const token = await auth.currentUser.getIdToken();

@@ -86,12 +86,25 @@ onMounted(async () => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    let parsed;
-    if (typeof res.data === "object" && res.data.text) {
-      parsed = JSON.parse(res.data.text); // Parse the stringified JSON inside .text
-    } else {
-      parsed = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
+    const raw = res.data;
+
+    let parsed = raw;
+
+    // If `text` is a stringified JSON with ```json...``` wrapper
+    if (raw?.text && typeof raw.text === "string") {
+      try {
+        const cleanText = raw.text
+          .replace(/^```json/, "")
+          .replace(/^```/, "")
+          .replace(/```$/, "")
+          .trim();
+
+        parsed = JSON.parse(cleanText);
+      } catch (err) {
+        console.warn("Text field not JSON:", err);
+      }
     }
+
     evaluation.value = parsed;
 
     drawCharts();
