@@ -45,7 +45,6 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
 import { auth } from "src/firebase/init"; // Ensure correct import for Firebase Auth
 import Papa from "papaparse";
 import jsPDF from "jspdf";

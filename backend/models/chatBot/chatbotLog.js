@@ -10,6 +10,9 @@ const ChatbotLogSchema = new mongoose.Schema({
   tokensUsed: { type: Number, default: 0 },
   confidenceScore: { type: Number, default: 1 },
   timestamp: { type: Date, default: Date.now },
+  imageUrls: [String], // 👈 new
+  type: { type: String }, // e.g., 'vision'
+  tags: [String], // e.g., ['reference', 'carpet']
 });
 
 module.exports = mongoose.model("ChatbotLog", ChatbotLogSchema);

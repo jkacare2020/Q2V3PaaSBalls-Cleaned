@@ -1,3 +1,4 @@
+// ------------chatBotRoutes.js -------------
 const express = require("express");
 const router = express.Router();
 const chatBotController = require("../controllers/chatBotController");
@@ -12,6 +13,8 @@ const {
   getChatSessions,
   getChatBySession,
   getChatHistory,
+  logVisionResult, // ✅ Add this
+  getVisionLogsByUser,
 } = require("../controllers/chatBotController");
 
 // Route for sending a new message to GPT
@@ -29,5 +32,10 @@ router.get("/chatbot/sessions", getChatSessions);
 router.get("/chatbot/history/:sessionId", getChatBySession);
 
 router.get("/chatbot/history", getChatHistory);
+
+// Save GPT-4 Vision result with image URLs and metadata
+router.post("/chatbot/vision-log", logVisionResult);
+
+router.get("/chatbot/vision-logs", getVisionLogsByUser);
 
 module.exports = router;

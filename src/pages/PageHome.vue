@@ -1183,6 +1183,8 @@ async function sendComment() {
   }
 
   const token = await auth.currentUser.getIdToken();
+  // console.log("token:", token);
+
   try {
     await apiNode.post(
       "/api/comments/add",

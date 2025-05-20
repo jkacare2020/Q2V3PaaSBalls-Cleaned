@@ -1,7 +1,6 @@
 //--This is the chatBotController.js --------
 const { OpenAI } = require("openai");
 const ChatbotLog = require("../models/chatBot/chatbotLog"); // Import ChatbotLog model
-const mongoose = require("mongoose");
 const admin = require("firebase-admin"); // Firebase Admin SDK
 
 // Initialize OpenAI
@@ -188,14 +187,88 @@ const getChatBySession = async (req, res) => {
   }
 };
 
+//----------------------------
+/**
+ * Log GPT-4 Vision result to ChatbotLog
+ * Expects: userId, prompt, imageUrls, response, modelUsed?, tokensUsed?, score?, tags?
+ */
+const logVisionResult = async (req, res) => {
+  try {
+    const {
+      userId,
+      prompt,
+      imageUrls,
+      response,
+      modelUsed = "gpt-4-vision-preview",
+      tokensUsed = 0,
+      score,
+      tags = [],
+    } = req.body;
+
+    if (!userId || !prompt || !imageUrls || !response) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const sessionId = `vision-${userId}-${Date.now()}`;
+
+    const log = new ChatbotLog({
+      userId,
+      sessionId,
+      query: prompt,
+      response: typeof response === "string" ? { text: response } : response,
+      modelUsed,
+      tokensUsed,
+      confidenceScore: 1,
+      imageUrls,
+      type: "vision",
+      tags,
+    });
+
+    if (typeof score === "number") {
+      log.response.score = score;
+    }
+
+    await log.save();
+
+    res.status(201).json({ message: "Vision log saved", sessionId });
+  } catch (err) {
+    console.error("logVisionResult error:", err);
+    res.status(500).json({ error: "Failed to save vision log" });
+  }
+};
+
+//---------------------------------------------------------------------------
+const getVisionLogsByUser = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Unauthorized: Missing token" });
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const userId = decodedToken.uid;
+
+    const logs = await ChatbotLog.find({ userId, type: "vision" }).sort({
+      timestamp: -1,
+    });
+
+    res.status(200).json(logs);
+  } catch (error) {
+    console.error("Error fetching vision logs:", error);
+    res.status(500).json({ error: "Failed to fetch vision logs" });
+  }
+};
+//------------------------------------------------------------
+
 // ✅ **Correctly Export All Functions**
 module.exports = {
   sendMessage,
   postLogs,
-  // getLogs,
-  // getAllLogs,
   deleteLog,
   getChatHistory,
   getChatSessions, // ✅ Now defined before export
   getChatBySession, // ✅ Keep this function
+  logVisionResult, // ✅ ADD THIS LINE
+  getVisionLogsByUser, // ✅ Add this to exports
 };

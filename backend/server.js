@@ -25,6 +25,7 @@ const commentsRoutes = require("./routes/commentsRoutes");
 const userPresenceRoutes = require("./routes/userPresenceRoutes");
 const accessRoutes = require("./routes/accessRoutes");
 const registerClientRoutes = require("./routes/registerClientRoutes");
+const visionRoutes = require("./routes/visionRoutes");
 
 // const adminRoutes = require("./routes/adminRoutes");
 
@@ -107,6 +108,7 @@ app.use("/api/comments", commentsRoutes); // ✅ Now protected
 app.use("/api/presence", userPresenceRoutes); // optional
 app.use("/api/access", accessRoutes);
 app.use("/api", registerClientRoutes);
+app.use("/api/vision", visionRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

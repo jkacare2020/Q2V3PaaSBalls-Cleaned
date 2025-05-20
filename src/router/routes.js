@@ -293,6 +293,15 @@ const routes = [
         component: () => import("pages/PageCart.vue"),
         meta: { requiresAuth: true },
       },
+      {
+        path: "/vision-submit",
+        component: () => import("pages/PageVisionSubmit.vue"),
+      },
+      {
+        path: "/vision-bot",
+        component: () => import("pages/PageVisionLog.vue"), // Adjust if path differs
+        meta: { requiresAuth: true },
+      },
     ],
   },
 

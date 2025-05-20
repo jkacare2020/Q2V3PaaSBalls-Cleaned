@@ -382,6 +382,11 @@ const navLinks = [
         link: "/tenants",
         adminOnly: true,
       },
+      {
+        title: "VisionBot",
+        icon: "visibility",
+        link: "/vision-bot",
+      },
     ],
   },
   {
