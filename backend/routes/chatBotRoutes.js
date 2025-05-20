@@ -17,6 +17,7 @@ const {
   getVisionLogsByUser,
   getLatestVisionEval,
   getVisionEvalBySessionId,
+  deleteUserLog,
 } = require("../controllers/chatBotController");
 
 // Route for sending a new message to GPT
@@ -43,5 +44,7 @@ router.get("/chatbot/vision-logs", getVisionLogsByUser);
 router.get("/chatbot/latest-vision-eval", getLatestVisionEval);
 
 router.get("/chatbot/vision-eval/:sessionId", getVisionEvalBySessionId);
+// routes/chatBotRoutes.js
+router.delete("/chatbot/log/:id", deleteUserLog);
 
 module.exports = router;

@@ -30,6 +30,7 @@
           <th class="text-left">Prompt</th>
           <th class="text-left">Timestamp</th>
           <th class="text-left">Details</th>
+          <th class="text-left">Delete</th>
         </tr>
       </thead>
       <tbody>
@@ -52,6 +53,15 @@
               color="primary"
               icon="open_in_new"
               @click="goToDetails"
+            />
+          </td>
+          <td>
+            <q-btn
+              dense
+              flat
+              icon="delete"
+              color="negative"
+              @click="confirmDelete(log._id)"
             />
           </td>
         </tr>
@@ -206,6 +216,27 @@ async function exportToPDF() {
 
 function goToDetails() {
   router.push("/vision-details"); // route name or path
+}
+
+async function confirmDelete(id) {
+  $q.dialog({
+    title: "Confirm Deletion",
+    message: "Are you sure you want to delete this log?",
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const token = await auth.currentUser.getIdToken();
+      await apiNode.delete(`/api/chatbot/log/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      visionLogs.value = visionLogs.value.filter((log) => log._id !== id);
+      $q.notify({ type: "positive", message: "Log deleted successfully." });
+    } catch (err) {
+      console.error("Error deleting log:", err);
+      $q.notify({ type: "negative", message: "Failed to delete log." });
+    }
+  });
 }
 </script>
 

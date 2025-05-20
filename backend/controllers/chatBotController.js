@@ -87,6 +87,31 @@ const deleteLog = (req, res) => {
   const { id } = req.params;
   res.status(200).json({ message: `Log with ID ${id} deleted.` });
 };
+//------------------------------------------
+const deleteUserLog = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const userId = decodedToken.uid;
+
+    const { id } = req.params;
+
+    const log = await ChatbotLog.findOne({ _id: id, userId });
+    if (!log)
+      return res.status(404).json({ error: "Log not found or not yours" });
+
+    await ChatbotLog.deleteOne({ _id: id });
+    res.json({ message: "Log deleted" });
+  } catch (err) {
+    console.error("deleteUserLog error:", err);
+    res.status(500).json({ error: "Failed to delete log" });
+  }
+};
 
 const getChatHistory = async (req, res) => {
   try {
@@ -325,4 +350,5 @@ module.exports = {
   getVisionLogsByUser, // ✅ Add this to exports
   getLatestVisionEval,
   getVisionEvalBySessionId,
+  deleteUserLog,
 };

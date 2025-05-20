@@ -67,20 +67,27 @@ const cleanedImage = ref(null);
 // const prompt = ref("Compare the cleaning result of this item.");
 const prompt = ref(`Please evaluate the cleaning result of this leather bag.
 
-The first image shows the condition before cleaning, and the second image shows it after cleaning.
+The first image shows the condition *before cleaning*, and the second image shows it *after cleaning*.
 
-In your response, return a JSON object with the following fields:
+Your task:
+- Visually compare both images.
+- Identify specific cleaning improvements and surface conditions.
+
+Respond ONLY with a JSON object with these fields:
 
 {
-  "dirtyAreas": number,
-  "cleaningSuccess": "string description",
-  "cleaningScore": number (0-100),
-  "colorRestoration": number (0-100),
-  "scuffVisibility": "string description",
-  "textureAndShine": "string description",
-  "damageDetected": boolean,
-  "summary": "string"
-}`);
+  "dirtyAreas": integer, // Total distinct dirty regions seen in the before image (e.g. stains, dark spots, grime)
+  "cleaningSuccess": "Short summary of how well the dirty areas were cleaned",
+  "cleaningScore": integer (0-100), // Based on cleanliness and visual improvement
+  "colorRestoration": integer (0-100), // Based on color consistency and vibrancy after cleaning
+  "scuffVisibility": "Describe if scuffs are still visible or reduced",
+  "textureAndShine": "Describe how the leather texture and shine changed",
+  "damageDetected": boolean, // true if cleaning caused new visible damage
+  "summary": "Final judgment of the cleaning effectiveness"
+}
+
+Format only as raw JSON (no extra text, no explanation).
+`);
 
 const aiResponse = ref(null);
 const isSubmitting = ref(false);
