@@ -59,7 +59,8 @@ import { ref } from "vue";
 import { useQuasar } from "quasar";
 import { auth } from "src/firebase/init";
 import { apiNode } from "boot/apiNode";
-
+import { useRouter } from "vue-router";
+const router = useRouter();
 const $q = useQuasar();
 const dirtyImage = ref(null);
 const cleanedImage = ref(null);
@@ -108,6 +109,8 @@ async function submitToAI() {
 
     aiResponse.value = res.data.result;
     $q.notify({ type: "positive", message: "AI evaluation complete!" });
+    const sessionId = res.data.sessionId;
+    router.push({ path: "/vision-details", query: { sessionId } });
   } catch (err) {
     console.error("Vision error:", err);
     $q.notify({ type: "negative", message: "Failed to get AI response." });

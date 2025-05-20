@@ -73,11 +73,27 @@
             @click="openImagePair(log.imageUrls)"
           />
         </q-card-section>
+
         <q-card-section>
-          <div class="text-bold">Feedback:</div>
-          <div>{{ log.response?.text || log.response }}</div>
-          <div class="q-mt-sm text-caption">Prompt: {{ log.query }}</div>
-          <div class="text-caption">{{ formatDate(log.timestamp) }}</div>
+          <div class="text-bold">📝 Feedback:</div>
+          <div class="q-mb-sm">{{ log.response?.text || log.response }}</div>
+
+          <div class="q-mt-xs text-caption">
+            <strong>📌 Prompt:</strong> {{ log.query }}
+          </div>
+          <div class="text-caption">
+            <strong>⏰ Timestamp:</strong> {{ formatDate(log.timestamp) }}
+          </div>
+
+          <div class="q-mt-sm">
+            <q-btn
+              label="View Details"
+              color="primary"
+              icon="open_in_new"
+              dense
+              @click="goToDetails"
+            />
+          </div>
         </q-card-section>
       </q-card>
     </div>

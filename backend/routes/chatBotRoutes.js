@@ -16,6 +16,7 @@ const {
   logVisionResult, // ✅ Add this
   getVisionLogsByUser,
   getLatestVisionEval,
+  getVisionEvalBySessionId,
 } = require("../controllers/chatBotController");
 
 // Route for sending a new message to GPT
@@ -40,5 +41,7 @@ router.post("/chatbot/vision-log", logVisionResult);
 router.get("/chatbot/vision-logs", getVisionLogsByUser);
 
 router.get("/chatbot/latest-vision-eval", getLatestVisionEval);
+
+router.get("/chatbot/vision-eval/:sessionId", getVisionEvalBySessionId);
 
 module.exports = router;

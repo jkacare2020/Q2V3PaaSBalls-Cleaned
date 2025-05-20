@@ -259,7 +259,7 @@ const getVisionLogsByUser = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch vision logs" });
   }
 };
-
+//-------------------------------------------------------------------
 const getLatestVisionEval = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -287,6 +287,30 @@ const getLatestVisionEval = async (req, res) => {
   }
 };
 
+//-------------------------------------------------------
+const getVisionEvalBySessionId = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const userId = decodedToken.uid;
+
+    const { sessionId } = req.params;
+
+    const log = await ChatbotLog.findOne({ userId, sessionId });
+    if (!log) return res.status(404).json({ error: "Log not found" });
+
+    res.json(log.response);
+  } catch (err) {
+    console.error("getVisionEvalBySessionId error:", err);
+    res.status(500).json({ error: "Failed to fetch evaluation" });
+  }
+};
+
 //------------------------------------------------------------
 
 // ✅ **Correctly Export All Functions**
@@ -300,4 +324,5 @@ module.exports = {
   logVisionResult, // ✅ ADD THIS LINE
   getVisionLogsByUser, // ✅ Add this to exports
   getLatestVisionEval,
+  getVisionEvalBySessionId,
 };

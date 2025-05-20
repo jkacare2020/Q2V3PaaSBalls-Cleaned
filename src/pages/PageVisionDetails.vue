@@ -74,23 +74,33 @@ import { ref, onMounted } from "vue";
 import { apiNode } from "src/boot/apiNode";
 import { auth } from "src/firebase/init";
 import Chart from "chart.js/auto";
+import { useRoute } from "vue-router";
+const route = useRoute();
 
 const evaluation = ref(null);
+
+//-----------------------------------------
 
 onMounted(async () => {
   const user = auth.currentUser;
   if (!user) return;
+
   const token = await user.getIdToken();
+  const sessionId = route.query.sessionId;
+
   try {
-    const res = await apiNode.get("/api/chatbot/latest-vision-eval", {
+    const url = sessionId
+      ? `/api/chatbot/vision-eval/${sessionId}`
+      : `/api/chatbot/latest-vision-eval`;
+
+    const res = await apiNode.get(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     const raw = res.data;
-
     let parsed = raw;
 
-    // If `text` is a stringified JSON with ```json...``` wrapper
+    // 🧠 Robust parser for `response.text` format
     if (raw?.text && typeof raw.text === "string") {
       try {
         const cleanText = raw.text
@@ -101,18 +111,54 @@ onMounted(async () => {
 
         parsed = JSON.parse(cleanText);
       } catch (err) {
-        console.warn("Text field not JSON:", err);
+        console.warn("⚠️ Failed to parse evaluation text as JSON:", err);
       }
     }
 
     evaluation.value = parsed;
-
     drawCharts();
   } catch (err) {
-    console.error("Failed to load evaluation:", err);
+    console.error("❌ Failed to load evaluation:", err);
   }
 });
+//--------------------------------------------------------
 
+// onMounted(async () => {
+//   const user = auth.currentUser;
+//   if (!user) return;
+//   const token = await user.getIdToken();
+//   try {
+//     const res = await apiNode.get("/api/chatbot/latest-vision-eval", {
+//       headers: { Authorization: `Bearer ${token}` },
+//     });
+
+//     const raw = res.data;
+
+//     let parsed = raw;
+
+//     // If `text` is a stringified JSON with ```json...``` wrapper
+//     if (raw?.text && typeof raw.text === "string") {
+//       try {
+//         const cleanText = raw.text
+//           .replace(/^```json/, "")
+//           .replace(/^```/, "")
+//           .replace(/```$/, "")
+//           .trim();
+
+//         parsed = JSON.parse(cleanText);
+//       } catch (err) {
+//         console.warn("Text field not JSON:", err);
+//       }
+//     }
+
+//     evaluation.value = parsed;
+
+//     drawCharts();
+//   } catch (err) {
+//     console.error("Failed to load evaluation:", err);
+//   }
+// });
+//-------------------------------
 function drawCharts() {
   setTimeout(() => {
     if (!evaluation.value) return;
