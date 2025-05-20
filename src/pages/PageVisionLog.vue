@@ -29,6 +29,7 @@
           <th class="text-left">Feedback</th>
           <th class="text-left">Prompt</th>
           <th class="text-left">Timestamp</th>
+          <th class="text-left">Details</th>
         </tr>
       </thead>
       <tbody>
@@ -45,6 +46,14 @@
           <td>{{ log.response?.text || log.response }}</td>
           <td>{{ log.query }}</td>
           <td>{{ formatDate(log.timestamp) }}</td>
+          <td>
+            <q-btn
+              label="View Details"
+              color="primary"
+              icon="open_in_new"
+              @click="goToDetails"
+            />
+          </td>
         </tr>
       </tbody>
     </q-markup-table>
@@ -115,6 +124,9 @@ import { auth } from "src/firebase/init";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+import { useRouter } from "vue-router";
+const router = useRouter();
+
 const $q = useQuasar();
 const visionLogs = ref([]);
 const showOnlyVision = ref(true);
@@ -174,6 +186,10 @@ async function exportToPDF() {
     },
   });
   doc.save(`vision_logs_${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+function goToDetails() {
+  router.push("/vision-details"); // route name or path
 }
 </script>
 

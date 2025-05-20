@@ -77,7 +77,7 @@
       >
         <q-card-section>
           <q-icon name="smart_toy" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">HR Bot</div>
+          <div class="text-h6 q-mt-sm">HR Assist Bot</div>
         </q-card-section>
       </q-card>
       <q-card
@@ -88,7 +88,7 @@
         @click="$router.push('/vision-submit')"
       >
         <q-card-section>
-          <q-icon name="smart_toy" size="xl" color="primary" />
+          <q-icon name="scoreboard" size="xl" color="primary" />
           <div class="text-h6 q-mt-sm">AI Cleaning Score</div>
         </q-card-section>
         <q-tooltip>Upload before & after images for AI evaluation</q-tooltip>

@@ -103,14 +103,21 @@ exports.compareImagesWithAI = async (req, res) => {
     // Save log to MongoDB
     const sessionId = `vision-${uid}-${Date.now()}`;
     const log = new ChatbotLog({
-      userId: uid,
+      userId,
       sessionId,
       query: prompt,
-      response: { text },
-      modelUsed: "gpt-4-turbo",
-      imageUrls: [dirtyUrl, cleanedUrl],
+      response: {
+        text: aiRawTextOutput, // Full GPT response (optional)
+        details: parsedStructuredJson, // 👈 Structured output from GPT (what PageVisionDetails.vue uses)
+      },
       type: "vision",
+      modelUsed,
+      tokensUsed,
+      confidenceScore: 1,
+      imageUrls,
+      tags,
     });
+
     await log.save();
 
     res.status(200).json({ result: { text }, sessionId });

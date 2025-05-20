@@ -259,6 +259,34 @@ const getVisionLogsByUser = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch vision logs" });
   }
 };
+
+const getLatestVisionEval = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Unauthorized: Missing token" });
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const userId = decodedToken.uid;
+
+    const latest = await ChatbotLog.findOne({
+      userId,
+      type: "vision",
+    }).sort({ timestamp: -1 });
+
+    if (!latest) {
+      return res.status(404).json({ error: "No vision logs found." });
+    }
+
+    res.json(latest.response);
+  } catch (err) {
+    console.error("getLatestVisionEval error:", err);
+    res.status(500).json({ error: "Failed to fetch evaluation." });
+  }
+};
+
 //------------------------------------------------------------
 
 // ✅ **Correctly Export All Functions**
@@ -271,4 +299,5 @@ module.exports = {
   getChatBySession, // ✅ Keep this function
   logVisionResult, // ✅ ADD THIS LINE
   getVisionLogsByUser, // ✅ Add this to exports
+  getLatestVisionEval,
 };

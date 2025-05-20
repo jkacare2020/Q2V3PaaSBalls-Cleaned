@@ -302,6 +302,11 @@ const routes = [
         component: () => import("pages/PageVisionLog.vue"), // Adjust if path differs
         meta: { requiresAuth: true },
       },
+      {
+        path: "/vision-details",
+        component: () => import("pages/PageVisionDetails.vue"), // Adjust if path differs
+        meta: { requiresAuth: true },
+      },
     ],
   },
 

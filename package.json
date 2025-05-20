@@ -24,6 +24,7 @@
     "@google-cloud/speech": "^6.7.0",
     "@quasar/extras": "^1.16.17",
     "axios": "^1.8.1",
+    "chart.js": "^4.4.9",
     "dotenv": "^16.4.7",
     "firebase": "^11.0.2",
     "highlight.js": "^11.11.1",
