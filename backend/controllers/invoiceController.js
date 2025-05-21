@@ -166,15 +166,18 @@ exports.generateInvoiceById = async (req, res) => {
     doc.text("Seller:");
     doc.text(`Display Name: ${transaction.sellerDisplayName || "N/A"}`);
     doc.text(`Username: ${transaction.sellerUserName || "N/A"}`);
+    doc.text(`Company name: ${transaction.sellerCompanyName || "N/A"}`);
     doc.moveDown();
 
     console.log("🧾 Description:", transaction.description);
     console.log("🧾 Seller Name:", transaction.sellerDisplayName);
+    console.log("🧾 Seller compay Name:", transaction.sellerCompanyName);
 
     // Transaction Details
     doc.text(`Product: ${transaction.description}`);
     doc.text(`Quantity: ${transaction.quantity || 1}`);
     doc.text(`Unit Price: $${transaction.transact_amount.toFixed(2)}`);
+
     doc.text(
       `Total: $${(
         transaction.transact_amount * (transaction.quantity || 1)

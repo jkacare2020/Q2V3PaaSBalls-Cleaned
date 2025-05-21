@@ -183,108 +183,6 @@ exports.getTransactionHistoryByPhone = async (req, res) => {
   }
 };
 
-// ---------------Create a new transaction -----
-// // ---------------Create a new transaction -----
-// exports.createNewTransaction = async (req, res) => {
-//   let {
-//     userId,
-//     First_Name,
-//     Last_Name,
-//     Phone_Number,
-//     User_Email,
-//     Payer_address,
-//     Payer_address_city,
-//     Payer_address_state,
-//     check_type,
-//     transact_amount,
-//     tran_status,
-//     quantity,
-//     timestamp,
-//     _id,
-//     sellerId, // ✅ Add this
-//     productId, // ✅ Add this (optional but recommended)
-//     imageUrl, // ✅ Add if used
-//     description, // Optional, if passed separately
-//   } = req.body;
-
-//   console.log("📦 Incoming request to create transaction:", req.body);
-
-//   const product = await PostProduct.findById(productId);
-
-//   if (!product) {
-//     console.error("❌ Product not found for ID:", productId);
-//     return res.status(404).json({ message: "Product not found." });
-//   }
-
-//   if (_id) {
-//     console.warn("⚠️ Unexpected _id in request payload, removing it.");
-//     _id = undefined;
-//   }
-
-//   let uid;
-
-//   try {
-//     const authHeader = req.headers.authorization;
-//     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-//       return res
-//         .status(401)
-//         .json({ error: "Authorization header missing or invalid." });
-//     }
-
-//     const token = authHeader.split("Bearer ")[1];
-//     const decodedToken = await admin.auth().verifyIdToken(token);
-//     uid = decodedToken.uid;
-//     console.log("✅ Firebase token decoded, uid:", uid);
-//   } catch (error) {
-//     console.error("❌ Error verifying ID token:", error.message);
-//     return res.status(401).json({ error: "Invalid or expired token." });
-//   }
-
-//   try {
-//     const clientDoc = await admin
-//       .firestore()
-//       .collection("users")
-//       .doc(uid)
-//       .get();
-//     const clientData = clientDoc.exists ? clientDoc.data() : {};
-//     const assignedMerchant = clientData.assignedMerchant || null;
-
-//     console.log("👤 Client data loaded:", clientData);
-//     console.log("🔗 Assigned Merchant:", assignedMerchant);
-
-//     const transactionDate = timestamp || new Date();
-//     const newTransaction = new Transact({
-//       sellerId: product.userId,
-//       sellerUserName: product.userName || "N/A",
-//       sellerDisplayName: product.displayName || "N/A",
-//       assignedMerchant,
-//       owner: uid,
-//       userId,
-//       First_Name,
-//       Last_Name,
-//       Phone_Number,
-//       User_Email,
-//       Payer_address,
-//       Payer_address_city,
-//       Payer_address_state,
-//       check_type,
-//       tran_status: tran_status || "unpaid",
-//       quantity: quantity || 1,
-//       transact_amount,
-//       productId,
-//       imageUrl,
-//       description: description || product.description,
-//       date: transactionDate,
-//     });
-
-//     console.log("📝 Saving new transaction:", newTransaction);
-//     await newTransaction.save();
-//     res.status(201).json({ success: true, transaction: newTransaction });
-//   } catch (error) {
-//     console.error("❌ Error saving transaction:", error.message);
-//     res.status(500).json({ message: "Error saving transaction." });
-//   }
-// };
 //--------------------------------------------------------------------------
 // /controller/transactsController.js
 
@@ -310,6 +208,7 @@ exports.createNewTransaction = async (req, res) => {
     sellerId,
     sellerUserName,
     sellerDisplayName,
+    sellerCompanyName,
     productId,
     imageUrl,
     description,
@@ -401,6 +300,7 @@ exports.createNewTransaction = async (req, res) => {
         sellerDisplayName ||
         clientData.displayName ||
         "N/A",
+      sellerCompanyName: sellerCompanyName || "N/A", //  added
       assignedMerchant,
       userId,
       First_Name,
@@ -540,7 +440,7 @@ exports.getUnpaidTransactions = async (req, res) => {
   const unpaid = await Transact.find({ owner: userId, tran_status: "unpaid" });
   res.status(200).json(unpaid);
 };
-//------------------------------------------------------------------------
+//-------------------------------------Invoice-----------------------------------
 
 const fs = require("fs");
 const path = require("path");

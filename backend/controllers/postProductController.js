@@ -92,6 +92,7 @@ exports.importFromFirebasePost = async (req, res) => {
       role: userRoles,
       userName: userData.userName || "", // ✅ ADD THIS
       displayName: userData.displayName || "", // ✅ AND THIS
+      companyName: userData.companyName || "", // ✅ AND THIS companyName
       //--------------------
       visibility: postTags.includes("private") ? "private" : "public",
 
@@ -139,6 +140,7 @@ exports.createPostProduct = async (req, res) => {
       imageUrl,
       userName,
       displayName,
+      companyName,
       postId,
       tags,
       category,
@@ -153,6 +155,7 @@ exports.createPostProduct = async (req, res) => {
       imageUrl,
       userName,
       displayName, // Include seller info directly
+      companyName, //seller
     });
 
     await newProduct.save();

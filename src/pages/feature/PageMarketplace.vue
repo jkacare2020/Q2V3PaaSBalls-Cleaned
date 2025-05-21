@@ -136,6 +136,7 @@ function goToTransaction(product) {
     sellerId: product.userId,
     sellerUserName: product.userName || "", // ✅ add this
     sellerDisplayName: product.displayName || "", // ✅ add this
+    sellerCompanyName: product.companyName || "", // ✅ add this
     imageUrl: product.imageUrl,
     productId: product._id,
   };

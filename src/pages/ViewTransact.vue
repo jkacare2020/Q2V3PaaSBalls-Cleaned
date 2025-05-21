@@ -19,6 +19,13 @@
             class="q-mb-md"
           />
           <q-input
+            v-model="transactInfo.sellerCompanyName"
+            label="Company Name"
+            outlined
+            dense
+            class="q-mb-md"
+          />
+          <q-input
             v-model="transactInfo.First_Name"
             label="Customer First Name"
             outlined

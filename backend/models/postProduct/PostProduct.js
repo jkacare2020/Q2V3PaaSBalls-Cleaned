@@ -17,6 +17,7 @@ const PostProductSchema = new mongoose.Schema(
     userId: { type: String, required: true },
     userName: { type: String },
     displayName: { type: String },
+    companyName: { type: String },
     tenantId: { type: String },
 
     name: { type: String, required: true },

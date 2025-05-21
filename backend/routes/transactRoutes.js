@@ -11,7 +11,6 @@ const {
   getMyTransactions,
   getTransactionsBySeller,
   getUnpaidTransactions,
-  generateInvoice,
 } = require("../controllers/transactController");
 
 const invoiceController = require("../controllers/invoiceController");
@@ -59,7 +58,7 @@ router.get(
   getUnpaidTransactions
 );
 
-//------------------------------------------------------------
+//----------------------------invoiceController--------------------------------
 router.get(
   "/transactions/invoice/:transactId",
   // authenticateAndAuthorize(),

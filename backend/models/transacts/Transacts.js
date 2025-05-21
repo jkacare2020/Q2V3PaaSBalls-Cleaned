@@ -11,6 +11,7 @@ const TransactSchema = new mongoose.Schema(
     sellerId: { type: String, required: true }, // seller (product.userId)
     sellerUserName: { type: String },
     sellerDisplayName: { type: String },
+    sellerCompanyName: { type: String },
 
     // ✅ Add this
     assignedMerchant: { type: String }, // From client.user.assignedMerchant
