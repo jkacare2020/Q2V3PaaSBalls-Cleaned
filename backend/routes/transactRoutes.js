@@ -11,6 +11,7 @@ const {
   getMyTransactions,
   getTransactionsBySeller,
   getUnpaidTransactions,
+  getDraftTransactions,
 } = require("../controllers/transactController");
 
 const invoiceController = require("../controllers/invoiceController");
@@ -73,6 +74,8 @@ router.get("/transactions/:id", (req, res, next) => {
   );
   next(); // Pass control to the next middleware or controller
 });
+
+router.get("/transactions/drafts", getDraftTransactions);
 
 // Route to get a single transaction by ID url params
 router.get("/transactions/:id", authenticateAndAuthorize(), getTransactionById); // This handles the actual logic

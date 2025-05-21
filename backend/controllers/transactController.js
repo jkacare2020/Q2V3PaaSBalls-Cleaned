@@ -322,6 +322,8 @@ exports.createNewTransaction = async (req, res) => {
       req_date: transactionDate,
       createdAt: transactionDate,
       updatedAt: transactionDate,
+      // ✅ This line enables Save for Later support
+      isDraft: req.body.isDraft === true,
     });
 
     console.log("📝 Saving new transaction:", newTransaction);
@@ -335,22 +337,28 @@ exports.createNewTransaction = async (req, res) => {
 
 //--------------------------Update Transaction Button clicked----------------
 exports.updateTransaction = async (req, res) => {
-  const { id } = req.params; // Transaction ID
-  let updatedData = req.body; // New transaction data
-
-  console.log("Transaction ID:", id);
-  console.log("Payload for Update:", updatedData);
+  const { id } = req.params;
+  const updatedData = req.body;
 
   try {
-    // Fetch the existing transaction
+    const userId = req.user.uid; // ✅ FIX: define userId from middleware
+
     const existingTransaction = await Transact.findById(id);
     if (!existingTransaction) {
       return res.status(404).json({ message: "Transaction not found." });
     }
 
-    console.log("Existing Transaction:", existingTransaction);
+    // ✅ Authorization check: only owner or seller can edit
+    if (
+      userId !== existingTransaction.sellerId &&
+      userId !== existingTransaction.owner
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to update this transaction." });
+    }
 
-    // Identify modified fields
+    // ✅ Determine which fields changed
     const modifiedFields = {};
     for (const key in updatedData) {
       if (updatedData[key] !== existingTransaction[key]) {
@@ -358,7 +366,8 @@ exports.updateTransaction = async (req, res) => {
       }
     }
 
-    console.log("Modified Fields:", modifiedFields);
+    // Remove _id if included
+    delete modifiedFields._id;
 
     if (Object.keys(modifiedFields).length === 0) {
       return res
@@ -366,23 +375,11 @@ exports.updateTransaction = async (req, res) => {
         .json({ message: "No changes detected for update." });
     }
 
-    // Ensure _id is not included in the update
-    if (modifiedFields._id) {
-      delete modifiedFields._id;
-    }
-
-    // Apply updates using $set
     const updatedTransaction = await Transact.findByIdAndUpdate(
       id,
       { $set: modifiedFields },
       { new: true, runValidators: true }
     );
-
-    console.log("Updated Transaction:", updatedTransaction);
-
-    if (!updatedTransaction) {
-      return res.status(404).json({ message: "Transaction not found." });
-    }
 
     res.status(200).json({
       success: true,
@@ -556,5 +553,17 @@ exports.generateInvoice = async (req, res) => {
   } catch (error) {
     console.error("PDF generation error:", error);
     res.status(500).send("Could not generate invoice");
+  }
+};
+//-----------------------------------
+
+exports.getDraftTransactions = async (req, res) => {
+  try {
+    const { uid } = req.user;
+    const drafts = await Transact.find({ owner: uid, isDraft: true });
+    res.json(drafts);
+  } catch (err) {
+    console.error("Error fetching draft transactions:", err);
+    res.status(500).json({ error: "Failed to fetch draft transactions." });
   }
 };

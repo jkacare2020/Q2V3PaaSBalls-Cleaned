@@ -65,6 +65,12 @@
             type="text"
           />
           <q-btn label="Submit Transaction" @click="submitTransaction" />
+          <q-btn
+            label="Save for Later"
+            color="secondary"
+            class="q-ml-sm"
+            @click="saveAsDraft"
+          />
         </q-form>
       </q-card-section>
     </q-card>
@@ -142,6 +148,41 @@ async function submitTransaction() {
     $q.notify({
       color: "negative",
       message: "Failed to submit transaction.",
+      icon: "error",
+      position: "center",
+    });
+  } finally {
+    isSubmitting.value = false;
+  }
+}
+//-------------------------------Save as Draft ------------------
+async function saveAsDraft() {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
+  try {
+    const token = await auth.currentUser.getIdToken();
+
+    const draftPayload = {
+      ...transactionData.value,
+      tran_status: "unpaid",
+      isDraft: true,
+    };
+
+    await apiNode.post("/api/transactions/new", draftPayload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    $q.notify({
+      color: "info",
+      message: "Transaction saved as draft!",
+      icon: "bookmark",
+      position: "center",
+    });
+  } catch (error) {
+    console.error("Error saving draft:", error);
+    $q.notify({
+      color: "negative",
+      message: "Failed to save draft.",
       icon: "error",
       position: "center",
     });

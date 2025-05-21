@@ -111,6 +111,7 @@
             dense
             class="q-mb-md"
             type="text"
+            :disable="!canUpdateStatus"
           />
 
           <q-btn
@@ -136,13 +137,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
-import axios from "axios";
-import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
-
+import { apiNode } from "boot/apiNode"; // ✅ Make sure to import it
 import { watch } from "vue";
+import { getAuth } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "src/firebase/init"; // Firestore init
+
+const currentUser = ref(null);
+const userRole = ref("user");
+const userRoles = ref([]);
 
 const router = useRouter();
 const $q = useQuasar();
@@ -183,6 +189,29 @@ console.log(
   "ViewTransact.vue: Current route object:",
   router.currentRoute.value
 );
+
+onMounted(async () => {
+  const user = getAuth().currentUser;
+  if (user) {
+    currentUser.value = user;
+
+    const docSnap = await getDoc(doc(db, "users", user.uid));
+    if (docSnap.exists()) {
+      const roles = docSnap.data().role;
+      userRoles.value = Array.isArray(roles) ? roles : [roles];
+    }
+  }
+
+  fetchTransactInfo();
+});
+
+const canUpdateStatus = computed(() => {
+  return (
+    userRoles.value.includes("admin") ||
+    userRoles.value.includes("merchant") ||
+    currentUser.value?.uid === transactInfo.sellerId
+  );
+});
 
 onMounted(() => {
   console.log(

@@ -53,7 +53,7 @@
             icon="shopping_cart"
             flat
             color="orange"
-            label="Buy"
+            label="Add to Cart"
             @click.stop="goToTransaction(item)"
           />
           <q-btn

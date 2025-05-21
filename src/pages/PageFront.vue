@@ -93,6 +93,30 @@
         </q-card-section>
         <q-tooltip>Upload before & after images for AI evaluation</q-tooltip>
       </q-card>
+      <q-card
+        class="my-card relative-position"
+        flat
+        bordered
+        clickable
+        @click="$router.push('/mongo-mytransacts')"
+      >
+        <q-card-section>
+          <q-icon name="shopping_cart" size="xl" color="primary" />
+          <div class="text-h6 q-mt-sm">Resume Cart</div>
+          <q-tooltip v-if="showResumeCart"
+            >You have {{ cartCount }} item(s) in your cart</q-tooltip
+          >
+          <q-badge
+            v-if="showResumeCart"
+            color="red"
+            floating
+            rounded
+            style="position: absolute; top: 5px; right: 5px"
+          >
+            {{ cartCount }}
+          </q-badge>
+        </q-card-section>
+      </q-card>
     </div>
 
     <div class="text-caption text-grey-6 q-mt-xl">
@@ -100,6 +124,34 @@
     </div>
   </q-page>
 </template>
+
+<script setup>
+import { ref, onMounted } from "vue";
+import { apiNode } from "src/boot/apiNode";
+import { auth } from "src/firebase/init";
+
+const showResumeCart = ref(false);
+const cartCount = ref(0);
+
+onMounted(async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const token = await user.getIdToken();
+  try {
+    const res = await apiNode.get("/api/transactions/drafts", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.data && res.data.length > 0) {
+      showResumeCart.value = true;
+      cartCount.value = res.data.length;
+    }
+  } catch (err) {
+    console.error("Error checking cart drafts:", err);
+  }
+});
+</script>
 
 <style scoped>
 .my-card {

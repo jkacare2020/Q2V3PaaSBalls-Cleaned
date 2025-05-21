@@ -29,6 +29,7 @@ const TransactSchema = new mongoose.Schema(
     check_type: String,
     tran_status: { type: String, default: "unpaid" },
     quantity: { type: Number, default: 1 },
+    isDraft: { type: Boolean, default: false }, // 👈 Add this
   },
   {
     timestamps: true,
