@@ -1,5 +1,4 @@
 <template>
-  <!--PageFront.vue -->
   <q-page class="q-pa-lg column items-center justify-center">
     <div class="text-center q-mb-xl">
       <q-img
@@ -77,9 +76,10 @@
       >
         <q-card-section>
           <q-icon name="smart_toy" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">HR Assist Bot</div>
+          <div class="text-h6 q-mt-sm">AI Assist Bot</div>
         </q-card-section>
       </q-card>
+
       <q-card
         class="my-card"
         flat
@@ -93,6 +93,7 @@
         </q-card-section>
         <q-tooltip>Upload before & after images for AI evaluation</q-tooltip>
       </q-card>
+
       <q-card
         class="my-card relative-position"
         flat
@@ -103,9 +104,9 @@
         <q-card-section>
           <q-icon name="shopping_cart" size="xl" color="primary" />
           <div class="text-h6 q-mt-sm">Resume Cart</div>
-          <q-tooltip v-if="showResumeCart"
-            >You have {{ cartCount }} item(s) in your cart</q-tooltip
-          >
+          <q-tooltip v-if="showResumeCart">
+            You have {{ cartCount }} item(s) in your cart
+          </q-tooltip>
           <q-badge
             v-if="showResumeCart"
             color="red"
@@ -151,6 +152,36 @@ onMounted(async () => {
     console.error("Error checking cart drafts:", err);
   }
 });
+</script>
+
+<script>
+export default {
+  name: "PageFront",
+  meta() {
+    return {
+      title: "IsmeHr | AI Cleaning Grading & HR Assistant",
+      meta: [
+        {
+          name: "description",
+          content:
+            "Upload before-and-after cleaning photos and get an AI-generated grade using GPT-4 Vision. Manage resumes, access HR tools, and shop with confidence.",
+        },
+        { name: "robots", content: "index, follow" },
+        { property: "og:title", content: "IsmeHr | AI Cleaning Grading" },
+        {
+          property: "og:description",
+          content:
+            "Get instant AI feedback on cleanliness, explore the marketplace, or chat with our HR AI assistant.",
+        },
+        {
+          property: "og:image",
+          content: "https://ismehr.com/icons/apple-touch-icon.png",
+        },
+        { property: "og:url", content: "https://ismehr.com" },
+      ],
+    };
+  },
+};
 </script>
 
 <style scoped>

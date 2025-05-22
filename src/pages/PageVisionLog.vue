@@ -1,5 +1,5 @@
 <template>
-  <q-page class="q-pa-md">
+  <q-page class="q-pa-md" :class="{ 'bg-dark text-white': isDark }">
     <div class="row items-center q-mb-md justify-between">
       <div class="text-h5">🧠 Vision Logs</div>
       <q-btn
@@ -18,7 +18,7 @@
 
     <q-markup-table
       v-if="$q.screen.gt.sm && filteredLogs.length"
-      class="bg-grey-1 q-mb-lg"
+      :class="[isDark ? 'bg-grey-9 text-white' : 'bg-grey-1']"
       flat
       bordered
       wrap-cells
@@ -149,6 +149,7 @@ import { apiNode } from "src/boot/apiNode";
 import { auth } from "src/firebase/init";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { onAuthStateChanged } from "firebase/auth";
 
 import { useRouter } from "vue-router";
 const router = useRouter();
@@ -164,22 +165,26 @@ const openImagePair = (urls) => {
   showPreviewDialog.value = true;
 };
 
-onMounted(async () => {
-  try {
-    const user = auth.currentUser;
+const isDark = computed(() => $q.dark.isActive);
+
+onMounted(() => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) return;
 
     const token = await user.getIdToken();
-    const res = await apiNode.get("/api/chatbot/vision-logs", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    visionLogs.value = res.data;
-  } catch (err) {
-    console.error("Failed to load vision logs:", err);
-    $q.notify({ type: "negative", message: "Failed to load vision logs." });
-  }
+
+    try {
+      const res = await apiNode.get("/api/chatbot/vision-logs", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      visionLogs.value = res.data;
+    } catch (err) {
+      console.error("Failed to load vision logs:", err);
+      $q.notify({ type: "negative", message: "Failed to load vision logs." });
+    }
+  });
 });
 
 const filteredLogs = computed(() => {

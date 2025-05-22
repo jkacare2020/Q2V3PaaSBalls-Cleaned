@@ -1,89 +1,93 @@
 import { useStoreUsers } from "src/stores/storeUsers";
-import ResumeUpload from "src/pages/feature/py_PageResumeUpload.vue"; // ✅ Import the Resume Upload Page
+// import ResumeUpload from "src/pages/feature/py_PageResumeUpload.vue"; // ✅ Import the Resume Upload Page
 
 const routes = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
     children: [
+      // ✅ Homepage
       {
         path: "",
-        component: () => import("pages/PageFront.vue"),
-        meta: { requiresAuth: true },
+        redirect: "front-page",
       },
+
       {
-        path: "settings",
-        component: () => import("pages/PageSettings.vue"),
-        meta: { requiresAuth: true },
-      },
-      {
-        path: "/login",
-        component: () => import("pages/Login.vue"),
-      },
-      {
-        path: "/signup",
-        component: () => import("pages/Signup.vue"),
-      },
-      {
-        path: "/front-page",
+        path: "front-page",
         name: "front-page",
         component: () => import("pages/PageFront.vue"),
       },
+
       {
-        path: "/user/:username",
+        path: "user/:username",
         name: "PublicUserProfile",
         component: () => import("pages/PageMentionUserProfileUpdate.vue"),
       },
+      // ✅ Public Auth Routes
       {
-        path: "/profile/edit/:id?",
+        path: "login",
+        component: () => import("pages/Login.vue"),
+      },
+      {
+        path: "signup",
+        component: () => import("pages/Signup.vue"),
+      },
+      {
+        path: "profile/edit/:id?",
         name: "UserProfileEdit",
         component: () => import("pages/UserProfile.vue"),
         meta: { requiresAuth: true },
       },
 
       {
-        path: "/camera",
+        path: "settings",
+        component: () => import("pages/PageSettings.vue"),
+        meta: { requiresAuth: true },
+      },
+
+      {
+        path: "camera",
         component: () => import("pages/PageCamera.vue"),
         meta: { requiresAuth: true },
         name: "Camera",
       },
       {
-        path: "/videoCamera",
+        path: "videoCamera",
         component: () => import("pages/PageVideoCam.vue"),
         meta: { requiresAuth: true },
         name: "VideoCamera",
       },
       {
-        path: "/video-posts",
+        path: "video-posts",
         component: () => import("pages/PageVideoView.vue"),
         meta: { requiresAuth: true },
         name: "VideoPost",
       },
       {
-        path: "/audio-posts",
+        path: "audio-posts",
         component: () => import("pages/PageAudioView.vue"),
         meta: { requiresAuth: true },
         name: "audioPost",
       },
-      { path: "/photos", component: () => import("pages/PageHome.vue") },
-      { path: "/videos", component: () => import("pages/PageVideoView.vue") },
+      { path: "photos", component: () => import("pages/PageHome.vue") },
+      { path: "videos", component: () => import("pages/PageVideoView.vue") },
       {
-        path: "/audios-AI-stt",
+        path: "audios-AI-stt",
         component: () => import("pages/PageSTTAudio.vue"),
       },
-      { path: "/audios", component: () => import("pages/PageAudio.vue") },
+      { path: "audios", component: () => import("pages/PageAudio.vue") },
 
       {
-        path: "/chatBot",
+        path: "chatBot",
         component: () => import("pages/feature/PageChatBotABMode.vue"),
       },
       {
-        path: "/ChatbotHistory",
+        path: "ChatbotHistory",
         component: () => import("pages/feature/PageChatbotHistory.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/firestore-users",
+        path: "firestore-users",
         component: () => import("pages/PageFirestoreUsers.vue"),
         meta: { requiresAuth: true },
         async beforeEnter(to, from, next) {
@@ -109,112 +113,112 @@ const routes = [
       },
 
       {
-        path: "/mongo-users",
+        path: "mongo-users",
         component: () => import("pages/PageMongoUsers.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/mongo-transacts",
+        path: "mongo-transacts",
         component: () => import("pages/PageMongoTran.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/mongo-mytransacts",
+        path: "mongo-mytransacts",
         component: () => import("pages/PageMongo-MyTransacts.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/mongo-AllTransacts",
+        path: "mongo-AllTransacts",
         component: () => import("pages/PageMongo-AllTransacts.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/view-transaction/:transactId",
+        path: "view-transaction/:transactId",
         component: () => import("pages/ViewTransact.vue"),
         meta: { requiresAuth: true },
       },
 
       // Route for creating a new transaction
       {
-        path: "/new-transaction",
+        path: "new-transaction",
         component: () => import("pages/RetieveTranHistory.vue"),
         meta: { requiresAuth: true },
       },
 
       {
-        path: "/ledger",
+        path: "ledger",
         component: () => import("pages/PageEntries.vue"),
         meta: { requiresAuth: true },
       },
 
       {
-        path: "/merchant-transactions",
+        path: "merchant-transactions",
         component: () => import("pages/PageSellerTransacts.vue"),
         meta: { requiresAuth: true },
       },
 
       {
-        path: "/tenants",
+        path: "tenants",
         component: () => import("pages/feature/PageTenantList.vue"),
       },
       {
-        path: "/tenants/add",
+        path: "tenants/add",
         component: () => import("pages/feature/PageTenantAdd.vue"),
       },
       {
-        path: "/tenants/edit/:id",
+        path: "tenants/edit/:id",
         component: () => import("pages/feature/PageTenantEdit.vue"),
       },
       {
-        path: "/py_loginPage",
+        path: "py_loginPage",
         component: () => import("pages/feature/py_LoginPage.vue"),
       },
       {
-        path: "/py_registerPage",
+        path: "py_registerPage",
         component: () => import("pages/feature/py_RegisterPage.vue"),
       },
       {
-        path: "/py_PageTodos",
+        path: "py_PageTodos",
         component: () => import("pages/feature/py_TodosPage.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/py_PageUsers",
+        path: "py_PageUsers",
         component: () => import("pages/feature/py_PageUsers.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/add-todo",
+        path: "add-todo",
         component: () => import("pages/feature/py_AddTodosPage.vue"),
       },
       {
-        path: "/edit-todo/:id",
+        path: "edit-todo/:id",
         component: () => import("pages/feature/py_EditTodosPage.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/hr-agent",
+        path: "hr-agent",
         component: () => import("pages/feature/py_PageHRChat.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/hr-chat",
+        path: "hr-chat",
         component: () => import("pages/feature/py_PageHRChat.vue"),
       },
       {
-        path: "/resume-history",
+        path: "resume-history",
         component: () => import("pages/feature/py_PageResumeHistory.vue"),
       },
       {
-        path: "/job-description",
+        path: "job-description",
         component: () => import("pages/feature/py_PageJobDescription.vue"),
       },
       {
-        path: "/public/job-opening",
+        path: "public/job-opening",
         component: () => import("pages/feature/py_PublicJobBoard.vue"),
       },
       {
-        path: "/resume-upload",
+        path: "resume-upload",
         component: () => import("pages/feature/py_PageResumeUpload.vue"), // ✅ Lazy-loaded component
         props: (route) => ({
           jobId: route.query.jobId,
@@ -224,61 +228,61 @@ const routes = [
       },
 
       {
-        path: "/resume-screened",
+        path: "resume-screened",
         component: () => import("pages/feature/py_PageAI-screenedResumes.vue"),
         meta: { requiresAuth: true }, // Only allow authenticated users
       },
       {
-        path: "/semantic-match",
+        path: "semantic-match",
         component: () => import("pages/feature/py_PageJobMatcher.vue"),
         meta: { requiresAuth: true }, // Optional: restrict to logged-in users
       },
       {
-        path: "/upload-success",
+        path: "upload-success",
         component: () => import("pages/feature/py_SuccessfulPage.vue"),
       },
       // router/index.js or wherever you define routes
       {
-        path: "/replies/:postId/:commentId",
+        path: "replies/:postId/:commentId",
         name: "PageReplies",
         component: () => import("pages/PageReplies.vue"),
       },
       {
-        path: "/post-product/:postId",
+        path: "post-product/:postId",
         component: () => import("pages/feature/PostProduct.vue"),
       },
       {
-        path: "/my-products",
+        path: "my-products",
         name: "ProductList",
         component: () => import("pages/feature/ProductList.vue"),
       },
       {
-        path: "/marketplace",
+        path: "marketplace",
         name: "marketplace",
         component: () => import("pages/feature/PageMarketplace.vue"),
       },
 
       {
-        path: "/private-posts",
+        path: "private-posts",
         component: () => import("pages/PagePrivatePosts.vue"),
       },
       {
-        path: "/assign-client",
+        path: "assign-client",
         component: () => import("pages/PageAssignClient.vue"),
       },
       {
-        path: "/preSignup",
+        path: "preSignup",
         component: () => import("pages/PageRegisterClient.vue"),
       },
 
       {
-        path: "/products/:id",
+        path: "products/:id",
         name: "ProductDetails",
         component: () => import("pages/feature/PostProduct.vue"), // ✅ or your correct file
       },
 
       {
-        path: "/product-view/:id",
+        path: "product-view/:id",
         component: () => import("pages/feature/PostProductMongo.vue"),
       },
 
@@ -288,22 +292,22 @@ const routes = [
         component: () => import("pages/feature/PageNewTransactionCart.vue"),
       },
       {
-        path: "/transactions-unpaid",
+        path: "transactions-unpaid",
         name: "CartPage_Unpaid",
         component: () => import("pages/PageCart.vue"),
         meta: { requiresAuth: true },
       },
       {
-        path: "/vision-submit",
+        path: "vision-submit",
         component: () => import("pages/PageVisionSubmit.vue"),
       },
       {
-        path: "/vision-bot",
+        path: "vision-bot",
         component: () => import("pages/PageVisionLog.vue"), // Adjust if path differs
         meta: { requiresAuth: true },
       },
       {
-        path: "/vision-details",
+        path: "vision-details",
         component: () => import("pages/PageVisionDetails.vue"), // Adjust if path differs
         meta: { requiresAuth: true },
       },

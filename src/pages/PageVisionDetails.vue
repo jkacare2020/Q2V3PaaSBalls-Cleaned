@@ -1,8 +1,13 @@
 <template>
-  <q-page class="q-pa-md">
+  <q-page class="q-pa-md" :class="{ 'bg-dark text-white': isDark }">
     <div class="text-h5 q-mb-md">🧼 Restoration Job Evaluation</div>
 
-    <q-markup-table v-if="evaluation" flat bordered class="bg-grey-1">
+    <q-markup-table
+      v-if="evaluation"
+      flat
+      bordered
+      :class="[isDark ? 'bg-grey-9 text-white' : 'bg-grey-1']"
+    >
       <thead>
         <tr>
           <th style="width: 200px">Metric</th>
@@ -63,102 +68,73 @@
       </div>
     </div>
 
-    <q-banner v-else class="bg-grey-3 q-mt-md">
+    <q-banner v-else :class="[isDark ? 'bg-grey-10 text-white' : 'bg-grey-3']">
       No evaluation data available.
     </q-banner>
   </q-page>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { apiNode } from "src/boot/apiNode";
 import { auth } from "src/firebase/init";
 import Chart from "chart.js/auto";
 import { useRoute } from "vue-router";
+import { useQuasar } from "quasar";
+import { onAuthStateChanged } from "firebase/auth";
+
+const $q = useQuasar();
+const isDark = computed(() => $q.dark.isActive);
+
 const route = useRoute();
 
 const evaluation = ref(null);
 
 //-----------------------------------------
 
-onMounted(async () => {
-  const user = auth.currentUser;
-  if (!user) return;
+onMounted(() => {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
 
-  const token = await user.getIdToken();
-  const sessionId = route.query.sessionId;
+    const token = await user.getIdToken();
+    const sessionId = route.query.sessionId;
 
-  try {
-    const url = sessionId
-      ? `/api/chatbot/vision-eval/${sessionId}`
-      : `/api/chatbot/latest-vision-eval`;
+    try {
+      const url = sessionId
+        ? `/api/chatbot/vision-eval/${sessionId}`
+        : `/api/chatbot/latest-vision-eval`;
 
-    const res = await apiNode.get(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      const res = await apiNode.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    const raw = res.data;
-    let parsed = raw;
+      const raw = res.data;
+      let parsed = raw;
 
-    // 🧠 Robust parser for `response.text` format
-    if (raw?.text && typeof raw.text === "string") {
-      try {
-        const cleanText = raw.text
-          .replace(/^```json/, "")
-          .replace(/^```/, "")
-          .replace(/```$/, "")
-          .trim();
+      // 🧠 Robust parser for `response.text` format
+      if (raw?.text && typeof raw.text === "string") {
+        try {
+          const cleanText = raw.text
+            .replace(/^```json/, "")
+            .replace(/^```/, "")
+            .replace(/```$/, "")
+            .trim();
 
-        parsed = JSON.parse(cleanText);
-      } catch (err) {
-        console.warn("⚠️ Failed to parse evaluation text as JSON:", err);
+          parsed = JSON.parse(cleanText);
+        } catch (err) {
+          console.warn("⚠️ Failed to parse evaluation text as JSON:", err);
+        }
       }
-    }
 
-    evaluation.value = parsed;
-    drawCharts();
-  } catch (err) {
-    console.error("❌ Failed to load evaluation:", err);
-  }
+      evaluation.value = parsed;
+      drawCharts();
+    } catch (err) {
+      console.error("❌ Failed to load evaluation:", err);
+    }
+  });
 });
 //--------------------------------------------------------
 
-// onMounted(async () => {
-//   const user = auth.currentUser;
-//   if (!user) return;
-//   const token = await user.getIdToken();
-//   try {
-//     const res = await apiNode.get("/api/chatbot/latest-vision-eval", {
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-
-//     const raw = res.data;
-
-//     let parsed = raw;
-
-//     // If `text` is a stringified JSON with ```json...``` wrapper
-//     if (raw?.text && typeof raw.text === "string") {
-//       try {
-//         const cleanText = raw.text
-//           .replace(/^```json/, "")
-//           .replace(/^```/, "")
-//           .replace(/```$/, "")
-//           .trim();
-
-//         parsed = JSON.parse(cleanText);
-//       } catch (err) {
-//         console.warn("Text field not JSON:", err);
-//       }
-//     }
-
-//     evaluation.value = parsed;
-
-//     drawCharts();
-//   } catch (err) {
-//     console.error("Failed to load evaluation:", err);
-//   }
-// });
-//-------------------------------
 function drawCharts() {
   setTimeout(() => {
     if (!evaluation.value) return;
