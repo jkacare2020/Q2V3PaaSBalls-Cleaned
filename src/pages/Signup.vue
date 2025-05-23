@@ -65,6 +65,28 @@
             label="Username"
             :rules="[(value) => !!value || 'Username is required']"
           />
+          <q-checkbox
+            v-model="agreeToPolicy"
+            :rules="[(val) => val || 'You must agree to the policies.']"
+            class="q-mt-md"
+          >
+            <span>
+              I agree to the
+              <a
+                href="/terms"
+                target="_blank"
+                class="text-primary text-underline"
+                >Terms</a
+              >
+
+              <a href="/privacy" target="_blank" class="text-primary"
+                >Privacy Policy</a
+              >, and
+              <a href="/content-policy" target="_blank" class="text-primary"
+                >Content Policy</a
+              >.
+            </span>
+          </q-checkbox>
 
           <q-btn
             label="Sign Up"
@@ -85,9 +107,8 @@ import { useStoreAuth } from "src/stores/storeAuth";
 import { useRouter } from "vue-router";
 import { usePhoneFormat } from "src/use/formatPhone";
 import { useQuasar } from "quasar"; // Import Quasar Notify
-// import { collection, query, where, getDocs } from "firebase/firestore";
-// import { db } from "src/firebase/init";
 
+const agreeToPolicy = ref(false);
 const authStore = useStoreAuth();
 const router = useRouter();
 const $q = useQuasar(); // Quasar instance for notifications
@@ -120,6 +141,8 @@ const registerUser = async () => {
       email: credentials.value.email,
       companyName: credentials.value.companyName,
       userName: credentials.value.userName,
+      agreeToPolicy: true,
+      policyAcceptedAt: new Date().toISOString(),
     });
     // Navigate to home page or dashboard after successful registration
     $q.notify({
@@ -128,6 +151,8 @@ const registerUser = async () => {
       icon: "check_circle",
       position: "top",
     });
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     router.push("/");
   } catch (error) {
     console.error("Error during registration:", error.message);

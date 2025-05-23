@@ -311,6 +311,20 @@ const routes = [
         component: () => import("pages/PageVisionDetails.vue"), // Adjust if path differs
         meta: { requiresAuth: true },
       },
+
+      //-------------------------------------------------------
+      {
+        path: "privacy",
+        component: () => import("pages/PagePrivacy.vue"),
+      },
+      {
+        path: "terms",
+        component: () => import("pages/PageTerms.vue"),
+      },
+      {
+        path: "content-policy",
+        component: () => import("pages/PageContentPolicy.vue"),
+      },
     ],
   },
 

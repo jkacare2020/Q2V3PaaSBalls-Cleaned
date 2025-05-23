@@ -17,24 +17,40 @@
           accept="image/*"
           filled
         />
-
-        <q-input
-          v-model="prompt"
-          type="textarea"
-          label="Custom Prompt for GPT"
-          autogrow
-          outlined
-          :rules="[(val) => !!val || 'Prompt is required']"
-          class="q-mt-md"
-        />
-
+        <div class="q-mt-md" style="max-width: 300px">
+          <q-select
+            v-model="itemType"
+            :options="itemOptions"
+            label="Item Type"
+            outlined
+            dense
+            style="max-width: 300px"
+          />
+        </div>
         <q-btn
           type="submit"
           color="primary"
           label="Run AI Evaluation"
           :loading="isSubmitting"
         />
+
+        <q-btn
+          label="Reset Prompt"
+          flat
+          color="secondary"
+          @click="resetPrompt"
+        />
       </div>
+      <!-- 📝 Prompt Textarea -->
+      <q-input
+        v-model="prompt"
+        type="textarea"
+        label="Custom Prompt for GPT"
+        autogrow
+        outlined
+        :rules="[(val) => !!val || 'Prompt is required']"
+        class="q-mt-md"
+      />
     </q-form>
 
     <q-separator class="q-my-md" />
@@ -55,7 +71,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { auth } from "src/firebase/init";
 import { apiNode } from "boot/apiNode";
@@ -64,8 +80,29 @@ const router = useRouter();
 const $q = useQuasar();
 const dirtyImage = ref(null);
 const cleanedImage = ref(null);
-// const prompt = ref("Compare the cleaning result of this item.");
-const prompt = ref(`Please evaluate the cleaning result of this leather bag.
+
+const aiResponse = ref(null);
+const isSubmitting = ref(false);
+
+// const itemType = ref("leather bag");
+const prompt = ref("");
+
+const itemOptions = [
+  { label: "👜 leather bag", value: "leather bag" },
+  { label: "👞 shoe", value: "shoe" },
+  { label: "🧥 jacket", value: "jacket" },
+  { label: "🧼 carpet", value: "carpet" },
+];
+
+const itemType = ref(itemOptions[0]); // ✅ Default selection with emoji la
+
+function resetPrompt() {
+  prompt.value = ""; // or regenerate based on itemType if you want
+}
+
+// Step 2: Define the reusable prompt generator function
+function generatePrompt(type) {
+  return `Please evaluate the cleaning result of this ${type}.
 
 The first image shows the condition *before cleaning*, and the second image shows it *after cleaning*.
 
@@ -76,21 +113,37 @@ Your task:
 Respond ONLY with a JSON object with these fields:
 
 {
-  "dirtyAreas": integer, // Total distinct dirty regions seen in the before image (e.g. stains, dark spots, grime)
+  "dirtyAreas": integer,
   "cleaningSuccess": "Short summary of how well the dirty areas were cleaned",
-  "cleaningScore": integer (0-100), // Based on cleanliness and visual improvement
-  "colorRestoration": integer (0-100), // Based on color consistency and vibrancy after cleaning
+  "cleaningScore": integer (0-100),
+  "colorRestoration": integer (0-100),
   "scuffVisibility": "Describe if scuffs are still visible or reduced",
-  "textureAndShine": "Describe how the leather texture and shine changed",
-  "damageDetected": boolean, // true if cleaning caused new visible damage
+  "textureAndShine": "Describe how the ${type} texture and shine changed",
+  "damageDetected": boolean,
   "summary": "Final judgment of the cleaning effectiveness"
 }
 
-Format only as raw JSON (no extra text, no explanation).
-`);
+Format only as raw JSON (no extra text, no explanation).`;
+}
 
-const aiResponse = ref(null);
-const isSubmitting = ref(false);
+// Step 3: Watch for item type change
+watch(itemType, (newTypeObj) => {
+  const newType = newTypeObj?.value || "";
+  if (
+    !prompt.value ||
+    prompt.value.includes("Please evaluate the cleaning result")
+  ) {
+    prompt.value = `Please evaluate the cleaning result of this ${newType}...`;
+  }
+});
+
+// 🧠 Initialize prompt on page load
+onMounted(() => {
+  if (!prompt.value) {
+    prompt.value = generatePrompt(itemType.value);
+  }
+});
+//------------------------------------
 
 async function submitToAI() {
   if (!dirtyImage.value || !cleanedImage.value) {
@@ -130,5 +183,9 @@ async function submitToAI() {
 <style scoped>
 .q-file {
   max-width: 400px;
+}
+
+.item-select-box {
+  max-width: 300px;
 }
 </style>

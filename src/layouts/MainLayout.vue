@@ -176,6 +176,13 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+    <q-footer class="bg-grey-10 text-white">
+      <div class="q-pa-sm text-center">
+        <q-btn flat label="Privacy" to="/privacy" />
+        <q-btn flat label="Terms" to="/terms" />
+        <q-btn flat label="Content Policy" to="/content-policy" />
+      </div>
+    </q-footer>
   </q-layout>
 </template>
 
@@ -220,6 +227,10 @@ const finalAvatarUrl = computed(() => userAvatar.value || defaultAvatar);
 
 // 🚀 Load avatar from Firebase Firestore
 async function loadAvatar(uid) {
+  if (!uid) {
+    console.warn("⏳ Skipping avatar load: UID is undefined");
+    return;
+  }
   try {
     console.log("👤 Loading avatar for:", uid);
     const avatarCollectionRef = collection(db, `users/${uid}/avatar`);
@@ -238,6 +249,7 @@ async function loadAvatar(uid) {
     console.error("❌ Error loading avatar from Firestore:", err);
   }
 }
+
 //----------------------------------------------------------
 
 onMounted(() => {
