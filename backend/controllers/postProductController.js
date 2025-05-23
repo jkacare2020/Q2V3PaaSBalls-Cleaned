@@ -196,21 +196,62 @@ exports.grantPrivateAccessToClientFirebase = async (req, res) => {
     res.status(500).json({ message: "Failed to grant access" });
   }
 };
+//--------------------------------------------------------------------------
+// exports.getPrivatePostsByClientFirebase = async (req, res) => {
+//   const email = req.user?.email;
+//   if (!email) return res.status(400).json({ message: "Missing email" });
 
+//   try {
+//     const snapshot = await admin.firestore().collection("posts").get();
+
+//     const matched = snapshot.docs
+//       .map((doc) => ({ id: doc.id, ...doc.data() }))
+//       .filter((doc) =>
+//         doc.privateAccess?.some((entry) => entry.email === email)
+//       );
+
+//     res.status(200).json(matched);
+//   } catch (err) {
+//     console.error("Fetch error:", err);
+//     res.status(500).json({ message: "Failed to fetch private posts" });
+//   }
+// };
+//--------------------------------------------------------------------
 exports.getPrivatePostsByClientFirebase = async (req, res) => {
-  const email = req.user?.email;
-  if (!email) return res.status(400).json({ message: "Missing email" });
+  const firebaseUser = req.user; // From Firebase Auth middleware
+  const { email: queryEmail, passcode } = req.body;
 
   try {
     const snapshot = await admin.firestore().collection("posts").get();
 
-    const matched = snapshot.docs
+    const matchedPosts = snapshot.docs
       .map((doc) => ({ id: doc.id, ...doc.data() }))
-      .filter((doc) =>
-        doc.privateAccess?.some((entry) => entry.email === email)
-      );
+      .filter((doc) => {
+        const accessList = doc.privateAccess || [];
 
-    res.status(200).json(matched);
+        // 🟢 Case 1: Logged-in Firebase user (match by UID)
+        if (firebaseUser?.uid) {
+          return accessList.some((entry) => entry.uid === firebaseUser.uid);
+        }
+
+        // 🔵 Case 2: Guest access via email + passcode
+        if (queryEmail && passcode) {
+          return accessList.some(
+            (entry) => entry.email === queryEmail && entry.passcode === passcode
+          );
+        }
+
+        // ❌ No valid access method
+        return false;
+      });
+
+    if (matchedPosts.length === 0) {
+      return res
+        .status(403)
+        .json({ message: "No matching private posts found" });
+    }
+
+    res.status(200).json(matchedPosts);
   } catch (err) {
     console.error("Fetch error:", err);
     res.status(500).json({ message: "Failed to fetch private posts" });
