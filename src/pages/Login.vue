@@ -37,6 +37,7 @@ import { useStoreAuth } from "../stores/storeAuth";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { apiNode } from "boot/apiNode";
+import { useStoreUsers } from "src/stores/storeUsers"; // ⬅️ Add this line
 
 const email = ref("");
 const password = ref("");
@@ -69,7 +70,10 @@ async function login() {
   try {
     await storeAuth.loginUser({ email: email.value, password: password.value });
 
-    // ✅ Mark user online in Realtime Database
+    const storeUsers = useStoreUsers(); // Inject user store
+    await storeUsers.init(); // ⬅️ Load latest user document
+
+    // ✅ Mark online in Realtime Database
     const userId = storeAuth.user.uid;
     const userPresenceRef = dbRef(dbRealtime, `usersPresence/${userId}`);
     await set(userPresenceRef, {
@@ -85,14 +89,18 @@ async function login() {
         },
       }
     );
-
-    // ✅ Setup disconnect logic to mark offline
     onDisconnect(userPresenceRef).set({
       online: false,
       lastSeen: Date.now(),
     });
 
-    router.push("/front-page"); // Redirect after successful login
+    // ✅ Conditional redirect
+    if (storeUsers.user?.pendingInvite?.merchantId) {
+      router.push("/pending-invite");
+    } else {
+      router.push("/front-page");
+    }
+
     $q.notify({
       color: "positive",
       message: "Login successful! Welcome back.",

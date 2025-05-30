@@ -39,7 +39,11 @@ exports.assignClient = async (req, res) => {
     const clientRef = db.collection("users").doc(clientId);
     const merchantRef = db.collection("users").doc(merchantId);
 
-    await clientRef.update({ assignedMerchant: merchantId });
+    // await clientRef.update({ assignedMerchant: merchantId });
+
+    await clientRef.update({
+      pendingMerchantInvite: merchantId,
+    });
 
     await merchantRef.set(
       {
@@ -61,4 +65,28 @@ exports.assignClient = async (req, res) => {
     console.error("🔥 Assignment error:", err);
     res.status(500).json({ message: "Failed to assign client" });
   }
+};
+//------------------
+exports.acceptInvite = async (req, res) => {
+  const uid = req.user?.uid;
+  if (!uid) return res.status(401).json({ message: "Unauthorized" });
+
+  const userRef = db.collection("users").doc(uid);
+  const userDoc = await userRef.get();
+
+  if (!userDoc.exists)
+    return res.status(404).json({ message: "User not found" });
+
+  const userData = userDoc.data();
+  const merchantId = userData.pendingMerchantInvite;
+
+  if (!merchantId)
+    return res.status(400).json({ message: "No pending invite" });
+
+  await userRef.update({
+    assignedMerchant: merchantId,
+    pendingMerchantInvite: admin.firestore.FieldValue.delete(),
+  });
+
+  res.status(200).json({ message: "Invite accepted" });
 };

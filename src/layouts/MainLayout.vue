@@ -280,11 +280,27 @@ watch(
   { immediate: true }
 );
 
+// Auto-redirect based on pending invite status
+watch(
+  () => storeUsers.user?.pendingInvite?.merchantId,
+  (merchantId) => {
+    if (merchantId) {
+      console.log("📨 Detected pending invite, routing to /pending-invite...");
+      router.push("/pending-invite");
+    }
+  },
+  { immediate: true }
+);
 // Extra safety: Try load on mount too
 onMounted(async () => {
   if (storeAuth.user) {
     await storeUsers.init();
     await loadAvatar(storeAuth.user.uid);
+
+    if (storeUsers.user?.pendingInvite?.merchantId) {
+      console.log("📨 Detected pending invite, routing to /pending-invite...");
+      router.push("/pending-invite");
+    }
   }
 });
 

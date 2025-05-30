@@ -325,6 +325,11 @@ const routes = [
         path: "content-policy",
         component: () => import("pages/PageContentPolicy.vue"),
       },
+      {
+        path: "/pending-invite",
+        component: () => import("pages/PagePendingInvite.vue"),
+        meta: { requiresAuth: true }, // optional
+      },
     ],
   },
 

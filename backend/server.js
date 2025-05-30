@@ -29,6 +29,7 @@ const visionRoutes = require("./routes/visionRoutes");
 
 const assignClientRoutes = require("./routes/assignClientRoutes"); // ✅ adjust path if needed
 
+const invitationRoutes = require("./routes/invitationRoutes");
 // const adminRoutes = require("./routes/adminRoutes");
 
 dotenv.config();
@@ -112,6 +113,7 @@ app.use("/api/access", accessRoutes);
 app.use("/api", registerClientRoutes);
 app.use("/api/vision", visionRoutes);
 app.use("/api", assignClientRoutes);
+app.use("/api/invites", invitationRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

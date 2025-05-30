@@ -52,10 +52,18 @@ export const useStoreUsers = defineStore("storeUsers", {
         console.log("Fetching user data from Firestore for:", userDocRef.id);
         const userDocSnapshot = await getDoc(userDocRef);
         if (userDocSnapshot.exists()) {
+          const userData = userDocSnapshot.data();
+          const pendingMerchantInvite = userData.pendingMerchantInvite || null;
+
           this.user = {
             id: userDocSnapshot.id,
-            ...userDocSnapshot.data(), // Includes the role field
+            ...userData,
+            pendingInvite: pendingMerchantInvite
+              ? { merchantId: pendingMerchantInvite }
+              : null,
           };
+
+          console.log("Fetched user data:", this.user);
           console.log("Fetched user data:", this.user);
 
           // Save the user data in LocalStorage for persistence
