@@ -9,7 +9,6 @@
           <th class="text-left">Company</th>
           <th class="text-left">Phone No.</th>
           <th class="text-left">Email</th>
-
           <th class="text-left">Date</th>
         </tr>
       </thead>
@@ -23,7 +22,6 @@
           </td>
           <td class="text-left">{{ user.Phone_Number }}</td>
           <td class="text-left">{{ user.email }}</td>
-
           <td class="text-left">{{ formatDate(user.app_date) }}</td>
         </tr>
       </tbody>
@@ -31,99 +29,83 @@
   </div>
 </template>
 
-<script>
-import axios from "axios";
-import { auth, db } from "src/firebase/init"; // Ensure db is correctly imported for Firestore checks
-import { onAuthStateChanged } from "firebase/auth";
+<script setup>
+import { ref, onMounted } from "vue";
+import { useQuasar } from "quasar";
+import { auth, db } from "src/firebase/init";
 import { doc, getDoc } from "firebase/firestore";
-import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
+import { onAuthStateChanged } from "firebase/auth";
+import { apiNode } from "boot/apiNode";
 
-export default {
-  data() {
-    return {
-      users: [],
-    };
-  },
-  methods: {
-    // Function to check if the current user is an admin
-    async checkAdmin(userId) {
-      try {
-        const userRef = doc(db, "users", userId);
-        const docSnapshot = await getDoc(userRef);
-        return docSnapshot.exists() && docSnapshot.data().role === "admin";
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        return false;
-      }
-    },
+const $q = useQuasar();
+const users = ref([]);
 
-    // Fetch users from MongoDB backend
-    async fetchUsers() {
-      try {
-        // Get the Firebase ID token
-        const idToken = await auth.currentUser.getIdToken();
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toISOString().split("T")[0];
+}
 
-        console.log(
-          "Fetching users from:",
-          `${nodeApiBaseURL}/api/mongo-users`
-        );
-        const response = await apiNode.get(`/api/mongo-users`, {
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
-        this.users = response.data;
-        console.log("Users fetched from MongoDB:", this.users);
+async function checkAdmin(userId) {
+  try {
+    const userRef = doc(db, "users", userId);
+    const docSnapshot = await getDoc(userRef);
+    const roleField = docSnapshot.data()?.role;
+    const roles = Array.isArray(roleField) ? roleField : [roleField];
+    return roles.includes("admin");
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return false;
+  }
+}
 
-        // Display a success notification for admin
-        this.$q.notify({
-          color: "positive",
-          message: "You’re logged in as an administrator.",
-          icon: "check",
-        });
-      } catch (error) {
-        console.error("Error fetching users from backend:", error);
+async function fetchUsers() {
+  try {
+    const idToken = await auth.currentUser.getIdToken();
 
-        // Display an error notification if non-admin or fetch error
-        this.$q.notify({
-          color: "negative",
-          message: "Error fetching users.",
-          icon: "warning",
-        });
-      }
-    },
-
-    // Format the date for display
-    formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toISOString().split("T")[0]; // Format date as YYYY-MM-DD
-    },
-  },
-  mounted() {
-    // Check authentication state and admin status when component mounts
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const isAdmin = await this.checkAdmin(user.uid);
-        if (isAdmin) {
-          console.log("User is admin, fetching users.");
-          this.fetchUsers();
-        } else {
-          console.warn("User is not admin, restricting access.");
-          this.$q.notify({
-            color: "negative",
-            message: "User is not authorized as admin, limiting access.",
-            icon: "warning",
-          });
-        }
-      } else {
-        console.warn("User is not authenticated.");
-        this.$q.notify({
-          color: "negative",
-          message: "Please log in to access this page.",
-          icon: "warning",
-        });
-      }
+    const response = await apiNode.get("/api/mongo-users", {
+      headers: { Authorization: `Bearer ${idToken}` },
     });
-  },
-};
+
+    users.value = response.data;
+    console.log("✅ Users fetched:", users.value);
+
+    $q.notify({
+      color: "positive",
+      message: "You’re logged in as an administrator.",
+      icon: "check",
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    $q.notify({
+      color: "negative",
+      message: "Error fetching users.",
+      icon: "warning",
+    });
+  }
+}
+
+onMounted(() => {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const isAdmin = await checkAdmin(user.uid);
+      if (isAdmin) {
+        fetchUsers();
+      } else {
+        $q.notify({
+          color: "negative",
+          message: "User is not authorized as admin.",
+          icon: "warning",
+        });
+      }
+    } else {
+      $q.notify({
+        color: "negative",
+        message: "Please log in to access this page.",
+        icon: "warning",
+      });
+    }
+  });
+});
 </script>
 
 <style scoped>

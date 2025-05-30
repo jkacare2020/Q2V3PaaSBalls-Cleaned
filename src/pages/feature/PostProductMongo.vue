@@ -102,7 +102,8 @@ const fetchRoles = async () => {
     if (!user) return;
     const userSnap = await getDoc(doc(db, "users", user.uid));
     if (userSnap.exists()) {
-      userRoles.value = userSnap.data().role || [];
+      const rawRole = userSnap.data().role;
+      userRoles.value = Array.isArray(rawRole) ? rawRole : [rawRole];
     }
   });
 };

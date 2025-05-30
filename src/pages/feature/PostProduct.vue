@@ -174,7 +174,7 @@ const form = ref({ name: "", description: "", price: 0, image: "" });
 const products = ref([]);
 
 const userRoles = ref([]);
-const isLoadingRoles = ref(true);
+
 const rolesLoaded = ref(false);
 
 const isEditingDescription = ref(false);
@@ -310,17 +310,19 @@ onMounted(() => {
   });
 });
 
-//-------------------------------------
 const fetchUserRoles = async () => {
   onAuthStateChanged(auth, async (user) => {
     if (!user) return;
+
     const userSnap = await getDoc(doc(db, "users", user.uid));
     if (userSnap.exists()) {
-      userRoles.value = userSnap.data().role || [];
+      const roleField = userSnap.data().role;
+      userRoles.value = Array.isArray(roleField) ? roleField : [roleField];
       rolesLoaded.value = true; // ✅ mark as ready
     }
   });
 };
+
 onMounted(fetchUserRoles);
 //-----------------------------------------------------
 onMounted(() => {

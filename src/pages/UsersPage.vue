@@ -47,13 +47,18 @@ export default {
       try {
         const userRef = doc(db, "users", userId);
         const docSnapshot = await getDoc(userRef);
-        return docSnapshot.exists() && docSnapshot.data().role === "admin";
+
+        if (!docSnapshot.exists()) return false;
+
+        const roleField = docSnapshot.data().role;
+        const roles = Array.isArray(roleField) ? roleField : [roleField];
+
+        return roles.includes("admin");
       } catch (error) {
         console.error("Error checking admin status:", error);
         return false;
       }
     },
-
     // Fetch users from MongoDB backend
     async fetchUsers() {
       try {

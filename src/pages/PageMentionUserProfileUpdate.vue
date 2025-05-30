@@ -130,7 +130,11 @@ const editableUser = ref({
 });
 
 // Check if the logged-in user is an admin
-const isAdmin = computed(() => storeUsers.user?.role === "admin");
+const isAdmin = computed(() => {
+  const roleField = storeUsers.user?.role;
+  const roles = Array.isArray(roleField) ? roleField : [roleField];
+  return roles.includes("admin");
+});
 
 // Use `let` instead of `const` for `userId` to allow reassignment.
 let userId = null; // Allow reassignment

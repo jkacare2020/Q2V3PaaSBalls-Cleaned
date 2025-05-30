@@ -197,8 +197,8 @@ onMounted(async () => {
 
     const docSnap = await getDoc(doc(db, "users", user.uid));
     if (docSnap.exists()) {
-      const roles = docSnap.data().role;
-      userRoles.value = Array.isArray(roles) ? roles : [roles];
+      const rolesField = docSnap.data().role;
+      userRoles.value = Array.isArray(rolesField) ? rolesField : [rolesField];
     }
   }
 

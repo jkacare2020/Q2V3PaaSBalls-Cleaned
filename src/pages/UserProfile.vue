@@ -206,6 +206,7 @@
             color="primary"
             @click="router.push('/assign-client')"
             class="q-mt-md"
+            v-if="canAssignClient"
           />
         </q-form>
       </q-card-section>
@@ -266,6 +267,14 @@ import { useQuasar } from "quasar";
 // import { useRouter } from "vue-router";
 import { auth } from "src/firebase/init";
 import { apiNode } from "boot/apiNode";
+
+//-------------------------------------------------------
+const canAssignClient = computed(() => {
+  const roleField = storeUsers.user?.role;
+  const roles = Array.isArray(roleField) ? roleField : [roleField];
+  return roles.includes("merchant") || roles.includes("admin");
+});
+//------------------------------------------
 const router = useRouter();
 const $q = useQuasar();
 
@@ -277,7 +286,11 @@ const editableUser = ref(null);
 const showDeleteDialog = ref(false);
 
 // Check if the logged-in user is an admin
-const isAdmin = computed(() => storeUsers.user?.role === "admin");
+const isAdmin = computed(() => {
+  const roleField = storeUsers.user?.role;
+  const roles = Array.isArray(roleField) ? roleField : [roleField];
+  return roles.includes("admin");
+});
 
 // Use `let` instead of `const` for `userId` to allow reassignment.
 let userId = null; // Allow reassignment
@@ -396,7 +409,7 @@ const confirmDeleteAccount = () => {
     deleteAccount();
   });
 };
-
+//----------------------------------------------------------------
 const deleteAccount = async () => {
   if (editableUser.value?.role === "admin") {
     $q.notify({

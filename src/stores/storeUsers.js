@@ -25,7 +25,6 @@ export const useStoreUsers = defineStore("storeUsers", {
       // Always re-fetch fresh user data
       await this.getUser(userDocRef);
     },
-    //---------------------------------
 
     async beforeEnter(to, from, next) {
       const storeUsers = useStoreUsers();
@@ -37,14 +36,17 @@ export const useStoreUsers = defineStore("storeUsers", {
       console.log("🧠 storeUsers.user =", storeUsers.user);
       console.log("🔍 Detected role:", storeUsers.user?.role);
 
-      if ((storeUsers.user?.role || "").toLowerCase() === "admin") {
+      const roleField = storeUsers.user?.role;
+      const roles = Array.isArray(roleField) ? roleField : [roleField];
+
+      if (roles.includes("admin")) {
         next(); // ✅ Proceed if admin
       } else {
         console.warn("❌ Not admin. Redirecting...");
         next("/profile/edit");
       }
     },
-    //--------------------------------------------------------------
+
     async getUser(userDocRef) {
       this.userLoaded = false;
 
@@ -64,7 +66,6 @@ export const useStoreUsers = defineStore("storeUsers", {
           };
 
           console.log("Fetched user data:", this.user);
-          console.log("Fetched user data:", this.user);
 
           // Save the user data in LocalStorage for persistence
           LocalStorage.set("user", this.user);
@@ -81,12 +82,14 @@ export const useStoreUsers = defineStore("storeUsers", {
         this.user = null;
         LocalStorage.remove("user");
       } finally {
-        this.userLoaded = true; // Mark user data as loaded Tqtc37XTx9N1Yr1pUzeelmAdUmw1
+        this.userLoaded = true; // Mark user data as loaded
       }
     },
 
     async getAllUsers() {
-      if (this.user?.role === "admin") {
+      const roleField = this.user?.role;
+      const roles = Array.isArray(roleField) ? roleField : [roleField];
+      if (roles.includes("admin")) {
         try {
           console.log("Fetching all users from Firestore...");
           const usersSnapshot = await getDocs(collection(db, "users"));
@@ -105,7 +108,6 @@ export const useStoreUsers = defineStore("storeUsers", {
       }
     },
 
-    //--------------------------------------------------------------------
     clearUsers() {
       this.user = null;
       this.userLoaded = false;

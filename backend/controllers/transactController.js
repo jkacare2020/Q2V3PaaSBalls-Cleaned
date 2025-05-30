@@ -16,14 +16,16 @@ const isAdmin = async (userId) => {
     if (!userDoc.exists) return false;
 
     const userData = userDoc.data();
-    const roles = userData.role;
+    const roleField = userData.role;
+    const roles = Array.isArray(roleField) ? roleField : [roleField]; // ✅ Normalize to array
 
-    return Array.isArray(roles) && roles.includes("admin");
+    return roles.includes("admin");
   } catch (err) {
     console.error("Error checking admin role:", err);
     return false;
   }
 };
+
 //---------Get all transaction -----------------------
 exports.getAllTransactions = async (req, res) => {
   try {

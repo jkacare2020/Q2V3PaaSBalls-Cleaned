@@ -90,7 +90,7 @@ const routes = [
         path: "firestore-users",
         component: () => import("pages/PageFirestoreUsers.vue"),
         meta: { requiresAuth: true },
-        async beforeEnter(to, from, next) {
+        beforeEnter: async (to, from, next) => {
           const storeUsers = useStoreUsers();
 
           console.log("🛂 Route guard triggered for /firestore-users");
@@ -102,7 +102,10 @@ const routes = [
 
           console.log("🔍 storeUsers.user =", storeUsers.user);
 
-          if ((storeUsers.user?.role || "").toLowerCase() === "admin") {
+          const roleField = storeUsers.user?.role;
+          const roles = Array.isArray(roleField) ? roleField : [roleField];
+
+          if (roles.includes("admin")) {
             console.log("✅ Admin detected. Proceeding...");
             next();
           } else {

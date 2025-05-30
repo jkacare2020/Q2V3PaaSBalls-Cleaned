@@ -55,7 +55,11 @@ import { useQuasar } from "quasar";
 const $q = useQuasar();
 const storeUsers = useStoreUsers();
 const router = useRouter();
-const isAdmin = computed(() => storeUsers.user?.role === "admin");
+const isAdmin = computed(() => {
+  const roleField = storeUsers.user?.role;
+  const roles = Array.isArray(roleField) ? roleField : [roleField];
+  return roles.includes("admin");
+});
 
 // Fetch all users if the logged-in user is an admin
 onMounted(() => {

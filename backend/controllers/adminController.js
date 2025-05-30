@@ -5,7 +5,15 @@ exports.getUserRoles = async (req, res) => {
   try {
     const { uid } = req.params;
     const user = await admin.auth().getUser(uid);
-    const roles = user.customClaims?.role || [];
+    const roleField = user.customClaims?.role;
+
+    // Normalize to array (support both "admin" or ["admin", "merchant"])
+    const roles = Array.isArray(roleField)
+      ? roleField
+      : roleField
+      ? [roleField]
+      : [];
+
     res.status(200).json({ uid, roles });
   } catch (error) {
     console.error("Error getting user roles:", error.message);

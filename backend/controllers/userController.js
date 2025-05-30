@@ -1,3 +1,4 @@
+// ---userController.js ----
 const User = require("../models/users/User"); // Adjust the path as needed
 const admin = require("firebase-admin"); // Firebase Admin SDK
 
@@ -14,7 +15,10 @@ const isAdmin = async (userId) => {
       console.log("User not found in Firestore.");
       return false;
     }
-    return doc.data().role === "admin";
+
+    const roleField = doc.data().role;
+    const roles = Array.isArray(roleField) ? roleField : [roleField]; // ✅ Normalize role
+    return roles.includes("admin");
   } catch (error) {
     console.error("Error checking admin status:", error);
     return false;
