@@ -123,50 +123,48 @@
           >
             <!-- Handle each link or submenu -->
             <template v-for="link in category.links" :key="link.title">
-              <!-- Check for sub-menu (children) -->
-              <q-expansion-item
-                v-if="link.children"
-                :icon="link.icon"
-                :label="link.title"
-                expand-separator
-              >
-                <q-item
-                  v-for="child in link.children"
-                  :key="child.title"
-                  clickable
-                  v-ripple
-                  @click="$router.push(child.link)"
-                  class="q-ml-lg"
-                >
-                  <q-item-section avatar>
-                    <q-icon :name="child.icon" />
-                  </q-item-section>
-                  <q-item-section>{{ child.title }}</q-item-section>
-                </q-item>
-              </q-expansion-item>
+              <!-- Conditionally skip adminOnly or merchantOnly links -->
+              <template v-if="!link.adminOnly || storeUsers.isAdmin">
+                <template v-if="!link.merchantOnly || storeUsers.isMerchant">
+                  <!-- Has children -->
+                  <q-expansion-item
+                    v-if="link.children"
+                    :icon="link.icon"
+                    :label="link.title"
+                    expand-separator
+                  >
+                    <q-item
+                      v-for="child in link.children"
+                      :key="child.title"
+                      clickable
+                      v-ripple
+                      @click="$router.push(child.link)"
+                      class="q-ml-lg"
+                    >
+                      <q-item-section avatar>
+                        <q-icon :name="child.icon" />
+                      </q-item-section>
+                      <q-item-section>{{ child.title }}</q-item-section>
+                    </q-item>
+                  </q-expansion-item>
 
-              <!-- Single link (no children) -->
-              <q-item
-                v-else
-                clickable
-                v-ripple
-                @click="$router.push(link.link)"
-                class="q-ml-lg"
-              >
-                <q-item-section avatar>
-                  <template v-if="link.iconImg">
-                    <q-img
-                      :src="link.iconImg"
-                      style="width: 32px; height: 32px"
-                    />
-                  </template>
-                  <template v-else>
-                    <q-icon :name="link.icon" />
-                  </template>
-                </q-item-section>
-
-                <q-item-section>{{ link.title }}</q-item-section>
-              </q-item>
+                  <!-- Normal link -->
+                  <q-item
+                    v-else
+                    clickable
+                    v-ripple
+                    @click="$router.push(link.link)"
+                  >
+                    <q-item-section avatar>
+                      <q-icon
+                        :name="link.icon || undefined"
+                        :src="link.iconImg || undefined"
+                      />
+                    </q-item-section>
+                    <q-item-section>{{ link.title }}</q-item-section>
+                  </q-item>
+                </template>
+              </template>
             </template>
           </q-expansion-item>
         </template>
@@ -425,6 +423,7 @@ const navLinks = [
         title: "All Transactions",
         icon: "point_of_sale",
         link: "/mongo-AllTransacts",
+        adminOnly: true, // ✅ only admin can see
       },
       {
         title: "Buyer Transactions",
@@ -435,6 +434,7 @@ const navLinks = [
         title: "Seller Transactions", // ✅ Add this one
         icon: "storefront",
         link: "/merchant-transactions",
+        merchantOnly: true, // ✅ only merchant can see
       },
       {
         title: "Search by Phone# ", // ✅ Add this one
