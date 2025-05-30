@@ -12,6 +12,20 @@ export const useStoreUsers = defineStore("storeUsers", {
     usersList: [], // Holds list of users for admin
     userLoaded: !!LocalStorage.getItem("user"), // Check if user exists in LocalStorage
   }),
+  getters: {
+    isAdmin: (state) => {
+      const roles = Array.isArray(state.user?.role)
+        ? state.user.role
+        : [state.user?.role];
+      return roles.includes("admin");
+    },
+    isMerchant: (state) => {
+      const roles = Array.isArray(state.user?.role)
+        ? state.user.role
+        : [state.user?.role];
+      return roles.includes("merchant");
+    },
+  },
   actions: {
     async init() {
       const storeAuth = useStoreAuth();

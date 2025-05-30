@@ -62,7 +62,7 @@
             color="negative"
             label="Delete"
             @click.stop="deleteProduct(item)"
-            v-if="item.userId === auth.currentUser?.uid"
+            v-if="item.userId === auth.currentUser?.uid || storeUsers.isAdmin"
           />
         </q-item-section>
       </q-item>
@@ -76,12 +76,15 @@ import { apiNode } from "boot/apiNode";
 import { getDoc, doc } from "firebase/firestore";
 import { auth, db } from "src/firebase/init"; // Adjust path if needed
 import { useRouter } from "vue-router";
+import { useStoreUsers } from "src/stores/storeUsers";
 
 const router = useRouter();
 
 const userData = ref({}); // Create the userData ref
 const posts = ref([]); // Assume you already fetched marketplace-tagged posts here
 const searchQuery = ref("");
+
+const storeUsers = useStoreUsers();
 
 onMounted(async () => {
   const currentUser = auth.currentUser;
