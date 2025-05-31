@@ -126,7 +126,7 @@
     <strong> Total Transaction Amount:</strong>
     {{ formatCurrency(totalAmount) }}
   </div>
-  <div class="row q-gutter-sm items-center q-mb-md q-mt-md">
+  <div class="row q-gutter-sm items-center q-mb-md q-mt-md q-ml-sm">
     <q-btn
       label="Export CSV "
       style="font-size: 12px"
