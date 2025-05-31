@@ -9,6 +9,7 @@ const {
   deleteTransaction,
   getAllTransactions,
   getMyTransactions,
+  getSellerTransactions,
   getTransactionsBySeller,
   getUnpaidTransactions,
   getDraftTransactions,
@@ -18,7 +19,8 @@ const invoiceController = require("../controllers/invoiceController");
 
 const authenticateAndAuthorize = require("../middlewares/authMiddleware");
 
-router.get("/transactions/seller", getTransactionsBySeller);
+router.get("/transactions/seller", getSellerTransactions);
+router.get("/transactions/seller/date", getTransactionsBySeller);
 
 // get transactions routes by user profile phone No. -----------------------
 router.get("/mongo-transacts", authenticateAndAuthorize(), getTransactions);

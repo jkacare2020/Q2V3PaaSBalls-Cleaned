@@ -22,6 +22,24 @@
     </div>
   </div>
 
+  <!-- <q-input
+    v-model="startDate"
+    label="Start Date"
+    type="date"
+    dense
+    filled
+    class="q-mb-sm"
+  />
+  <q-input
+    v-model="endDate"
+    label="End Date"
+    type="date"
+    dense
+    filled
+    class="q-mb-sm"
+  />
+  <q-btn label="Filter" color="primary" @click="getTransactionsBySeller" /> -->
+
   <!-- Transactions Table -->
   <q-markup-table
     dark
@@ -108,6 +126,22 @@
     <strong> Total Transaction Amount:</strong>
     {{ formatCurrency(totalAmount) }}
   </div>
+  <div class="row q-gutter-sm items-center q-mb-md q-mt-md">
+    <q-btn
+      label="Export CSV "
+      style="font-size: 12px"
+      icon="download"
+      color="primary"
+      @click="exportToCSV"
+    />
+    <q-btn
+      label="Export Excel"
+      style="font-size: 12px"
+      icon="table_view"
+      color="green"
+      @click="exportToExcel"
+    />
+  </div>
 </template>
 
 <script setup>
@@ -120,6 +154,18 @@ import { useRouter } from "vue-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { useQuasar } from "quasar";
 import { apiNode, nodeApiBaseURL } from "boot/apiNode"; // ✅ Make sure to import it
+import * as XLSX from "xlsx";
+
+function exportToExcel() {
+  const rows = filteredTransacts.value;
+  if (!rows.length) return;
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+
+  XLSX.writeFile(workbook, "transactions.xlsx");
+}
 
 const $q = useQuasar();
 const router = useRouter();
@@ -133,6 +179,41 @@ const transacts = ref([]);
 const isLoading = ref(false);
 const sellerTransacts = ref([]); // 👈 Declare it
 const searchQuery = ref("");
+
+const startDate = ref("");
+const endDate = ref("");
+
+function formatDateOnly(dateStr) {
+  const date = new Date(dateStr);
+  return date.toISOString().split("T")[0];
+}
+
+function formatInclusiveEndDate(dateStr) {
+  const date = new Date(dateStr);
+  date.setHours(23, 59, 59, 999);
+  return date.toISOString();
+}
+
+//---------------------------------------------------
+function exportToCSV() {
+  const rows = filteredTransacts.value;
+
+  if (!rows.length) return;
+
+  const headers = Object.keys(rows[0]);
+  const csvContent = [
+    headers.join(","), // header row
+    ...rows.map((row) => headers.map((key) => `"${row[key] ?? ""}"`).join(",")),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "transactions.csv");
+  link.click();
+}
+
 //-------------------------------------------------
 const downloadInvoice = async (transactId) => {
   const user = auth.currentUser;
@@ -242,6 +323,7 @@ onMounted(() => {
       isLoading.value = true;
       await fetchAvatar(user.uid);
       await getSellerTransactions();
+      await getTransactionsBySeller();
     } else {
       console.log("User not logged in.");
       isAuthenticated.value = false;
@@ -341,8 +423,8 @@ async function openDeleteForm(transactId) {
 
 // Compute the total amount from all transactions
 const totalAmount = computed(() => {
-  return sellerTransacts.value.reduce(
-    (sum, transact) => sum + transact.transact_amount,
+  return filteredTransacts.value.reduce(
+    (sum, t) => sum + (t.transact_amount || 0),
     0
   );
 });
@@ -364,17 +446,51 @@ const formatCurrency = (amount) => {
 
 const filteredTransacts = computed(() => {
   if (!searchQuery.value) return transacts.value;
-  const q = searchQuery.value.toLowerCase();
+
+  const keywords = searchQuery.value.toLowerCase().split(" ");
+
   return transacts.value.filter((t) => {
-    return (
-      String(t.transact_number).includes(q) ||
-      (t.First_Name && t.First_Name.toLowerCase().includes(q)) ||
-      (t.Last_Name && t.Last_Name.toLowerCase().includes(q)) ||
-      (t.User_Email && t.User_Email.toLowerCase().includes(q)) ||
-      (t.tran_status && t.tran_status.toLowerCase().includes(q))
-    );
+    const combinedText = [
+      t.transact_number,
+      t.First_Name,
+      t.Last_Name,
+      t.User_Email,
+      t.tran_status,
+      t.req_date,
+      t.Phone_Number,
+      t.transact_number,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return keywords.every((kw) => combinedText.includes(kw));
   });
 });
+
+//---------------------------------------------------------------------------
+// ✅ Unified and final version
+const getTransactionsBySeller = async () => {
+  try {
+    const idToken = await storeAuth.user?.getIdToken();
+
+    const params = {};
+    if (startDate.value && endDate.value) {
+      params.startDate = formatDateOnly(startDate.value);
+      params.endDate = formatInclusiveEndDate(endDate.value);
+    }
+
+    const response = await apiNode.get("/api/transactions/seller/date", {
+      headers: { Authorization: `Bearer ${idToken}` },
+      params,
+    });
+
+    transacts.value = response.data;
+    sellerTransacts.value = response.data;
+  } catch (error) {
+    console.error("❌ Fetch error:", error);
+  }
+};
 </script>
 
 <style scoped>

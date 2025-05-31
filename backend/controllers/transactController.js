@@ -569,3 +569,46 @@ exports.getDraftTransactions = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch draft transactions." });
   }
 };
+//------------------------------------------------
+exports.getSellerTransactions = async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized access" });
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+  let userId;
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    userId = decodedToken.uid;
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+
+  const query = { owner: userId };
+
+  // ✅ Robust handling of date range input (MM/DD/YYYY from frontend)
+  if (req.query.startDate && req.query.endDate) {
+    const startDate = new Date(req.query.startDate);
+    const endDate = new Date(req.query.endDate);
+
+    // Make sure end date includes the entire day
+    endDate.setHours(23, 59, 59, 999);
+
+    // Validate both dates before applying
+    if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+      query.req_date = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+    }
+  }
+
+  try {
+    const transacts = await Transact.find(query).sort({ req_date: -1 });
+    res.status(200).json(transacts);
+  } catch (error) {
+    console.error("Error fetching seller transactions:", error);
+    res.status(500).json({ message: "Error fetching transactions" });
+  }
+};

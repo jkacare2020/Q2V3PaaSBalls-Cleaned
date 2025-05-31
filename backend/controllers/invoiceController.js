@@ -151,6 +151,10 @@ exports.generateInvoiceById = async (req, res) => {
 
     // Title
     doc.fontSize(18).text("Invoice", { align: "center" }).moveDown();
+    doc
+      .fontSize(12)
+      .text(`Transaction Number: ${transaction.transact_number}`)
+      .moveDown();
 
     // Buyer Info
     doc.fontSize(12).text("Bill To:");
