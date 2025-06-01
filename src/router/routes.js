@@ -333,6 +333,11 @@ const routes = [
         component: () => import("pages/PagePendingInvite.vue"),
         meta: { requiresAuth: true }, // optional
       },
+      {
+        path: "detect-brand",
+        component: () => import("pages/feature/PageVisualBrandMaterial.vue"),
+        meta: { requiresAuth: true }, // optional
+      },
     ],
   },
 

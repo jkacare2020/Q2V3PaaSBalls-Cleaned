@@ -1,22 +1,56 @@
 <template>
+  <!--PageVisionSubmit.vue-->
   <q-page class="q-pa-md">
     <div class="text-h5 q-mb-md">Submit Cleaning Evaluation</div>
 
     <q-form @submit.prevent="submitToAI">
       <div class="q-gutter-md">
-        <q-file
-          v-model="dirtyImage"
-          label="Upload Dirty Image (Before Cleaning)"
-          accept="image/*"
-          filled
-        />
+        <div class="row items-start q-col-gutter-md">
+          <div class="col-6">
+            <q-file
+              v-model="dirtyImage"
+              label="Upload Dirty Image (Before Cleaning)"
+              accept="image/*"
+              filled
+            />
+            <div v-if="dirtyImage" class="q-mt-sm">
+              <img
+                :src="dirtyPreviewUrl"
+                @click="showZoom('dirty')"
+                style="
+                  max-width: 100%;
+                  max-height: 200px;
+                  border: 1px solid #ccc;
+                  cursor: zoom-in;
+                "
+              />
+              <div class="text-caption text-center">Before</div>
+            </div>
+          </div>
 
-        <q-file
-          v-model="cleanedImage"
-          label="Upload Cleaned Image (After Cleaning)"
-          accept="image/*"
-          filled
-        />
+          <div class="col-6">
+            <q-file
+              v-model="cleanedImage"
+              label="Upload Cleaned Image (After Cleaning)"
+              accept="image/*"
+              filled
+            />
+            <div v-if="cleanedImage" class="q-mt-sm">
+              <img
+                :src="cleanedPreviewUrl"
+                @click="showZoom('cleaned')"
+                style="
+                  max-width: 100%;
+                  max-height: 200px;
+                  border: 1px solid #ccc;
+                  cursor: zoom-in;
+                "
+              />
+              <div class="text-caption text-center">After</div>
+            </div>
+          </div>
+        </div>
+
         <div class="q-mt-md" style="max-width: 300px">
           <q-select
             v-model="itemType"
@@ -27,6 +61,7 @@
             style="max-width: 300px"
           />
         </div>
+
         <q-btn
           type="submit"
           color="primary"
@@ -40,8 +75,17 @@
           color="secondary"
           @click="resetPrompt"
         />
+
+        <!-- Link to detect brand/material -->
+        <q-btn
+          label="👜 Detect Brand & Material"
+          color="accent"
+          class="q-mt-sm"
+          to="/detect-brand"
+        />
       </div>
-      <!-- 📝 Prompt Textarea -->
+
+      <!-- 🗘 Prompt Textarea -->
       <q-input
         v-model="prompt"
         type="textarea"
@@ -67,6 +111,13 @@
         />
       </q-card>
     </div>
+
+    <!-- Zoomed image dialog -->
+    <q-dialog v-model="zoomDialog">
+      <q-card style="max-width: 90vw; max-height: 90vh; overflow: auto">
+        <img :src="zoomImageUrl" style="width: 100%; height: auto" />
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -80,6 +131,29 @@ const router = useRouter();
 const $q = useQuasar();
 const dirtyImage = ref(null);
 const cleanedImage = ref(null);
+const dirtyPreviewUrl = ref("");
+const cleanedPreviewUrl = ref("");
+
+const zoomDialog = ref(false);
+const zoomImageUrl = ref("");
+
+const showZoom = (type) => {
+  zoomImageUrl.value =
+    type === "dirty" ? dirtyPreviewUrl.value : cleanedPreviewUrl.value;
+  zoomDialog.value = true;
+};
+
+watch(dirtyImage, (file) => {
+  if (file) {
+    dirtyPreviewUrl.value = URL.createObjectURL(file);
+  }
+});
+
+watch(cleanedImage, (file) => {
+  if (file) {
+    cleanedPreviewUrl.value = URL.createObjectURL(file);
+  }
+});
 
 const aiResponse = ref(null);
 const isSubmitting = ref(false);
@@ -133,14 +207,16 @@ watch(itemType, (newTypeObj) => {
     !prompt.value ||
     prompt.value.includes("Please evaluate the cleaning result")
   ) {
-    prompt.value = `Please evaluate the cleaning result of this ${newType}...`;
+    // prompt.value = `Please evaluate the cleaning result of this ${newType}...`;
+    prompt.value = generatePrompt(newType); // ✅ Call function
   }
 });
 
 // 🧠 Initialize prompt on page load
 onMounted(() => {
   if (!prompt.value) {
-    prompt.value = generatePrompt(itemType.value);
+    // prompt.value = generatePrompt(itemType.value);
+    prompt.value = generatePrompt(itemType.value.value); // ✅ Extract value
   }
 });
 //------------------------------------

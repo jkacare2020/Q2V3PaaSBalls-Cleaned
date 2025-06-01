@@ -1,64 +1,4 @@
-// const { OpenAI } = require("openai");
-// const { uploadFileToStorage } = require("../utils/firebaseUpload");
-// const ChatbotLog = require("../models/chatBot/chatbotLog"); // your Mongoose model
-// const admin = require("../config/firebaseAdmin");
-
-// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// exports.analyzeCleaning = async (req, res) => {
-//   try {
-//     const file = req.file;
-//     const token = req.headers.authorization?.split("Bearer ")[1];
-
-//     if (!token) return res.status(401).json({ error: "Missing token" });
-
-//     const decodedToken = await admin.auth().verifyIdToken(token);
-//     const userId = decodedToken.uid;
-
-//     if (!file) return res.status(400).json({ error: "Image file is required" });
-
-//     // ✅ Upload to Firebase Storage
-//     const publicUrl = await uploadFileToStorage(file, "vision-uploads");
-
-//     // ✅ GPT-4 Vision call
-//     const response = await openai.chat.completions.create({
-//       model: "gpt-4-vision-preview",
-//       messages: [
-//         {
-//           role: "user",
-//           content: [
-//             {
-//               type: "text",
-//               text: "Analyze this image for cleanliness. Is it clean or dirty? Describe stains or damage.",
-//             },
-//             { type: "image_url", image_url: { url: publicUrl } },
-//           ],
-//         },
-//       ],
-//       max_tokens: 1000,
-//     });
-
-//     const botResponse = response.choices[0].message.content;
-
-//     // ✅ Log to MongoDB
-//     const logEntry = new ChatbotLog({
-//       userId,
-//       sessionId: `vision-${userId}-${Date.now()}`,
-//       query: "Image uploaded for AI cleaning analysis",
-//       response: botResponse,
-//       imageUrl: publicUrl,
-//       source: "vision", // optional tag for filtering
-//       timestamp: new Date(),
-//     });
-
-//     await logEntry.save();
-
-//     res.status(200).json({ result: botResponse });
-//   } catch (err) {
-//     console.error("GPT Vision error:", err);
-//     res.status(500).json({ error: "Failed to process GPT-4 Vision request" });
-//   }
-// };
+//visionController.js----
 const { OpenAI } = require("openai");
 const admin = require("firebase-admin");
 const { uploadImageAndGetUrl } = require("../utils/firebaseUpload");
@@ -117,5 +57,93 @@ exports.compareImagesWithAI = async (req, res) => {
   } catch (err) {
     console.error("compareImagesWithAI error:", err);
     res.status(500).json({ error: "Failed to analyze images." });
+  }
+};
+//-----------------------------------------------------------
+exports.detectBrandAndMaterial = async (req, res) => {
+  try {
+    const { uid, suggestionType = "care" } = req.body;
+    const imageFile = req.file;
+
+    if (!uid || !imageFile) {
+      return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    // Upload to Firebase
+    const imageUrl = await uploadImageAndGetUrl(
+      imageFile,
+      `vision/brand-${Date.now()}`
+    );
+
+    // ✨ Dynamic Prompt Based on suggestionType
+    let prompt = `
+Please analyze this image of a handbag.
+Identify the brand (if visible) and the material type (e.g. leather, suede, canvas, faux leather).
+Summarize the visual features like color, texture, and style.
+`;
+
+    if (suggestionType === "products") {
+      prompt += `
+Then recommend 1-3 real-world cleaning products (include product name, brand, and usage instructions) based on the material.
+Respond in this JSON format:
+{
+  "brand": "...",
+  "material": "...",
+  "summary": "...",
+  "suggestion": "...",
+  "recommendedProducts": [
+    {
+      "name": "Lexol Leather Cleaner",
+      "brand": "Lexol",
+      "usage": "Gently rub with a soft cloth and wipe away residue."
+    }
+  ]
+}
+      `.trim();
+    } else {
+      prompt += `
+Then provide care suggestions suitable for the detected material type (steps, precautions).
+Respond in this JSON format:
+{
+  "brand": "...",
+  "material": "...",
+  "summary": "...",
+  "suggestion": "..."
+}
+      `.trim();
+    }
+
+    // 🧠 Call GPT-4 Turbo with Vision
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4-turbo",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: imageUrl } },
+          ],
+        },
+      ],
+      max_tokens: 700,
+    });
+
+    let responseText = completion.choices[0]?.message?.content || "{}";
+
+    // 🧼 Clean markdown wrappers if included
+    responseText = responseText.replace(/```json|```/g, "").trim();
+
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (err) {
+      console.error("❌ JSON parse error:", err);
+      return res.status(500).json({ error: "AI returned malformed JSON." });
+    }
+
+    res.status(200).json(result);
+  } catch (err) {
+    console.error("detectBrandAndMaterial error:", err);
+    res.status(500).json({ error: "Failed to process image." });
   }
 };
