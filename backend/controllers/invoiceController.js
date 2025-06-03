@@ -3,6 +3,8 @@ const PDFDocument = require("pdfkit");
 const axios = require("axios");
 const Transact = require("../models/transacts/Transacts");
 
+const QRCode = require("qrcode");
+
 const admin = require("../config/firebaseAdmin");
 
 async function fetchImageBuffer(url) {
@@ -47,6 +49,8 @@ exports.generateInvoice = async (req, res) => {
   console.log("👤 User making request:", req.user?.uid || req.user);
 
   try {
+    const qrDataUrl = await QRCode.toDataURL("https://www.ismyhr.com");
+
     const { userId } = req.body;
 
     const transactions = await Transact.find({
@@ -140,6 +144,22 @@ exports.generateInvoice = async (req, res) => {
       .fontSize(14)
       .text(`Total Due: $${total.toFixed(2)}`, { align: "right" });
 
+    const qrBuffer = Buffer.from(
+      qrDataUrl.replace(/^data:image\/png;base64,/, ""),
+      "base64"
+    );
+
+    // 🧾 Insert QR code + link into PDF
+    doc.moveDown();
+    doc.fontSize(12).text("📱 Scan to revisit the app:", { align: "left" });
+    doc.image(qrBuffer, { fit: [100, 100] });
+
+    doc.moveDown(0.5);
+    doc.fillColor("blue").text("or visit manually: https://www.ismyhr.com", {
+      link: "https://www.ismyhr.com",
+      underline: true,
+    });
+
     doc.end();
   } catch (err) {
     console.error("PDF generation error:", err);
@@ -174,8 +194,17 @@ exports.generateInvoiceById = async (req, res) => {
   console.log("📥 Invoice requested for transaction ID:", transactId);
 
   try {
+    const qrDataUrl = await QRCode.toDataURL("https://www.ismyhr.com");
     const transaction = await Transact.findById(transactId);
     if (!transaction) return res.status(404).send("Transaction not found");
+
+    // 👤 Fetch seller Firestore data
+    const sellerDoc = await admin
+      .firestore()
+      .collection("users")
+      .doc(transaction.sellerId)
+      .get();
+    const sellerData = sellerDoc.exists ? sellerDoc.data() : {};
 
     // Fetch avatars
     // const buyerAvatarUrl = await getAvatarUrl(transaction.owner);
@@ -239,6 +268,43 @@ exports.generateInvoiceById = async (req, res) => {
     doc.moveDown();
 
     doc.fontSize(10).text("Thank you for your purchase!", { align: "center" });
+
+    // ✅ 1. Generate QR code as base64 buffer (PNG format)
+
+    const base64Data = qrDataUrl.split(",")[1];
+    const qrBuffer = Buffer.from(base64Data, "base64");
+
+    // ✅ 2. Embed QR and link
+    doc.moveDown(2);
+    doc.fontSize(12).text("Scan to revisit the app:", { align: "left" });
+
+    try {
+      doc.image(qrBuffer, { fit: [100, 100] }); // ✅ show the QR image
+    } catch (err) {
+      console.error("❌ Failed to draw QR image in PDF:", err.message);
+      doc.text("⚠️ QR image failed to render.");
+    }
+
+    doc.moveDown(0.5);
+    doc.fillColor("blue").text("or visit manually: https://www.ismyhr.com", {
+      link: "https://www.ismyhr.com",
+      underline: true,
+    });
+
+    const sellerEmail = sellerData.email || "support@ismyhr.com";
+
+    doc
+      .fillColor("black")
+      .fontSize(12)
+      .text("Contact Seller:", { align: "left" });
+
+    doc.fillColor("blue").text(sellerEmail, {
+      link: `mailto:${sellerEmail}`,
+      underline: true,
+    });
+
+    doc.fillColor("black"); // Reset color
+
     doc.end();
   } catch (error) {
     console.error("Invoice generation error:", error);
