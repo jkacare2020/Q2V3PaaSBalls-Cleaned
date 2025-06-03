@@ -49,7 +49,7 @@ exports.generateInvoice = async (req, res) => {
   console.log("👤 User making request:", req.user?.uid || req.user);
 
   try {
-    const qrDataUrl = await QRCode.toDataURL("https://www.ismyhr.com");
+    const qrDataUrl = await QRCode.toDataURL("https://www.ismehr.com");
 
     const { userId } = req.body;
 
@@ -155,8 +155,8 @@ exports.generateInvoice = async (req, res) => {
     doc.image(qrBuffer, { fit: [100, 100] });
 
     doc.moveDown(0.5);
-    doc.fillColor("blue").text("or visit manually: https://www.ismyhr.com", {
-      link: "https://www.ismyhr.com",
+    doc.fillColor("blue").text("or visit manually: https://www.ismehr.com", {
+      link: "https://www.ismehr.com",
       underline: true,
     });
 
@@ -194,7 +194,7 @@ exports.generateInvoiceById = async (req, res) => {
   console.log("📥 Invoice requested for transaction ID:", transactId);
 
   try {
-    const qrDataUrl = await QRCode.toDataURL("https://www.ismyhr.com");
+    const qrDataUrl = await QRCode.toDataURL("https://www.ismehr.com");
     const transaction = await Transact.findById(transactId);
     if (!transaction) return res.status(404).send("Transaction not found");
 
@@ -286,12 +286,12 @@ exports.generateInvoiceById = async (req, res) => {
     }
 
     doc.moveDown(0.5);
-    doc.fillColor("blue").text("or visit manually: https://www.ismyhr.com", {
-      link: "https://www.ismyhr.com",
+    doc.fillColor("blue").text("or visit manually: https://www.ismehr.com", {
+      link: "https://www.ismehr.com",
       underline: true,
     });
 
-    const sellerEmail = sellerData.email || "support@ismyhr.com";
+    const sellerEmail = sellerData.email || "support@ismehr.com";
 
     doc
       .fillColor("black")
