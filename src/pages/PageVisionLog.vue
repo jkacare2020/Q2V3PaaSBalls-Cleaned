@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md" :class="{ 'bg-dark text-white': isDark }">
     <div class="row items-center q-mb-md justify-between">
-      <div class="text-h5">🧠 Vision Logs</div>
+      <div class="text-h5">Vision Logs</div>
       <q-btn
         label="Export PDF"
         color="red"
@@ -30,6 +30,7 @@
           <th class="text-left">Prompt</th>
           <th class="text-left">Timestamp</th>
           <th class="text-left">Details</th>
+          <th class="text-left">PDF</th>
           <th class="text-left">Delete</th>
         </tr>
       </thead>
@@ -55,6 +56,17 @@
               @click="goToDetails"
             />
           </td>
+          <td>
+            <q-btn
+              dense
+              icon="picture_as_pdf"
+              color="red"
+              @click="exportSingleLog(log)"
+            >
+              <q-tooltip>Export this log to PDF</q-tooltip>
+            </q-btn>
+          </td>
+
           <td>
             <q-btn
               dense
@@ -242,6 +254,73 @@ async function confirmDelete(id) {
       $q.notify({ type: "negative", message: "Failed to delete log." });
     }
   });
+}
+//-----------------------------------------------------------------------
+async function toBase64Image(imageUrl) {
+  const res = await fetch(imageUrl);
+  const blob = await res.blob();
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function exportSingleLog(log) {
+  const doc = new jsPDF();
+  const title = "AI Cleaning Report";
+  const date = new Date(log.timestamp).toLocaleString();
+  let y = 15;
+
+  doc.setFontSize(16);
+  doc.text(title, 14, y);
+  y += 10;
+
+  doc.setFontSize(12);
+  doc.text("AI Feedback:", 14, y);
+  y += 8;
+
+  doc.setFontSize(10);
+
+  const feedback = log.response?.text || log.response || "";
+  const feedbackText =
+    typeof feedback === "object"
+      ? JSON.stringify(feedback, null, 2)
+      : String(feedback);
+
+  const feedbackLines = doc.splitTextToSize(feedbackText, 180);
+  doc.text(feedbackLines, 14, y);
+  y += feedbackLines.length * 6 + 4;
+
+  doc.text(`Timestamp: ${date}`, 14, y);
+  y += 10;
+
+  // try {
+  //   if (log.imageUrls && log.imageUrls.length >= 2) {
+  //     const [beforeUrl, afterUrl] = log.imageUrls;
+  //     const beforeImg = await toBase64Image(beforeUrl);
+  //     const afterImg = await toBase64Image(afterUrl);
+
+  //     const imgHeight = 60;
+  //     const imgWidth = 80;
+
+  //     if (y + imgHeight > 270) {
+  //       doc.addPage();
+  //       y = 20;
+  //     }
+
+  //     doc.addImage(beforeImg, "JPEG", 14, y, imgWidth, imgHeight);
+  //     doc.text("Before", 14, y + imgHeight + 5);
+
+  //     doc.addImage(afterImg, "JPEG", 110, y, imgWidth, imgHeight);
+  //     doc.text("After", 110, y + imgHeight + 5);
+  //   }
+  // } catch (err) {
+  //   console.warn("Image embedding failed:", err);
+  //   doc.text("Failed to embed images", 14, y);
+  // }
+
+  doc.save(`vision_log_${log._id}.pdf`);
 }
 </script>
 

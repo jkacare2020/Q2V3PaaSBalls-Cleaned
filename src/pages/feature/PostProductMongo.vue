@@ -37,8 +37,14 @@
               <div>{{ product.description || "No description available" }}</div>
             </div>
             <div class="text-body1 q-mt-md">
-              <strong>Price:</strong>
-              <span class="text-positive">${{ product.price }}</span>
+              <strong>Price: </strong>
+              <span class="text-positive">
+                {{
+                  product.price && product.price > 0
+                    ? `$${product.price}`
+                    : " Contact us for quote"
+                }}
+              </span>
             </div>
             <div class="text-caption text-grey q-mt-sm">
               Created on: {{ formatDate(product.createdAt) }}

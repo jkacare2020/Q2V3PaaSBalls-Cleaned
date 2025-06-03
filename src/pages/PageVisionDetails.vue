@@ -111,7 +111,6 @@ onMounted(() => {
       const raw = res.data;
       let parsed = raw;
 
-      // 🧠 Robust parser for `response.text` format
       if (raw?.text && typeof raw.text === "string") {
         try {
           const cleanText = raw.text
@@ -124,9 +123,12 @@ onMounted(() => {
         } catch (err) {
           console.warn("⚠️ Failed to parse evaluation text as JSON:", err);
         }
+      } else if (typeof raw === "object") {
+        parsed = raw; // Handle direct JSON format
       }
-
+      console.log("✅ Final parsed evaluation:", parsed);
       evaluation.value = parsed;
+
       drawCharts();
     } catch (err) {
       console.error("❌ Failed to load evaluation:", err);
@@ -139,53 +141,54 @@ function drawCharts() {
   setTimeout(() => {
     if (!evaluation.value) return;
 
-    new Chart(document.getElementById("cleaningScoreChart"), {
-      type: "doughnut",
-      data: {
-        labels: ["Cleaned", "Remaining"],
-        datasets: [
-          {
-            data: [
-              evaluation.value.cleaningScore || 0,
-              100 - (evaluation.value.cleaningScore || 0),
-            ],
-            backgroundColor: ["#4CAF50", "#E0E0E0"],
-          },
-        ],
-      },
-      options: {
-        plugins: {
-          title: {
-            display: true,
-            text: "Cleaning Score",
-          },
-        },
-      },
-    });
+    const cleaningScore = Number(evaluation.value.cleaningScore);
+    const colorRestoration = Number(evaluation.value.colorRestoration);
 
-    new Chart(document.getElementById("colorRestorationChart"), {
-      type: "doughnut",
-      data: {
-        labels: ["Restored", "Unrestored"],
-        datasets: [
-          {
-            data: [
-              evaluation.value.colorRestoration || 0,
-              100 - (evaluation.value.colorRestoration || 0),
-            ],
-            backgroundColor: ["#03A9F4", "#E0E0E0"],
-          },
-        ],
-      },
-      options: {
-        plugins: {
-          title: {
-            display: true,
-            text: "Color Restoration",
+    if (!isNaN(cleaningScore)) {
+      new Chart(document.getElementById("cleaningScoreChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Cleaned", "Remaining"],
+          datasets: [
+            {
+              data: [cleaningScore, 100 - cleaningScore],
+              backgroundColor: ["#4CAF50", "#E0E0E0"],
+            },
+          ],
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: "Cleaning Score",
+            },
           },
         },
-      },
-    });
+      });
+    }
+
+    if (!isNaN(colorRestoration)) {
+      new Chart(document.getElementById("colorRestorationChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Restored", "Unrestored"],
+          datasets: [
+            {
+              data: [colorRestoration, 100 - colorRestoration],
+              backgroundColor: ["#03A9F4", "#E0E0E0"],
+            },
+          ],
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: "Color Restoration",
+            },
+          },
+        },
+      });
+    }
   }, 100);
 }
 </script>

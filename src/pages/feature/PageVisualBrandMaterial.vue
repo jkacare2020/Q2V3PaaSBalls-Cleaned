@@ -45,6 +45,44 @@
           <p><strong>Suggestion:</strong> {{ result.suggestion }}</p>
         </div>
       </q-card-section>
+      <q-separator class="q-mt-lg" />
+      <q-card-section>
+        <div class="text-subtitle1 q-mb-sm">
+          🧴 Trusted Leather Cleaning Product Suppliers
+        </div>
+        <ul class="q-ml-md">
+          <li>
+            <strong>Leather Honey Leather Cleaner</strong> – Gently removes
+            dirt, grime, and stains from leather without drying it out.<br />
+            <em
+              >Available at
+              <a
+                href="https://www.leatherhoney.com/products/leather-cleaner"
+                target="_blank"
+                >leatherhoney.com</a
+              >
+              and Amazon</em
+            >
+          </li>
+          <li class="q-mt-sm">
+            <strong>Chamberlain’s Leather Milk Cleaner & Conditioner</strong> –
+            Two-in-one formula to clean and condition leather, leaving it soft
+            and supple.<br />
+            <em
+              >Available at
+              <a href="https://leathermilk.com/" target="_blank"
+                >leathermilk.com</a
+              >
+              and Amazon</em
+            >
+          </li>
+          <li class="q-mt-sm">
+            <strong>Cadillac Leather Cleaner</strong> – pH-balanced, safe
+            formula trusted by leather professionals.<br />
+            <em>Available on Amazon and Walmart</em>
+          </li>
+        </ul>
+      </q-card-section>
     </q-card>
   </q-page>
 </template>

@@ -1,5 +1,6 @@
 <template>
-  <q-page class="q-pa-lg column items-center justify-center">
+  <q-page class="q-pa-xl column items-center justify-center">
+    <!-- Header Branding -->
     <div class="text-center q-mb-xl">
       <q-img
         src="/icons/apple-touch-icon.png"
@@ -8,170 +9,116 @@
         class="q-mb-md"
       />
       <div class="text-h4 text-primary text-weight-bold">IsmeHr</div>
-      <div class="text-subtitle2 text-grey-7">Your AI-powered HR Assistant</div>
+      <div class="text-subtitle2 text-grey-7">
+        AI-Powered Leather Care Assistant
+      </div>
     </div>
 
-    <div
-      class="q-gutter-md row justify-center items-stretch"
-      style="max-width: 700px"
-    >
+    <!-- Highlighted Features -->
+    <div class="q-gutter-xl row justify-center items-stretch q-mb-xl">
       <q-card
-        class="my-card"
-        flat
-        bordered
-        clickable
-        @click="$router.push('/photos')"
-      >
-        <q-card-section>
-          <q-icon name="feed" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">Explore Posts</div>
-        </q-card-section>
-      </q-card>
-
-      <q-card
-        class="my-card"
-        flat
-        bordered
-        clickable
-        @click="$router.push('/marketplace')"
-      >
-        <q-card-section>
-          <q-icon name="storefront" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">Marketplace</div>
-        </q-card-section>
-      </q-card>
-
-      <q-card
-        class="my-card"
-        flat
-        bordered
-        clickable
-        @click="$router.push('/camera')"
-      >
-        <q-card-section>
-          <q-icon name="photo_camera" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">Upload Photo</div>
-        </q-card-section>
-      </q-card>
-
-      <q-card
-        class="my-card"
-        flat
-        bordered
-        clickable
-        @click="$router.push('/private-posts')"
-      >
-        <q-card-section>
-          <q-icon name="person" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">My Private Post</div>
-        </q-card-section>
-      </q-card>
-
-      <q-card
-        class="my-card"
-        flat
-        bordered
-        clickable
-        @click="$router.push('/chatbot')"
-      >
-        <q-card-section>
-          <q-icon name="smart_toy" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">AI Assist Bot</div>
-        </q-card-section>
-      </q-card>
-
-      <q-card
-        class="my-card"
+        class="feature-card"
         flat
         bordered
         clickable
         @click="$router.push('/vision-submit')"
       >
-        <q-card-section>
-          <q-icon name="scoreboard" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">AI Cleaning Score</div>
+        <q-card-section class="q-pa-md">
+          <q-icon name="science" size="xl" color="primary" />
+          <div class="text-h6 q-mt-sm text-weight-medium">
+            AI Cleaning Evaluation
+          </div>
+          <div class="text-caption q-mt-xs text-grey-7">
+            Upload before & after photos. Let GPT-4 Vision assess cleanliness
+            and material quality.
+          </div>
         </q-card-section>
-        <q-tooltip>Upload before & after images for AI evaluation</q-tooltip>
       </q-card>
 
       <q-card
-        class="my-card relative-position"
+        class="feature-card"
         flat
         bordered
         clickable
-        @click="$router.push('/mongo-mytransacts')"
+        @click="$router.push('/detect-brand')"
       >
-        <q-card-section>
-          <q-icon name="shopping_cart" size="xl" color="primary" />
-          <div class="text-h6 q-mt-sm">Resume Cart</div>
-          <q-tooltip v-if="showResumeCart">
-            You have {{ cartCount }} item(s) in your cart
-          </q-tooltip>
-          <q-badge
-            v-if="showResumeCart"
-            color="red"
-            floating
-            rounded
-            style="position: absolute; top: 5px; right: 5px"
-          >
-            {{ cartCount }}
-          </q-badge>
+        <q-card-section class="q-pa-md">
+          <q-icon name="inventory_2" size="xl" color="primary" />
+          <div class="text-h6 q-mt-sm text-weight-medium">
+            Product Suggestions
+          </div>
+          <div class="text-caption q-mt-xs text-grey-7">
+            Get cleaner & conditioner product recommendations tailored to your
+            bag’s leather type.
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <q-card
+        class="feature-card"
+        flat
+        bordered
+        clickable
+        @click="$router.push('/vision-bot')"
+      >
+        <q-card-section class="q-pa-md">
+          <q-icon name="description" size="xl" color="primary" />
+          <div class="text-h6 q-mt-sm text-weight-medium">
+            Client PDF Reports
+          </div>
+          <div class="text-caption q-mt-xs text-grey-7">
+            Export professional AI analysis reports for your cleaning clients.
+          </div>
         </q-card-section>
       </q-card>
     </div>
 
+    <!-- Quick Access -->
+    <div class="q-gutter-md row justify-center">
+      <q-btn
+        color="primary"
+        label="Chat with AI Assistant"
+        icon="smart_toy"
+        @click="$router.push('/chatbot')"
+      />
+      <q-btn
+        color="accent"
+        label="Go to Marketplace"
+        icon="storefront"
+        @click="$router.push('/marketplace')"
+      />
+      <q-btn
+        color="secondary"
+        label="Upload New Photo"
+        icon="photo_camera"
+        @click="$router.push('/camera')"
+      />
+    </div>
+
     <div class="text-caption text-grey-6 q-mt-xl">
-      © 2025 IsmeHr. All rights reserved.
+      © 2025 IsmeHr – Your trusted AI assistant for leather restoration
     </div>
   </q-page>
 </template>
-
-<script setup>
-import { ref, onMounted } from "vue";
-import { apiNode } from "src/boot/apiNode";
-import { auth } from "src/firebase/init";
-
-const showResumeCart = ref(false);
-const cartCount = ref(0);
-
-onMounted(async () => {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const token = await user.getIdToken();
-  try {
-    const res = await apiNode.get("/api/transactions/drafts", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.data && res.data.length > 0) {
-      showResumeCart.value = true;
-      cartCount.value = res.data.length;
-    }
-  } catch (err) {
-    console.error("Error checking cart drafts:", err);
-  }
-});
-</script>
 
 <script>
 export default {
   name: "PageFront",
   meta() {
     return {
-      title: "IsmeHr | AI Cleaning Grading & HR Assistant",
+      title: "IsmeHr | AI Cleaning & Leather Restoration Assistant",
       meta: [
         {
           name: "description",
           content:
-            "Upload before-and-after cleaning photos and get an AI-generated grade using GPT-4 Vision. Manage resumes, access HR tools, and shop with confidence.",
+            "Upload before-and-after cleaning photos and get an AI-generated grade using GPT-4 Vision. Suggest products, manage clients, and export PDF reports.",
         },
         { name: "robots", content: "index, follow" },
-        { property: "og:title", content: "IsmeHr | AI Cleaning Grading" },
+        { property: "og:title", content: "IsmeHr | AI Leather Care Assistant" },
         {
           property: "og:description",
           content:
-            "Get instant AI feedback on cleanliness, explore the marketplace, or chat with our HR AI assistant.",
+            "Let AI analyze handbag images, recommend care products, and generate client reports.",
         },
         {
           property: "og:image",
@@ -185,12 +132,14 @@ export default {
 </script>
 
 <style scoped>
-.my-card {
-  width: 140px;
+.feature-card {
+  width: 220px;
+  min-height: 220px;
   text-align: center;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
 }
-.my-card:hover {
+.feature-card:hover {
   transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 </style>

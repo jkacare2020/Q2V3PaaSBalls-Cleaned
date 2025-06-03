@@ -29,12 +29,14 @@
         </q-item-section>
 
         <q-item-section>
-          <q-item-label>{{ item.name }}</q-item-label>
           <q-item-label caption class="text-grey">
-            {{ item.description }} – ${{ item.price }}
+            {{ item.description }}
+            <span v-if="item.price > 0"> – ${{ item.price }}</span>
           </q-item-label>
+
           <q-item-label caption class="text-grey">
-            {{ formatDate(item.createdAt) }} – ${{ item.price }}
+            {{ formatDate(item.createdAt) }}
+            <span v-if="item.price > 0"> – ${{ item.price }}</span>
           </q-item-label>
         </q-item-section>
 
