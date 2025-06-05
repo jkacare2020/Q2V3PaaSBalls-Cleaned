@@ -124,7 +124,7 @@ You are a fashion and leather care specialist. Analyze this handbag image and re
       material,
       summary,
       suggestion,
-      suggestionType, // carry for frontend logic
+      suggestionType,
       recommendedProducts: [],
       source: "gpt",
     };
@@ -132,7 +132,9 @@ You are a fashion and leather care specialist. Analyze this handbag image and re
     // Step 2: GPT-3.5 for product suggestions
     if (suggestionType === "products") {
       const productPrompt = `
-List 2–3 of the best commercial cleaning products specifically made for cleaning ${material} handbags. For each product, include:
+You are a leather care expert. Based on the material "${material}", list 2–3 **real, commercially available** leather cleaning products.
+
+Each must include:
 - name
 - brand
 - usage instructions
@@ -142,10 +144,10 @@ Respond strictly in this JSON format:
 {
   "recommendedProducts": [
     {
-      "name": "Lexol Leather Cleaner",
-      "brand": "Lexol",
-      "usage": "Apply with a soft cloth and gently wipe clean.",
-      "availability": "Available on Amazon and Walmart"
+      "name": "Leather Cleaner Name",
+      "brand": "Brand Name",
+      "usage": "How to apply",
+      "availability": "Amazon / Walmart / leatherhoney.com"
     }
   ]
 }
@@ -172,7 +174,7 @@ Respond strictly in this JSON format:
         result.recommendedProducts = [];
       }
 
-      // Fallback if GPT-3.5 failed or returned nothing
+      // Fallback list if GPT-3.5 fails
       if (result.recommendedProducts.length === 0) {
         result.recommendedProducts = [
           {
@@ -201,7 +203,6 @@ Respond strictly in this JSON format:
       }
     }
 
-    // Save the session log
     const sessionId = `vision-${uid}-${Date.now()}`;
     await new ChatbotLog({
       userId: uid,
@@ -218,5 +219,198 @@ Respond strictly in this JSON format:
   } catch (err) {
     console.error("❌ detectBrandAndMaterial error:", err);
     res.status(500).json({ error: "Failed to process image." });
+  }
+};
+
+// visionController.js (continued)
+
+// visionController.js
+
+exports.mapProductsToBag = async (req, res) => {
+  try {
+    console.log("🛠️ mapProductsToBag triggered with:", req.body);
+
+    const { material, stainType = "general", summary = "" } = req.body;
+
+    if (!material) {
+      return res.status(400).json({ error: "Missing material." });
+    }
+
+    // 🔍 Normalize material string for matching
+    const normalizeMaterial = (raw) => {
+      const val = raw.toLowerCase();
+      if (val.includes("leather")) return "leather";
+      if (val.includes("suede")) return "suede";
+      return "unknown";
+    };
+
+    const normalizedMaterial = normalizeMaterial(material);
+    const normalizedStain = stainType.toLowerCase();
+
+    // 🧴 Define product mapping
+    const productMap = {
+      leather: {
+        general: [
+          {
+            name: "Leather Honey Leather Cleaner",
+            brand: "Leather Honey",
+            usage:
+              "Apply with a soft cloth. Gently rub over leather surface, then wipe off excess.",
+            availability: "Available on Amazon and leatherhoney.com",
+          },
+          {
+            name: "Chamberlain’s Leather Milk Cleaner and Conditioner",
+            brand: "Chamberlain's",
+            usage:
+              "Use a soft pad to apply. Let sit for 10 minutes, then buff with a clean cloth.",
+            availability: "Available on leathermilk.com and Amazon",
+          },
+        ],
+        dirt: [
+          {
+            name: "Chemical Guys Leather Cleaner",
+            brand: "Chemical Guys",
+            usage:
+              "Spray lightly on dirty leather and wipe with microfiber towel.",
+            availability: "Available on Amazon and chemicalguys.com",
+          },
+          {
+            name: "Lexol Leather Deep Cleaner",
+            brand: "Lexol",
+            usage: "Apply to a cloth, scrub lightly, and wipe clean.",
+            availability: "Available on Amazon and lexol.com",
+          },
+        ],
+        mold: [
+          {
+            name: "Leather Master Mold Cleaner",
+            brand: "Leather Master",
+            usage: "Spray on leather, wait 10 minutes, then wipe clean.",
+            availability: "Available on furnitureclinic.com and Amazon",
+          },
+          {
+            name: "Furniture Clinic Leather Cleaner",
+            brand: "Furniture Clinic",
+            usage: "Apply using sponge. Work in circular motions. Wipe dry.",
+            availability: "Available on furnitureclinic.com and Amazon",
+          },
+        ],
+        oil: [
+          {
+            name: "Cadillac Leather Cleaner",
+            brand: "Cadillac",
+            usage: "Spray on leather. Wipe off oil with clean cloth.",
+            availability:
+              "Available on Amazon and cadillacboot.com,  cadillacshoe.com/",
+          },
+          {
+            name: "Bickmore Bick 1 Leather Cleaner",
+            brand: "Bickmore",
+            usage: "Apply with soft cloth. Let sit, then wipe thoroughly.",
+            availability: "Available on Amazon and bickmore.com",
+          },
+        ],
+        ink: [
+          {
+            name: "Artman Ink Remover for Leather",
+            brand: "Artman",
+            usage: "Apply gently over ink mark and wipe with damp cloth.",
+            availability: "Available on Amazon",
+          },
+          {
+            name: "Furniture Clinic Leather Ink Remover",
+            brand: "Furniture Clinic",
+            usage:
+              "Rub the stick directly on ink mark, wait 30 seconds, then wipe off.",
+            availability: "Available on furnitureclinic.com and Amazon",
+          },
+          {
+            name: "LeatherNova Ink & Stain Remover",
+            brand: "LeatherNova",
+            usage:
+              "Apply a few drops to soft cloth, dab gently. Avoid rubbing.",
+            availability: "Available on Amazon and leathernova.com",
+          },
+          {
+            name: "Cadillac Select Leather Cleaner",
+            brand: "Cadillac",
+            usage:
+              "Apply to ink area with soft cloth. Gently rub in circular motion. Wipe dry.",
+            availability: "Available on Amazon and cadillacboot.com",
+          },
+          {
+            name: "Weiman Leather Cleaner & Conditioner",
+            brand: "Weiman",
+            usage:
+              "Spray onto leather surface, then wipe with microfiber cloth.",
+            availability: "Available on Amazon, Walmart, and weiman.com",
+          },
+          {
+            name: "COLOURLOCK Ballpoint Pen Remover",
+            brand: "COLOURLOCK",
+            usage:
+              "Use sparingly. Dab gently with cotton cloth on ink marks. Do not rub hard.",
+            availability: "Available on colourlock.com and Amazon",
+          },
+        ],
+      },
+
+      suede: {
+        general: [
+          {
+            name: "Kiwi Suede and Nubuck Cleaner",
+            brand: "Kiwi",
+            usage: "Spray lightly on surface. Use suede brush to clean.",
+            availability: "Available on Amazon and Target",
+          },
+        ],
+        dirt: [
+          {
+            name: "Saphir Omni’Nettoyant Suede Cleaner",
+            brand: "Saphir",
+            usage: "Mix with water, scrub gently using brush. Air dry.",
+            availability: "Available on Amazon and theshoemart.com",
+          },
+        ],
+        mold: [
+          {
+            name: "Moneysworth & Best Suede & Nubuck Cleaner",
+            brand: "Moneysworth & Best",
+            usage: "Spray and scrub with suede brush. Let air dry.",
+            availability: "Available on Amazon and Walmart",
+          },
+        ],
+        oil: [
+          {
+            name: "Jason Markk Suede Cleaning Kit",
+            brand: "Jason Markk",
+            usage: "Use cleaner and brush gently to lift oil stains.",
+            availability: "Available on jasonmarkk.com and Amazon",
+          },
+        ],
+        ink: [], // add if needed
+      },
+    };
+
+    const products =
+      productMap[normalizedMaterial]?.[normalizedStain] ||
+      productMap[normalizedMaterial]?.general ||
+      [];
+
+    console.log("🧴 Mapped products for:", {
+      normalizedMaterial,
+      normalizedStain,
+      found: products.length,
+    });
+
+    return res.status(200).json({
+      material,
+      stainType,
+      summary,
+      recommendedProducts: products,
+    });
+  } catch (err) {
+    console.error("mapProductsToBag error:", err);
+    res.status(500).json({ error: "Failed to map products." });
   }
 };

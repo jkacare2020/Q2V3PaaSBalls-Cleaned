@@ -3,6 +3,26 @@
   <q-page class="q-pa-md">
     <q-card>
       <q-card-section>
+        <q-expansion-item
+          label="🧠 How to Analyze Your Handbag"
+          expand-separator
+          :default-opened="false"
+          class="bg-grey-1 text-grey-9 rounded-borders q-mb-md"
+        >
+          <ul class="q-pl-md q-pt-sm">
+            <li>Upload a clear handbag image (front view preferred)</li>
+            <li>
+              Select Suggestion Type:
+              <ul>
+                <li>🧼 General Care – tips for maintenance</li>
+                <li>🛒 Products – get cleaner recommendations</li>
+              </ul>
+            </li>
+            <li>Choose Stain Type (optional)</li>
+            <li>Click <strong>Detect Brand/Material</strong></li>
+          </ul>
+        </q-expansion-item>
+
         <div class="text-h6">Brand & Material Detection</div>
         <q-file v-model="imageFile" label="Upload Bag Image" accept="image/*" />
         <q-btn
@@ -24,6 +44,15 @@
           emit-value
           map-options
         />
+        <q-select
+          v-model="stainType"
+          :options="stainOptions"
+          label="Optional: Select Stain Type"
+          class="q-mt-md"
+          emit-value
+          map-options
+        />
+
         <q-banner
           v-if="suggestionType === 'products'"
           dense
@@ -46,42 +75,37 @@
         </div>
       </q-card-section>
       <q-separator class="q-mt-lg" />
-      <q-card-section>
-        <div class="text-subtitle1 q-mb-sm">
-          🧴 Trusted Leather Cleaning Product Suppliers
+      <q-card-section v-if="result?.recommendedProducts?.length">
+        <div class="text-subtitle1 q-mb-md">
+          🧴 Recommended Products Based on Material & Stain
         </div>
-        <ul class="q-ml-md">
-          <li>
-            <strong>Leather Honey Leather Cleaner</strong> – Gently removes
-            dirt, grime, and stains from leather without drying it out.<br />
-            <em
-              >Available at
-              <a
-                href="https://www.leatherhoney.com/products/leather-cleaner"
-                target="_blank"
-                >leatherhoney.com</a
-              >
-              and Amazon</em
-            >
-          </li>
-          <li class="q-mt-sm">
-            <strong>Chamberlain’s Leather Milk Cleaner & Conditioner</strong> –
-            Two-in-one formula to clean and condition leather, leaving it soft
-            and supple.<br />
-            <em
-              >Available at
-              <a href="https://leathermilk.com/" target="_blank"
-                >leathermilk.com</a
-              >
-              and Amazon</em
-            >
-          </li>
-          <li class="q-mt-sm">
-            <strong>Cadillac Leather Cleaner</strong> – pH-balanced, safe
-            formula trusted by leather professionals.<br />
-            <em>Available on Amazon and Walmart</em>
-          </li>
-        </ul>
+
+        <div class="column">
+          <q-card
+            v-for="product in result.recommendedProducts"
+            :key="product.name"
+            class="q-mb-md q-pa-md"
+            flat
+            bordered
+          >
+            <q-card-section>
+              <div class="text-subtitle1 text-bold">{{ product.name }}</div>
+              <div class="text-caption text-grey">{{ product.brand }}</div>
+
+              <q-separator class="q-my-sm" />
+
+              <div class="q-mt-sm">
+                <strong>How to Use:</strong>
+                <div class="q-mt-xs">{{ product.usage }}</div>
+              </div>
+
+              <div class="q-mt-sm">
+                <strong>Where to Buy:</strong>
+                <div class="q-mt-xs text-blue">{{ product.availability }}</div>
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
       </q-card-section>
     </q-card>
   </q-page>
@@ -100,6 +124,8 @@ const storeAuth = useStoreAuth();
 
 const suggestionType = ref("care"); // default
 
+const stainType = ref("general"); // If not already added
+
 const analyzeImage = async () => {
   loading.value = true;
   result.value = null;
@@ -107,18 +133,44 @@ const analyzeImage = async () => {
   const formData = new FormData();
   formData.append("image", imageFile.value);
   formData.append("uid", storeAuth.user?.uid || "unknown");
-  formData.append("suggestionType", suggestionType.value); // 💡 add this
+  formData.append("suggestionType", suggestionType.value);
+  formData.append("stainType", stainType.value || "general");
 
   try {
+    // Step 1: detectBrandAndMaterial
     const response = await apiNode.post(
       "/api/vision/detect-brand-material",
       formData
     );
     result.value = response.data;
+    console.log("🧠 Detection result:", result.value);
+
+    // Step 2: Optional mapProductsToBag if suggestionType is 'products'
+    if (suggestionType.value === "products" && result.value?.material) {
+      const mapRes = await apiNode.post("/api/vision/map-products", {
+        material: result.value.material,
+        stainType: stainType.value || "general",
+        summary: result.value.summary,
+      });
+
+      console.log("🗺️ Product map result:", mapRes.data);
+
+      // 🧴 Override recommended products (optional)
+      result.value.recommendedProducts = mapRes.data.recommendedProducts || [];
+    }
   } catch (error) {
-    console.error("AI detection failed:", error);
+    console.error("❌ Detection or mapping failed:", error);
   } finally {
     loading.value = false;
   }
 };
+
+const stainOptions = [
+  { label: "None", value: "general" },
+  { label: "Water Stain", value: "water" },
+  { label: "Grease/Oil", value: "oil" },
+  { label: "Ink Mark", value: "ink" },
+  { label: "Dirt/Mud", value: "dirt" },
+  { label: "Mold/Mildew", value: "mold" },
+];
 </script>

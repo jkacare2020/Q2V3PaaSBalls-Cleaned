@@ -1,4 +1,4 @@
-//---visionRoutes.js-----------
+// backend/routes/visionRoutes.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
@@ -7,6 +7,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const {
   compareImagesWithAI,
   detectBrandAndMaterial,
+  mapProductsToBag,
 } = require("../controllers/visionController");
 
 // POST /api/vision/compare
@@ -25,5 +26,8 @@ router.post(
   upload.single("image"),
   detectBrandAndMaterial
 );
+
+// POST /api/vision/map-products
+router.post("/map-products", mapProductsToBag);
 
 module.exports = router;

@@ -14,7 +14,8 @@
           <div class="col-12 col-md-6">
             <q-img
               :src="product.imageUrl || defaultImage"
-              style="max-height: 300px"
+              style="height: 100vh; object-fit: contain"
+              class="q-mb-md"
             />
           </div>
           <div class="col-12 col-md-6">
