@@ -25,14 +25,22 @@
 
         <div class="text-h6">Brand & Material Detection</div>
         <q-file v-model="imageFile" label="Upload Bag Image" accept="image/*" />
-        <q-btn
-          label="Detect Brand/Material"
-          color="primary"
-          class="q-mt-md"
-          @click="analyzeImage"
-          :disable="!imageFile || loading"
-        />
-
+        <div class="row q-gutter-md q-mt-md">
+          <q-btn
+            label="🧠 Detect Brand/Material"
+            color="secondary"
+            class="q-mt-md"
+            @click="analyzeImage"
+            :disable="!imageFile || loading"
+          />
+          <q-btn
+            label="👜 Estimate Cleaning Price"
+            color="blue"
+            class="q-mt-md q-ml-md"
+            :to="{ path: '/bluebook-bag' }"
+            icon="price_change"
+          />
+        </div>
         <q-select
           v-model="suggestionType"
           :options="[

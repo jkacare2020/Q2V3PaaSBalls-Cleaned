@@ -8,6 +8,7 @@ const {
   compareImagesWithAI,
   detectBrandAndMaterial,
   mapProductsToBag,
+  mapPriceEstimating,
 } = require("../controllers/visionController");
 
 // POST /api/vision/compare
@@ -29,5 +30,7 @@ router.post(
 
 // POST /api/vision/map-products
 router.post("/map-products", mapProductsToBag);
+
+router.post("/map-price-estimate", upload.single("image"), mapPriceEstimating);
 
 module.exports = router;

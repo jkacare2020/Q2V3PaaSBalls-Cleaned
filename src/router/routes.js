@@ -338,6 +338,12 @@ const routes = [
         component: () => import("pages/feature/PageVisualBrandMaterial.vue"),
         meta: { requiresAuth: true }, // optional
       },
+
+      {
+        path: "bluebook-bag",
+        component: () => import("pages/feature/PageBluebookBag.vue"),
+        meta: { requiresAuth: true }, // optional
+      },
     ],
   },
 

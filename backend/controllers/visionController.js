@@ -3,8 +3,13 @@ const { OpenAI } = require("openai");
 const admin = require("firebase-admin");
 const { uploadImageAndGetUrl } = require("../utils/firebaseUpload");
 const ChatbotLog = require("../models/chatBot/chatbotLog");
-
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+const { priceMap, marketRanges } = require("../utils/priceMap");
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// DO NOT put pricing logic here
+// It belongs inside mapPriceEstimating()
 
 exports.compareImagesWithAI = async (req, res) => {
   try {
@@ -56,17 +61,6 @@ exports.compareImagesWithAI = async (req, res) => {
     res.status(500).json({ error: "Failed to analyze images." });
   }
 };
-
-// const { OpenAI } = require("openai");
-// const { uploadImageAndGetUrl } = require("../utils/firebaseUpload");
-
-// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// const { OpenAI } = require("openai");
-// const { uploadImageAndGetUrl } = require("../utils/firebaseUpload");
-// const ChatbotLog = require("../models/chatBot/chatbotLog");
-
-// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 exports.detectBrandAndMaterial = async (req, res) => {
   try {
@@ -412,5 +406,93 @@ exports.mapProductsToBag = async (req, res) => {
   } catch (err) {
     console.error("mapProductsToBag error:", err);
     res.status(500).json({ error: "Failed to map products." });
+  }
+};
+//----------------Estimate price--------------------------------------------
+
+exports.mapPriceEstimating = async (req, res) => {
+  try {
+    const imageFile = req.file;
+    if (!imageFile) {
+      return res.status(400).json({ error: "Image is required." });
+    }
+
+    const imageUrl = await uploadImageAndGetUrl(
+      imageFile,
+      `vision/price-${Date.now()}`
+    );
+
+    const prompt = `
+You are an expert in analyzing handbag stain areas. Given the uploaded image of a handbag, your task is to:
+1. Identify all major visible stains.
+2. For each stain, return:
+   - zone (e.g., front, side, handle)
+   - x and y coordinates (in pixels)
+   - approximate radius (in pixels)
+3. Format your response as JSON:
+{
+  "material": "...",
+  "stainType": "...",
+  "stainCount": ...,
+  "stainLocations": ["..."],
+  "stainCoordinates": [
+    { "x": ..., "y": ..., "radius": ..., "zone": "..." },
+    ...
+  ]
+}
+Only include real stains based on visible evidence.
+`.trim();
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4-turbo",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: imageUrl } },
+          ],
+        },
+      ],
+      max_tokens: 500,
+    });
+
+    const raw = completion.choices[0]?.message?.content || "{}";
+    console.log("📦 GPT raw response:", raw);
+    console.log("📦 GPT raw response:", completion.choices[0].message.content);
+
+    const responseText = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(responseText);
+
+    const material = parsed.material?.toLowerCase() || "unknown";
+    const stainType = parsed.stainType?.toLowerCase() || "general";
+    const stainCount = parseInt(parsed.stainCount) || 1;
+    const stainLocations = Array.isArray(parsed.stainLocations)
+      ? parsed.stainLocations
+      : [];
+
+    const rule = priceMap[material]?.[stainType] || {
+      base: 20,
+      multiplier: 1.0,
+    };
+    const consumerPrice = Math.round(
+      rule.base + stainCount * rule.multiplier * 5
+    );
+    const merchantPrice = Math.round(consumerPrice * 0.8);
+    const marketRange = marketRanges[material] || { low: 35, high: 70 };
+
+    return res.status(200).json({
+      material,
+      stainType,
+      stainCount,
+      stainLocations: parsed.stainLocations || [],
+      cleaningInstructions: parsed.cleaningInstructions || [],
+      consumerPrice,
+      merchantPrice,
+      marketRange,
+    });
+  } catch (err) {
+    console.error("❌ mapPriceEstimating error:", err);
+    return res.status(500).json({ error: "Failed to estimate price." });
   }
 };
