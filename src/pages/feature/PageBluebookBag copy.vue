@@ -1,5 +1,4 @@
 <template>
-  <!--PageBluebookBag --->
   <q-page class="q-pa-md">
     <q-card>
       <q-card-section>
@@ -168,7 +167,6 @@
 
 <script setup>
 import { ref, watch } from "vue";
-import { onMounted, nextTick } from "vue";
 import { useQuasar } from "quasar";
 import { apiNode } from "boot/apiNode";
 
@@ -236,17 +234,7 @@ async function mapPriceEstimating() {
       stainCount: data.stainCount,
       stainLocations: data.stainLocations || [],
       cleaningInstructions: data.cleaningInstructions || [],
-      stainCoordinates: data.stainCoordinates || [], // ✅ new
     };
-
-    analysisResult.value.stainCoordinates = [
-      { x: 100, y: 120, radius: 30 },
-      { x: 200, y: 160, radius: 25 },
-      { x: 300, y: 220, radius: 20 },
-    ];
-
-    await nextTick();
-    drawHighlights();
 
     pricingResult.value = {
       consumerPrice: data.consumerPrice,
@@ -266,48 +254,6 @@ function onFileChange(file) {
   } else {
     imagePreview.value = null;
   }
-}
-//------------------------------------------------------------
-
-const canvasRef = ref(null);
-const imageRef = ref(null);
-
-// 🟡 Draw stain circles when image is loaded
-async function drawHighlights() {
-  await nextTick();
-
-  const canvas = canvasRef.value;
-  const image = imageRef.value;
-  if (!canvas || !image || !analysisResult.value?.stainCoordinates) return;
-
-  const ctx = canvas.getContext("2d");
-  const rect = image.getBoundingClientRect();
-
-  canvas.width = rect.width;
-  canvas.height = rect.height;
-  canvas.style.width = rect.width + "px";
-  canvas.style.height = rect.height + "px";
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = "red";
-  ctx.lineWidth = 3;
-
-  const stainCoords = analysisResult.value.stainCoordinates;
-
-  stainCoords.forEach((stain) => {
-    // Normalize and apply shift
-    let x = (stain.x / image.naturalWidth) * rect.width;
-    let y = (stain.y / image.naturalHeight) * rect.height;
-
-    x += rect.width * 0.16; // ➕ Shift right 10%
-    y += rect.height * 0.22; // ➕ Shift down 10%
-
-    const r = (stain.radius / image.naturalWidth) * rect.width;
-
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, 2 * Math.PI);
-    ctx.stroke();
-  });
 }
 </script>
 
@@ -331,10 +277,5 @@ async function drawHighlights() {
 .bordered {
   border: 1px solid #ccc;
   border-radius: 4px;
-}
-
-canvas {
-  background-color: rgba(0, 0, 255, 0.05); /* light blue */
-  z-index: 10;
 }
 </style>

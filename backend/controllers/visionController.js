@@ -423,45 +423,40 @@ exports.mapPriceEstimating = async (req, res) => {
     );
 
     const prompt = `
-You are an expert in handbag stain analysis.
+You are an expert handbag restoration assistant using image analysis. For the uploaded handbag image, follow these steps:
 
-Given an image of a handbag, return a JSON object with:
-1. material (e.g., leather, suede)
-2. stainType (e.g., mold, oil, ink)
-3. stainCount (how many visible stains)
-4. stainLocations (zones like "front", "handle", "side", etc.)
-5. stainCoordinates (optional): for each stain, include x, y, radius, and zone
-6. cleaningInstructions:
-   - one instruction per zone in stainLocations
-   - each should include:
-     • location (zone only, no combined names)
-     • product (e.g., "pH-neutral leather cleaner")
-     • usage (e.g., "Gently apply with microfiber cloth in circular motion")
+1. Identify **all visible stains** on the handbag surface.
+2. For each stain, provide:
+   - zone: where it appears (e.g., "front", "handle", "side")
+   - x: estimated horizontal pixel position
+   - y: estimated vertical pixel position
+   - radius: estimated size in pixels
+3. Also provide for each unique zone:
+   - product to use
+   - how to apply it
 
-⚠️ Output must be pure JSON, no explanations or notes.
+Return your full answer strictly as JSON using this exact schema:
 
 {
   "material": "leather",
   "stainType": "mold",
-  "stainCount": 2,
-  "stainLocations": ["front", "side"],
-  "stainCoordinates": [
-    { "x": 200, "y": 180, "radius": 20, "zone": "front" },
-    { "x": 330, "y": 220, "radius": 18, "zone": "side" }
-  ],
+  "stainCount": 3,
+  "stainLocations": ["front", "handle"],
   "cleaningInstructions": [
     {
       "location": "front",
       "product": "pH-neutral leather cleaner",
       "usage": "Gently apply with microfiber cloth in circular motion"
-    },
-    {
-      "location": "side",
-      "product": "pH-neutral leather cleaner",
-      "usage": "Gently apply with microfiber cloth in circular motion"
     }
+  ],
+  "stainCoordinates": [
+    { "x": 150, "y": 240, "radius": 20, "zone": "front" },
+    { "x": 310, "y": 400, "radius": 18, "zone": "front" }
   ]
 }
+
+❗ Do NOT omit "stainCoordinates" — always return real estimated values.
+❗ Do NOT return explanations or text outside the JSON object.
 `.trim();
 
     const completion = await openai.chat.completions.create({
