@@ -423,24 +423,45 @@ exports.mapPriceEstimating = async (req, res) => {
     );
 
     const prompt = `
-You are an expert in analyzing handbag stain areas. Given the uploaded image of a handbag, your task is to:
-1. Identify all major visible stains.
-2. For each stain, return:
-   - zone (e.g., front, side, handle)
-   - x and y coordinates (in pixels)
-   - approximate radius (in pixels)
-3. Format your response as JSON:
+You are an expert in handbag stain analysis.
+
+Given an image of a handbag, return a JSON object with:
+1. material (e.g., leather, suede)
+2. stainType (e.g., mold, oil, ink)
+3. stainCount (how many visible stains)
+4. stainLocations (zones like "front", "handle", "side", etc.)
+5. stainCoordinates (optional): for each stain, include x, y, radius, and zone
+6. cleaningInstructions:
+   - one instruction per zone in stainLocations
+   - each should include:
+     • location (zone only, no combined names)
+     • product (e.g., "pH-neutral leather cleaner")
+     • usage (e.g., "Gently apply with microfiber cloth in circular motion")
+
+⚠️ Output must be pure JSON, no explanations or notes.
+
 {
-  "material": "...",
-  "stainType": "...",
-  "stainCount": ...,
-  "stainLocations": ["..."],
+  "material": "leather",
+  "stainType": "mold",
+  "stainCount": 2,
+  "stainLocations": ["front", "side"],
   "stainCoordinates": [
-    { "x": ..., "y": ..., "radius": ..., "zone": "..." },
-    ...
+    { "x": 200, "y": 180, "radius": 20, "zone": "front" },
+    { "x": 330, "y": 220, "radius": 18, "zone": "side" }
+  ],
+  "cleaningInstructions": [
+    {
+      "location": "front",
+      "product": "pH-neutral leather cleaner",
+      "usage": "Gently apply with microfiber cloth in circular motion"
+    },
+    {
+      "location": "side",
+      "product": "pH-neutral leather cleaner",
+      "usage": "Gently apply with microfiber cloth in circular motion"
+    }
   ]
 }
-Only include real stains based on visible evidence.
 `.trim();
 
     const completion = await openai.chat.completions.create({
@@ -454,15 +475,19 @@ Only include real stains based on visible evidence.
           ],
         },
       ],
-      max_tokens: 500,
+      max_tokens: 800,
     });
 
     const raw = completion.choices[0]?.message?.content || "{}";
-    console.log("📦 GPT raw response:", raw);
-    console.log("📦 GPT raw response:", completion.choices[0].message.content);
-
     const responseText = raw.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(responseText);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch (e) {
+      console.error("❌ Failed to parse JSON from GPT:", responseText);
+      return res.status(500).json({ error: "Invalid AI response format." });
+    }
 
     const material = parsed.material?.toLowerCase() || "unknown";
     const stainType = parsed.stainType?.toLowerCase() || "general";
