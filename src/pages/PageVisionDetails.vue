@@ -1,4 +1,5 @@
 <template>
+  <!--PageVisionDetails.vue -->
   <q-page class="q-pa-md" :class="{ 'bg-dark text-white': isDark }">
     <div class="text-h5 q-mb-md">🧼 Restoration Job Evaluation</div>
 
@@ -58,6 +59,12 @@
 
     <div v-if="evaluation" class="q-mt-xl">
       <div class="text-subtitle1 q-mb-sm">📊 Visual Summary</div>
+      <q-btn
+        label="📄 Download PDF Report"
+        color="primary"
+        class="q-mt-md"
+        @click="downloadPdf"
+      />
       <div class="row q-col-gutter-md">
         <div class="col-12 col-md-6">
           <canvas id="cleaningScoreChart"></canvas>
@@ -66,6 +73,19 @@
           <canvas id="colorRestorationChart"></canvas>
         </div>
       </div>
+      <!-- 📦 Raw JSON Output -->
+      <q-toggle
+        v-model="showRaw"
+        label="Show Raw JSON Output"
+        class="q-mt-md"
+      />
+
+      <q-card v-if="showRaw" flat bordered class="q-mt-lg bg-grey-2">
+        <q-card-section>
+          <div class="text-subtitle2 q-mb-sm">📦 Raw JSON Output</div>
+          <pre class="text-caption">{{ evaluation }}</pre>
+        </q-card-section>
+      </q-card>
     </div>
 
     <q-banner v-else :class="[isDark ? 'bg-grey-10 text-white' : 'bg-grey-3']">
@@ -89,6 +109,8 @@ const isDark = computed(() => $q.dark.isActive);
 const route = useRoute();
 
 const evaluation = ref(null);
+
+const showRaw = ref(false);
 
 //-----------------------------------------
 
@@ -191,6 +213,38 @@ function drawCharts() {
     }
   }, 100);
 }
+//---------------------------------------------------------------
+const downloadPdf = async () => {
+  try {
+    const user = auth.currentUser;
+    if (!user || !evaluation.value) {
+      $q.notify({ type: "negative", message: "Please log in first." });
+      return;
+    }
+
+    const token = await user.getIdToken();
+    const sessionId = route.query.sessionId;
+
+    const res = await apiNode.get(`/api/vision/report/${sessionId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const fileUrl = res.data?.pdfUrl;
+    if (!fileUrl) throw new Error("No PDF URL returned.");
+
+    // Start the download
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = `vision-report-${sessionId}.pdf`;
+    link.click();
+  } catch (err) {
+    console.error("❌ PDF Download failed:", err);
+    $q.notify({ type: "negative", message: "Failed to download PDF." });
+  }
+};
+//-----------------------------------------------------------------------
 </script>
 
 <style scoped>

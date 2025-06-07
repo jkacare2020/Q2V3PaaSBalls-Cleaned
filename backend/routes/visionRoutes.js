@@ -9,6 +9,7 @@ const {
   detectBrandAndMaterial,
   mapProductsToBag,
   mapPriceEstimating,
+  generateVisionReportPDF,
 } = require("../controllers/visionController");
 
 // POST /api/vision/compare
@@ -32,5 +33,8 @@ router.post(
 router.post("/map-products", mapProductsToBag);
 
 router.post("/map-price-estimate", upload.single("image"), mapPriceEstimating);
+
+// GET /api/vision/report/:sessionId (generate & download PDF)
+router.get("/report/:sessionId", generateVisionReportPDF);
 
 module.exports = router;

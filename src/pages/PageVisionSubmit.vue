@@ -14,6 +14,7 @@
               filled
             />
             <div v-if="dirtyImage" class="q-mt-sm">
+              ``
               <img
                 :src="dirtyPreviewUrl"
                 @click="showZoom('dirty')"
@@ -165,6 +166,7 @@ const itemOptions = [
   { label: "👜 leather bag", value: "leather bag" },
   { label: "👞 shoe", value: "shoe" },
   { label: "🧥 jacket", value: "jacket" },
+  { label: "🛋️ sofa", value: "sofa" },
   { label: "🧼 carpet", value: "carpet" },
 ];
 
@@ -176,17 +178,7 @@ function resetPrompt() {
 
 // Step 2: Define the reusable prompt generator function
 function generatePrompt(type) {
-  return `Please evaluate the cleaning result of this ${type}.
-
-The first image shows the condition *before cleaning*, and the second image shows it *after cleaning*.
-
-Your task:
-- Visually compare both images.
-- Identify specific cleaning improvements and surface conditions.
-
-Respond ONLY with a JSON object with these fields:
-
-{
+  const baseFields = `{
   "dirtyAreas": integer,
   "cleaningSuccess": "Short summary of how well the dirty areas were cleaned",
   "cleaningScore": integer (0-100),
@@ -195,9 +187,91 @@ Respond ONLY with a JSON object with these fields:
   "textureAndShine": "Describe how the ${type} texture and shine changed",
   "damageDetected": boolean,
   "summary": "Final judgment of the cleaning effectiveness"
-}
+}`;
 
-Format only as raw JSON (no extra text, no explanation).`;
+  const prompts = {
+    "leather bag": `
+Please evaluate the cleaning result of this leather bag.
+
+The first image shows the condition *before cleaning*, and the second shows it *after cleaning*.
+
+Focus on:
+- Dirt/stain removal (especially on corners and handles),
+- Surface shine and color restoration,
+- Visibility of scratches, mold, or scuffs,
+- Leather softness and flexibility.
+
+Respond ONLY with this JSON structure:
+${baseFields}
+`,
+
+    shoe: `
+Please evaluate the cleaning result of this shoe.
+
+Focus on:
+- Sole and upper stain removal,
+- Scuff visibility on toe and heel,
+- Shine or polish restoration,
+- Laces and edge detailing.
+
+Respond ONLY with this JSON structure:
+${baseFields}
+`,
+
+    sofa: `
+Please evaluate the cleaning result of this leather sofa.
+
+Focus on:
+- Stain removal from seat, back, and arms,
+- Recovery of original color and shine,
+- Surface issues: cracks, dryness, mold, or oil buildup,
+- Wrinkles, sagging, or structural wear.
+
+Respond ONLY with this JSON structure:
+${baseFields}
+`,
+
+    jacket: `
+Please evaluate the cleaning result of this leather jacket.
+
+Focus on:
+- Stains on sleeves, collar, and front,
+- Shine and texture restoration,
+- Damage or dryness signs,
+- Scuff visibility on high-contact areas.
+
+Respond ONLY with this JSON structure:
+${baseFields}
+`,
+
+    carpet: `
+Please evaluate the cleaning result of this carpet.
+
+Focus on:
+- Stain removal across fibers,
+- Color vibrancy restoration,
+- Edge and center spot visibility,
+- Texture softness and cleanliness.
+
+Respond ONLY with this JSON structure:
+${baseFields}
+`,
+  };
+
+  const key = type?.toLowerCase?.();
+  return (
+    prompts[key] ||
+    `
+Please evaluate the cleaning result of this item.
+
+The first image shows it before cleaning; the second, after.
+
+Focus on visible improvements in cleanliness, damage, texture, and shine.
+
+Respond ONLY with this JSON structure:
+${baseFields}
+`
+  );
 }
 
 // Step 3: Watch for item type change

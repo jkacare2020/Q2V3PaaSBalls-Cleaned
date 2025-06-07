@@ -516,3 +516,109 @@ Return your full answer strictly as JSON using this exact schema:
     return res.status(500).json({ error: "Failed to estimate price." });
   }
 };
+//-------------------------------------------------------------------
+
+// ==============PDF===============
+const PDFDocument = require("pdfkit");
+const { createCanvas } = require("canvas");
+const { uploadPdfAndGetUrl } = require("../utils/firebaseStorage");
+// const ChatbotLog = require("../models/chatBot/chatbotLog");
+
+exports.generateVisionReportPDF = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) return res.status(400).json({ error: "Missing sessionId" });
+
+    const log = await ChatbotLog.findOne({ sessionId });
+    if (!log || !log.response?.text)
+      return res.status(404).json({ error: "No vision result found" });
+
+    // Parse raw JSON safely
+    let parsed;
+    try {
+      const cleanText = log.response.text
+        .replace(/^```json/, "")
+        .replace(/^```/, "")
+        .replace(/```$/, "")
+        .trim();
+      parsed = JSON.parse(cleanText);
+    } catch (e) {
+      return res.status(500).json({ error: "Invalid JSON in vision result" });
+    }
+
+    // Create PDF
+    const doc = new PDFDocument();
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", async () => {
+      const buffer = Buffer.concat(chunks);
+      const filename = `vision-reports/${sessionId}.pdf`;
+      const url = await uploadPdfAndGetUrl(buffer, filename);
+      return res.status(200).json({ pdfUrl: url });
+    });
+
+    doc.font("Helvetica-Bold"); // Set font before writing title
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(18)
+      .text(" Cleaning Evaluation Report", { align: "center" });
+
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Session ID: ${sessionId}`);
+    doc.text(`Date: ${new Date().toISOString()}`);
+    doc.moveDown();
+
+    doc.fontSize(14).text("Evaluation Summary:");
+    doc.moveDown(0.5);
+
+    for (const [key, value] of Object.entries(parsed)) {
+      doc.text(
+        `${key}: ${typeof value === "boolean" ? (value ? "Yes" : "No") : value}`
+      );
+    }
+
+    doc.addPage();
+    doc.fontSize(14).text("Score Charts:");
+
+    // Draw pie charts
+    const drawPie = (score, label, color) => {
+      const canvas = createCanvas(200, 200);
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#E0E0E0";
+      ctx.beginPath();
+      ctx.moveTo(100, 100);
+      ctx.arc(100, 100, 90, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(100, 100);
+      ctx.arc(100, 100, 90, 0, (score / 100) * 2 * Math.PI);
+      ctx.lineTo(100, 100);
+      ctx.fill();
+
+      return canvas.toBuffer("image/png");
+    };
+
+    const cleaningScore = parsed.cleaningScore || 0;
+    const colorRestoration = parsed.colorRestoration || 0;
+
+    doc.image(drawPie(cleaningScore, "Cleaning Score", "#4CAF50"), {
+      fit: [200, 200],
+    });
+    doc.text(`Cleaning Score: ${cleaningScore}/100`, { align: "center" });
+    doc.moveDown();
+
+    doc.image(drawPie(colorRestoration, "Color Restoration", "#03A9F4"), {
+      fit: [200, 200],
+    });
+    doc.text(`Color Restoration: ${colorRestoration}/100`, { align: "center" });
+
+    doc.end();
+  } catch (err) {
+    console.error("PDF generation failed:", err);
+    res.status(500).json({ error: "Failed to generate PDF" });
+  }
+};
