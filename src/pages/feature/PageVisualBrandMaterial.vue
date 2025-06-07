@@ -25,6 +25,14 @@
 
         <div class="text-h6">Brand & Material Detection</div>
         <q-file v-model="imageFile" label="Upload Bag Image" accept="image/*" />
+        <div v-if="imagePreviewUrl" class="q-mt-md">
+          <img
+            :src="imagePreviewUrl"
+            alt="Preview"
+            style="max-width: 300px; border-radius: 8px"
+          />
+        </div>
+
         <div class="row q-gutter-md q-mt-md">
           <q-btn
             label="🧠 Detect Brand/Material"
@@ -120,19 +128,33 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { apiNode } from "boot/apiNode";
 import { useStoreAuth } from "src/stores/storeAuth";
+import { useQuasar } from "quasar";
 
 const imageFile = ref(null);
 const loading = ref(false);
 const result = ref(null);
+const $q = useQuasar();
 
 const storeAuth = useStoreAuth();
 
 const suggestionType = ref("care"); // default
 
 const stainType = ref("general"); // If not already added
+
+const imagePreviewUrl = computed(() => {
+  if (imageFile.value && imageFile.value instanceof File) {
+    return URL.createObjectURL(imageFile.value);
+  } else if (
+    Array.isArray(imageFile.value) &&
+    imageFile.value[0] instanceof File
+  ) {
+    return URL.createObjectURL(imageFile.value[0]);
+  }
+  return null;
+});
 
 const analyzeImage = async () => {
   loading.value = true;
@@ -168,6 +190,19 @@ const analyzeImage = async () => {
     }
   } catch (error) {
     console.error("❌ Detection or mapping failed:", error);
+
+    if (error.response?.status === 403) {
+      $q.notify({
+        type: "negative",
+        message:
+          error.response.data.message || "Trial limit reached. Please upgrade.",
+      });
+    } else {
+      $q.notify({
+        type: "negative",
+        message: "Failed to get AI response. Please try again.",
+      });
+    }
   } finally {
     loading.value = false;
   }

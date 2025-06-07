@@ -167,7 +167,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { onMounted, nextTick } from "vue";
 import { useQuasar } from "quasar";
 import { apiNode } from "boot/apiNode";
@@ -254,7 +254,18 @@ async function mapPriceEstimating() {
       marketRange: data.marketRange,
     };
   } catch (err) {
-    $q.notify({ color: "negative", message: "AI pricing failed." });
+    if (err.response?.status === 403) {
+      $q.notify({
+        type: "negative",
+        message:
+          err.response.data.message || "Trial limit reached. Please upgrade.",
+      });
+    } else {
+      $q.notify({
+        type: "negative",
+        message: "AI pricing failed. Please try again.",
+      });
+    }
   } finally {
     loading.value = false;
   }

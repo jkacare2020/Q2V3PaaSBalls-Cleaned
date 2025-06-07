@@ -108,22 +108,57 @@
               </q-item-section>
             </q-item>
             <q-item>
+              <!-- 📌 Left icon -->
               <q-item-section side>
                 <q-icon name="business" />
               </q-item-section>
+
+              <!-- 🧑 Role Input -->
               <q-item-section>
-                <q-input
-                  v-if="storeAuth.user"
-                  v-model="editableUser.role"
-                  outlined
-                  dense
-                  label="Role Name"
-                  required
-                  :readonly="!isAdmin"
-                />
-                <!-- Set field as readonly if not admin -->
+                <div class="relative-position">
+                  <q-input
+                    v-if="storeAuth.user"
+                    v-model="editableUser.role"
+                    outlined
+                    dense
+                    label="Role Name"
+                    required
+                    :readonly="!isAdmin"
+                    class="q-mr-sm"
+                  />
+                  <q-tooltip
+                    v-if="!isAdmin"
+                    anchor="top middle"
+                    self="bottom middle"
+                  >
+                    Admin only!
+                  </q-tooltip>
+                </div>
+              </q-item-section>
+
+              <!-- ⏱️ Trial Times Input -->
+              <q-item-section>
+                <div class="relative-position">
+                  <q-input
+                    :model-value="trialRemaining"
+                    type="number"
+                    outlined
+                    dense
+                    label="Trial Times Remaining"
+                    readonly
+                  />
+                  <q-icon
+                    name="schedule"
+                    class="absolute-top-right q-mt-sm q-mr-sm"
+                  >
+                    <q-tooltip anchor="bottom middle" self="top middle">
+                      Trial usage left: trialLimit - trialUsed
+                    </q-tooltip>
+                  </q-icon>
+                </div>
               </q-item-section>
             </q-item>
+
             <q-card-section>
               <div class="text-h6">
                 <q-badge
@@ -311,6 +346,14 @@ const formatPhone = () => {
   }
 };
 
+//----------------------------------------
+
+const trialRemaining = computed(() => {
+  const limit = editableUser.value.trialLimit ?? 0;
+  const used = editableUser.value.trialUsed ?? 0;
+  return Math.max(0, limit - used);
+});
+
 // ---------------------------Fetch user data on component mount -----------------------------
 onMounted(async () => {
   // Wait for the storeAuth to initialize
@@ -375,6 +418,7 @@ const saveProfile = async () => {
       role: editableUser.value.role,
       email: editableUser.value.email,
       bio: editableUser.value.bio ?? "", // ✅ specifically fix this
+      trialLimit: editableUser.value.trialLimit, // ✅ Add this line
     });
 
     console.log("✅ Profile updated successfully");

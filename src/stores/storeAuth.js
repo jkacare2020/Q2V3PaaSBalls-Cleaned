@@ -160,6 +160,8 @@ export const useStoreAuth = defineStore("storeAuth", {
           userName,
           role: additionalUserInfo.role || "user",
           registrationDate: new Date(),
+          trialLimit: 5, // ✅ instead of trialTimes
+          trialUsed: 0, // ✅ always initialize
         });
 
         // Optional: wait for consistency

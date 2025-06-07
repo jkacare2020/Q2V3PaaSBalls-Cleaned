@@ -55,6 +55,17 @@ exports.compareImagesWithAI = async (req, res) => {
     });
     await log.save();
 
+    // 🔻 Deduct trial if user info and trial check were passed
+    if (req.trialInfo && req.user?.uid) {
+      await admin
+        .firestore()
+        .collection("users")
+        .doc(req.user.uid)
+        .update({
+          trialUsed: admin.firestore.FieldValue.increment(1),
+        });
+    }
+
     res.status(200).json({ result: { text }, sessionId });
   } catch (err) {
     console.error("compareImagesWithAI error:", err);
@@ -208,6 +219,17 @@ Respond strictly in this JSON format:
       imageUrls: [imageUrl],
       type: "vision",
     }).save();
+
+    // 🔻 Deduct trial if user info and trial check were passed
+    if (req.trialInfo && req.user?.uid) {
+      await admin
+        .firestore()
+        .collection("users")
+        .doc(req.user.uid)
+        .update({
+          trialUsed: admin.firestore.FieldValue.increment(1),
+        });
+    }
 
     res.status(200).json(result);
   } catch (err) {
@@ -397,6 +419,17 @@ exports.mapProductsToBag = async (req, res) => {
       found: products.length,
     });
 
+    // 🔻 Deduct trial if user info and trial check were passed
+    if (req.trialInfo && req.user?.uid) {
+      await admin
+        .firestore()
+        .collection("users")
+        .doc(req.user.uid)
+        .update({
+          trialUsed: admin.firestore.FieldValue.increment(1),
+        });
+    }
+
     return res.status(200).json({
       material,
       stainType,
@@ -500,6 +533,17 @@ Return your full answer strictly as JSON using this exact schema:
     );
     const merchantPrice = Math.round(consumerPrice * 0.8);
     const marketRange = marketRanges[material] || { low: 35, high: 70 };
+
+    // 🔻 Deduct trial if user info and trial check were passed
+    if (req.trialInfo && req.user?.uid) {
+      await admin
+        .firestore()
+        .collection("users")
+        .doc(req.user.uid)
+        .update({
+          trialUsed: admin.firestore.FieldValue.increment(1),
+        });
+    }
 
     return res.status(200).json({
       material,

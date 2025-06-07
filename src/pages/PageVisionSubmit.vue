@@ -323,7 +323,18 @@ async function submitToAI() {
     router.push({ path: "/vision-details", query: { sessionId } });
   } catch (err) {
     console.error("Vision error:", err);
-    $q.notify({ type: "negative", message: "Failed to get AI response." });
+    if (err.response?.status === 403) {
+      $q.notify({
+        type: "negative",
+        message:
+          err.response.data.message || "Trial limit reached. Please upgrade.",
+      });
+    } else {
+      $q.notify({
+        type: "negative",
+        message: "Failed to get AI response. Please try again.",
+      });
+    }
   } finally {
     isSubmitting.value = false;
   }
