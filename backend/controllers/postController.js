@@ -135,7 +135,7 @@ exports.togglePostVisibility = async (req, res) => {
 exports.getPostById = async (req, res) => {
   try {
     const postId = req.params.id;
-    const postDoc = await firestore().collection("posts").doc(postId).get();
+    const postDoc = await dbFirestore.collection("posts").doc(postId).get();
 
     if (!postDoc.exists) {
       return res.status(404).json({ message: "Post not found" });
@@ -144,6 +144,114 @@ exports.getPostById = async (req, res) => {
     return res.status(200).json(postDoc.data());
   } catch (error) {
     console.error("Error fetching post:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+//---------------------------------------------------------
+exports.getMyPosts = async (req, res) => {
+  try {
+    const userId = req.user.uid; // assuming you use Firebase Auth middleware
+
+    const snapshot = await dbFirestore
+      .collection("posts")
+      .where("userId", "==", userId)
+      .orderBy("date", "desc")
+      .get();
+
+    const posts = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return res.status(200).json(posts);
+  } catch (err) {
+    console.error("Error fetching user posts:", err);
+    return res.status(500).json({ message: "Failed to fetch your posts" });
+  }
+};
+
+// GET /api/posts/from-clients
+exports.getAssignedClientPosts = async (req, res) => {
+  try {
+    const idToken = req.headers.authorization?.split("Bearer ")[1];
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const merchantId = decoded.uid;
+
+    console.log("🔐 Auth middleware hit for:", merchantId);
+
+    const db = admin.firestore();
+    const merchantDoc = await db.collection("users").doc(merchantId).get();
+    const assignedClients = merchantDoc.data()?.assignedClients || {};
+    const clientIds = Object.keys(assignedClients);
+
+    console.log("👥 Assigned client IDs:", clientIds);
+
+    if (clientIds.length === 0) return res.json([]);
+
+    const posts = [];
+
+    for (const clientId of clientIds) {
+      const snapshot = await db
+        .collection("posts")
+        .where("userId", "==", clientId)
+        .where("tags", "array-contains", "private")
+        .orderBy("date", "desc")
+        .get();
+
+      snapshot.forEach((doc) => {
+        posts.push({ id: doc.id, ...doc.data() });
+      });
+    }
+
+    console.log("📷 Returning posts:", posts.length);
+    return res.json(posts); // ✅ explicitly return JSON
+  } catch (error) {
+    console.error("❌ Error in getAssignedClientPosts:", error);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+// controllers/postProductController.js
+// controllers/postProductController.js
+const PostProduct = require("../models/postProduct/PostProduct");
+
+exports.grantPrivateAccessBatch = async (req, res) => {
+  try {
+    const { postIds, email, phone, passcode } = req.body;
+    const userId = req.user.uid; // 🔐 comes from Firebase Auth middleware
+
+    if (!postIds || !Array.isArray(postIds) || postIds.length === 0) {
+      return res.status(400).json({ message: "No postIds provided." });
+    }
+
+    if (!email || !passcode) {
+      return res
+        .status(400)
+        .json({ message: "Email and passcode are required." });
+    }
+
+    const updateData = {
+      $addToSet: {
+        privateAccess: {
+          email,
+          phone,
+          passcode,
+          grantedBy: userId,
+          grantedAt: new Date(),
+        },
+      },
+    };
+
+    const result = await PostProduct.updateMany(
+      { postId: { $in: postIds } },
+      updateData
+    );
+
+    return res.status(200).json({
+      message: "Access granted to selected posts.",
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error("Error granting batch access:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };

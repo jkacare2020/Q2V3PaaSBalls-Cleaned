@@ -52,6 +52,12 @@ const routes = [
         name: "Camera",
       },
       {
+        path: "camera/batch",
+        component: () => import("pages/PageCameraBatch.vue"),
+        meta: { requiresAuth: true },
+        name: "Batch Camera ",
+      },
+      {
         path: "videoCamera",
         component: () => import("pages/PageVideoCam.vue"),
         meta: { requiresAuth: true },
@@ -70,6 +76,12 @@ const routes = [
         name: "audioPost",
       },
       { path: "photos", component: () => import("pages/PageHome.vue") },
+
+      {
+        path: "/photos/private",
+        component: () => import("pages/PagePhotosPrivate.vue"),
+        meta: { requiresAuth: true },
+      },
       { path: "videos", component: () => import("pages/PageVideoView.vue") },
       {
         path: "audios-AI-stt",
@@ -266,6 +278,18 @@ const routes = [
       },
 
       {
+        path: "/photos/:postId",
+        component: () => import("pages/PagePhotoDetail.vue"),
+        meta: { requiresAuth: true },
+      },
+
+      {
+        path: "/photos/mine",
+        component: () => import("pages/PagePhotosMine.vue"),
+        meta: { requiresAuth: true },
+      },
+
+      {
         path: "private-posts",
         component: () => import("pages/PagePrivatePosts.vue"),
       },
@@ -344,6 +368,12 @@ const routes = [
         component: () => import("pages/feature/PageBluebookBag.vue"),
         meta: { requiresAuth: true }, // optional
       },
+
+      {
+        path: "try",
+        name: "try-page",
+        component: () => import("pages/feature/PageTry.vue"),
+      }, // ✅ Add this line
     ],
   },
 

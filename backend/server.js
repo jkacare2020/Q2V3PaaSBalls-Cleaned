@@ -30,6 +30,8 @@ const visionRoutes = require("./routes/visionRoutes");
 const assignClientRoutes = require("./routes/assignClientRoutes"); // ✅ adjust path if needed
 
 const invitationRoutes = require("./routes/invitationRoutes");
+
+const tryLogRoutes = require("./routes/tryLogRoutes");
 // const adminRoutes = require("./routes/adminRoutes");
 
 dotenv.config();
@@ -94,6 +96,9 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // Public routes (no auth)
 app.use("/api/products", postProductRoutes); // Includes public marketplace
+
+// ✅ Allow public logging before auth
+app.use("/api/try-log", tryLogRoutes);
 
 // 🔐 Global Firebase Auth Middleware (protect everything below)
 app.use("/api", authenticateAndAuthorize());

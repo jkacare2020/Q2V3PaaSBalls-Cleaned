@@ -175,10 +175,37 @@
       <router-view />
     </q-page-container>
     <q-footer class="bg-grey-10 text-white">
-      <div class="q-pa-sm text-center">
-        <q-btn flat label="Privacy" to="/privacy" />
-        <q-btn flat label="Terms" to="/terms" />
-        <q-btn flat label="Content Policy" to="/content-policy" />
+      <div class="q-pa-sm column items-center">
+        <div class="q-mb-xs">
+          <q-btn flat label="Privacy" to="/privacy" class="text-white" />
+          <q-btn flat label="Terms" to="/terms" class="text-white" />
+          <q-btn
+            flat
+            label="Content Policy"
+            to="/content-policy"
+            class="text-white"
+          />
+        </div>
+
+        <div class="text-caption">
+          🧠 Powered by
+          <a
+            href="https://www.ismehr.com"
+            target="_blank"
+            class="text-blue-4 text-weight-medium"
+            >Ismehr</a
+          >
+          – AI Leather Cleaning Evaluation
+        </div>
+
+        <q-btn
+          flat
+          size="sm"
+          color="blue-4"
+          label="Try Now"
+          to="/try"
+          class="q-mt-xs"
+        />
       </div>
     </q-footer>
   </q-layout>
@@ -388,7 +415,39 @@ const navLinks = [
       },
       { title: "TTS/STT", icon: "eva-mic-outline", link: "/audios" },
       { title: "Videos", icon: "eva-film-outline", link: "/videos" },
-      { title: "Photos", icon: "image", link: "/photos" },
+
+      // { title: "Photos", icon: "image", link: "/photos" },
+      {
+        title: "Photos",
+        icon: "image",
+        children: [
+          {
+            title: "📁 All Photos",
+            icon: "collections",
+            link: "/photos", // your existing general view
+          },
+          {
+            title: "🌐 Public",
+            icon: "public",
+            link: "/photos",
+          },
+          {
+            title: "🔒 Private (Clients)",
+            icon: "lock",
+            link: "/photos/private",
+          },
+          {
+            title: "🛍️ Marketplace",
+            icon: "storefront",
+            link: "/marketplace",
+          },
+          {
+            title: "🧑‍💼 My Posts",
+            icon: "person",
+            link: "/photos/mine",
+          },
+        ],
+      },
 
       {
         title: "Audio Files",

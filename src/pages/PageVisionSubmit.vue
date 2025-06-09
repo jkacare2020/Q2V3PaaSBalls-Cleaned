@@ -87,14 +87,35 @@
       </div>
 
       <!-- 🗘 Prompt Textarea -->
+      <!-- Toggle Button -->
+      <q-btn
+        v-if="!showPromptEditor"
+        label="✏️ Edit Prompt"
+        color="primary"
+        flat
+        @click="showPromptEditor = true"
+        class="q-mt-md"
+      />
+
+      <!-- Hidden until button is clicked -->
       <q-input
+        v-else
         v-model="prompt"
         type="textarea"
         label="Custom Prompt for GPT"
-        autogrow
         outlined
+        autogrow
         :rules="[(val) => !!val || 'Prompt is required']"
         class="q-mt-md"
+        @blur="hidePromptIfEmpty"
+      />
+      <q-btn
+        v-if="showPromptEditor"
+        label="Cancel"
+        flat
+        color="negative"
+        class="q-mt-sm"
+        @click="showPromptEditor = false"
       />
     </q-form>
 
@@ -138,6 +159,15 @@ const cleanedPreviewUrl = ref("");
 const zoomDialog = ref(false);
 const zoomImageUrl = ref("");
 
+const showPromptEditor = ref(false);
+
+function hidePromptIfEmpty() {
+  // Optional: hide editor again if prompt is empty
+  if (prompt.value.trim() === "") {
+    showPromptEditor.value = false;
+  }
+}
+
 const showZoom = (type) => {
   zoomImageUrl.value =
     type === "dirty" ? dirtyPreviewUrl.value : cleanedPreviewUrl.value;
@@ -164,9 +194,12 @@ const prompt = ref("");
 
 const itemOptions = [
   { label: "👜 leather bag", value: "leather bag" },
+  { label: "👝 pouch", value: "pouch" },
+  { label: "👛 wallet", value: "wallet" },
   { label: "👞 shoe", value: "shoe" },
   { label: "🧥 jacket", value: "jacket" },
   { label: "🛋️ sofa", value: "sofa" },
+  { label: "🚗 car seat", value: "car seat" },
   { label: "🧼 carpet", value: "carpet" },
 ];
 
@@ -252,6 +285,32 @@ Focus on:
 - Color vibrancy restoration,
 - Edge and center spot visibility,
 - Texture softness and cleanliness.
+
+Respond ONLY with this JSON structure:
+${baseFields}
+`,
+
+    wallet: `
+Please evaluate the cleaning result of this leather wallet.
+
+Focus on:
+- Stain and grime removal from folds and edges,
+- Restoration of shine and color,
+- Visibility of scratches, wear marks, or surface dullness,
+- Softness and flexibility of the leather.
+
+Respond ONLY with this JSON structure:
+${baseFields}
+`,
+
+    pouch: `
+Please evaluate the cleaning result of this leather pouch.
+
+Focus on:
+- Surface stain removal,
+- Restoration of color and shine,
+- Damage on corners, zippers, or seams,
+- Texture and suppleness of the leather.
 
 Respond ONLY with this JSON structure:
 ${baseFields}
