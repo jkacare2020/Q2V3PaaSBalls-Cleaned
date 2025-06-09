@@ -407,7 +407,23 @@ const navLinks = [
     category: "Media Hub",
     icon: "perm_media",
     links: [
-      { title: "Camera", icon: "eva-camera", link: "/camera" },
+      // { title: "Camera", icon: "eva-camera", link: "/camera" },
+      {
+        title: "📷 Camera",
+        icon: "eva-camera",
+        children: [
+          {
+            title: "📸 Single Shot",
+            icon: "photo_camera",
+            link: "/camera",
+          },
+          {
+            title: "📷 Batch Mode",
+            icon: "collections",
+            link: "/camera/batch",
+          },
+        ],
+      },
       {
         title: "Video Camera",
         icon: "eva-video-outline",

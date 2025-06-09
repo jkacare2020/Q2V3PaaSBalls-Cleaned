@@ -8,6 +8,7 @@
       outlined
       dense
       class="q-mb-md"
+      :rules="[(val) => !!val?.trim() || 'Caption is required']"
     />
 
     <div class="camera-frame">
@@ -21,10 +22,12 @@
         icon="photo_camera"
         label="Capture"
         class="q-mr-sm"
+        :disable="!batchCaption.trim()"
       />
+
       <q-btn
         @click="uploadBatch"
-        :disable="capturedPhotos.length === 0"
+        :disable="capturedPhotos.length === 0 || !batchCaption.trim()"
         color="positive"
         icon="cloud_upload"
         label="Upload Batch"
