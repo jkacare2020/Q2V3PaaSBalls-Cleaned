@@ -65,6 +65,13 @@ const pieChart = ref(null);
 const chartInstance = ref(null);
 
 const selectedItem = ref("leather bag"); // or default value
+const itemOptions = [
+  { label: "Leather Bag", value: "leather bag" },
+  { label: "Sofa", value: "sofa" },
+  { label: "Car Seat", value: "car seat" },
+  { label: "Chair", value: "chair" },
+  { label: "Jacket", value: "jacket" },
+];
 
 watch(resultText, async (newVal) => {
   if (newVal && !chartInstance.value) {

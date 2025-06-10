@@ -203,7 +203,7 @@
           size="sm"
           color="blue-4"
           label="Try Now"
-          to="/try"
+          to="/marketing"
           class="q-mt-xs"
         />
       </div>
@@ -409,7 +409,7 @@ const navLinks = [
     links: [
       // { title: "Camera", icon: "eva-camera", link: "/camera" },
       {
-        title: "📷 Camera",
+        title: " Camera",
         icon: "eva-camera",
         children: [
           {

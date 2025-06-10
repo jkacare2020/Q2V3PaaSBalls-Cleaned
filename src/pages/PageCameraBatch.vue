@@ -8,7 +8,10 @@
       outlined
       dense
       class="q-mb-md"
-      :rules="[(val) => !!val?.trim() || 'Caption is required']"
+      autofocus
+      :rules="[
+        (val) => !!val?.trim() || 'Caption is required before capturing photos',
+      ]"
     />
 
     <div class="camera-frame">

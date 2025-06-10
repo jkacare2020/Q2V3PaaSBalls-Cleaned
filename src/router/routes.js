@@ -374,6 +374,11 @@ const routes = [
         name: "try-page",
         component: () => import("pages/feature/PageTry.vue"),
       }, // ✅ Add this line
+      {
+        path: "marketing",
+        name: "Demo-page",
+        component: () => import("src/pages/feature/PageTryMarketDemo.vue"),
+      }, // ✅ Add this line
     ],
   },
 
