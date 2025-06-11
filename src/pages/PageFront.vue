@@ -111,7 +111,7 @@ export default {
         {
           name: "description",
           content:
-            "Upload before-and-after cleaning photos and get an AI-generated grade using GPT-4 Vision. Suggest products, manage clients, and export PDF reports.",
+            "Upload before-and-after cleaning photos and get an AI-generated grade using our AI-4 Vision. Suggest products, manage clients, and export PDF reports.",
         },
         { name: "robots", content: "index, follow" },
         { property: "og:title", content: "IsmeHr | AI Leather Care Assistant" },

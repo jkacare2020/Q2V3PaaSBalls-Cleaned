@@ -5,7 +5,9 @@
 
     <q-form @submit.prevent="submitToAI">
       <div class="q-gutter-md">
-        <div class="row items-start q-col-gutter-md">
+        <div class="row q-col-gutter-md q-mt-md">
+          <!-- Dirty Image -->
+          <!-- Dirty Image -->
           <div class="col-6">
             <q-file
               v-model="dirtyImage"
@@ -13,22 +15,22 @@
               accept="image/*"
               filled
             />
-            <div v-if="dirtyImage" class="q-mt-sm">
-              ``
-              <img
-                :src="dirtyPreviewUrl"
-                @click="showZoom('dirty')"
-                style="
-                  max-width: 100%;
-                  max-height: 200px;
-                  border: 1px solid #ccc;
-                  cursor: zoom-in;
-                "
-              />
+            <div v-if="dirtyImage" class="image-preview q-mt-sm">
+              <div class="image-container">
+                <img
+                  :src="dirtyPreviewUrl"
+                  @click="showZoom('dirty')"
+                  class="preview-image"
+                />
+                <!-- ✅ Add scanner bar -->
+                <div v-if="isSubmitting" class="scanner-bar" />
+              </div>
               <div class="text-caption text-center">Before</div>
             </div>
           </div>
 
+          <!-- Cleaned Image -->
+          <!-- Cleaned Image -->
           <div class="col-6">
             <q-file
               v-model="cleanedImage"
@@ -36,22 +38,22 @@
               accept="image/*"
               filled
             />
-            <div v-if="cleanedImage" class="q-mt-sm">
-              <img
-                :src="cleanedPreviewUrl"
-                @click="showZoom('cleaned')"
-                style="
-                  max-width: 100%;
-                  max-height: 200px;
-                  border: 1px solid #ccc;
-                  cursor: zoom-in;
-                "
-              />
+            <div v-if="cleanedImage" class="image-preview q-mt-sm">
+              <div class="image-container">
+                <img
+                  :src="cleanedPreviewUrl"
+                  @click="showZoom('cleaned')"
+                  class="preview-image"
+                />
+                <!-- 👇 ADD THIS -->
+                <div v-if="isSubmitting" class="scanner-bar" />
+              </div>
               <div class="text-caption text-center">After</div>
             </div>
           </div>
         </div>
 
+        <!-------------------->
         <div class="q-mt-md" style="max-width: 300px">
           <q-select
             v-model="itemType"
@@ -94,8 +96,12 @@
         color="primary"
         flat
         @click="showPromptEditor = true"
+        :disable="!(userRole === 'admin' || userRole === 'merchant')"
         class="q-mt-md"
       />
+      <q-tooltip v-if="userRole !== 'admin' && userRole !== 'merchant'">
+        Only merchants and admins can edit the prompt.
+      </q-tooltip>
 
       <!-- Hidden until button is clicked -->
       <q-input
@@ -160,6 +166,11 @@ const zoomDialog = ref(false);
 const zoomImageUrl = ref("");
 
 const showPromptEditor = ref(false);
+
+const userRole = ref("client"); // default
+
+// You should load actual role from Firebase or your backend
+// e.g., Firestore: users/{uid}.role
 
 function hidePromptIfEmpty() {
   // Optional: hide editor again if prompt is empty
@@ -407,5 +418,61 @@ async function submitToAI() {
 
 .item-select-box {
   max-width: 300px;
+}
+
+.image-preview {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-image {
+  height: 160px;
+  max-width: 100%;
+  object-fit: contain;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: zoom-in;
+}
+
+.image-container {
+  position: relative;
+  overflow: hidden;
+  height: 160px;
+  max-width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.scanner-bar {
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(0, 174, 255, 0.5),
+    transparent
+  );
+  animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 </style>

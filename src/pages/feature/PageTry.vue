@@ -1,7 +1,9 @@
 <template>
   <q-page class="q-pa-md">
     <q-card flat class="q-pa-md q-mx-auto" style="max-width: 500px">
-      <div class="text-h5 q-mb-sm">🧠 Try AI Leather Cleaner Report</div>
+      <div class="text-h5 q-mb-sm">
+        🧠 Start Free Trial – AI Leather Cleaner Report
+      </div>
       <div class="text-subtitle1 q-mb-md">
         Upload your before/after bag photos. Get AI feedback and a PDF in 30
         seconds.

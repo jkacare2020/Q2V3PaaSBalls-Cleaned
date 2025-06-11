@@ -4,7 +4,7 @@
     <q-header :elevated="useLightOrDark(true, false)">
       <q-banner v-if="showAppInstallBanner" class="bubble-banner">
         <div>
-          <b>Install PaaS-Balls as a native app?</b>
+          <b>Install SaaS as a native app?</b>
         </div>
         <div class="bubble-banner-buttons">
           <q-btn flat dense label="Yes" @click="installApp" color="white" />
@@ -55,7 +55,7 @@
                 style="height: 32px; width: 32px"
                 class="logo-link q-mr-sm"
                 @click="$router.push('/front-page')"
-              />PaaSbot</span
+              />SaaSbot</span
             >
             <!-- ➡ Forward Icon -->
             <q-btn
@@ -202,7 +202,7 @@
           flat
           size="sm"
           color="blue-4"
-          label="Try Now"
+          label="Try the AI Leather Cleaning App Now"
           to="/marketing"
           class="q-mt-xs"
         />
@@ -589,7 +589,7 @@ async function logout() {
 function quitApp() {
   $q.dialog({
     title: "Confirm",
-    message: "Really quit PaaS-Balls?",
+    message: "Really quit SaaS-app?",
     cancel: true,
     persistent: true,
     html: true,
@@ -651,7 +651,7 @@ onMounted(() => {
     console.log("🎉 App was installed");
     $q.notify({
       type: "positive",
-      message: "PaaS-Balls installed successfully!",
+      message: "SaaS app installed successfully!",
     });
   });
 });
