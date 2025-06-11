@@ -379,6 +379,19 @@ const routes = [
         name: "Demo-page",
         component: () => import("src/pages/feature/PageTryMarketDemo.vue"),
       }, // ✅ Add this line
+
+      {
+        path: "/business-info",
+        component: () => import("pages/PageBusinessLanding.vue"),
+      },
+      {
+        path: "/business-about",
+        component: () => import("pages/PageBusinessAbout.vue"),
+      },
+      {
+        path: "/for-cleaners",
+        component: () => import("pages/PageForCleaners.vue"),
+      },
     ],
   },
 

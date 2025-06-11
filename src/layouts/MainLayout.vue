@@ -122,7 +122,10 @@
             expand-separator
           >
             <!-- Handle each link or submenu -->
-            <template v-for="link in category.links" :key="link.title">
+            <template
+              v-for="link in category.links || category.children"
+              :key="link.title"
+            >
               <!-- Conditionally skip adminOnly or merchantOnly links -->
               <template v-if="!link.adminOnly || storeUsers.isAdmin">
                 <template v-if="!link.merchantOnly || storeUsers.isMerchant">
@@ -355,9 +358,11 @@ const navLinks = [
   {
     category: "General",
     icon: "apps",
-    links: [{ title: "Settings", icon: "settings", link: "/settings" }],
+    links: [
+      { title: "Settings", icon: "settings", link: "/settings" },
+      { title: "About", icon: "info", link: "/business-about" },
+    ],
   },
-
   {
     category: "AI HR Assistant",
     icon: "work",
