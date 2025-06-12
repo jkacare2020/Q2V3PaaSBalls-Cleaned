@@ -20,12 +20,22 @@
     <!-- How It Works -->
     <div class="text-h5 q-mb-sm">How It Works</div>
     <q-timeline color="primary" layout="dense" class="q-mb-xl">
-      <q-timeline-entry title="1. Upload Before & After Photos" />
       <q-timeline-entry
-        title="2. AI Analyzes the Results"
-        subtitle="Detects stains, damage, color restoration, and gives a score."
+        title="1. Identify Bag Material"
+        subtitle="Use our AI detector to recognize brand, leather, or fabric type."
       />
-      <q-timeline-entry title="3. Download PDF Report or Share with Client" />
+      <q-timeline-entry
+        title="2. Estimate Price & Stains"
+        subtitle="Automatically count stains and generate a cleaning quote."
+      />
+      <q-timeline-entry
+        title="3. Upload Before & After Photos"
+        subtitle="Let the AI measure visual improvements after cleaning."
+      />
+      <q-timeline-entry
+        title="4. Download Report"
+        subtitle="Export a professional report or share results with clients."
+      />
     </q-timeline>
 
     <!-- Benefits -->
@@ -66,11 +76,25 @@
 
     <!-- CTA -->
     <q-btn
-      label="Start Free Trial"
+      label="🧪 Try Free AI Cleaning Analysis"
       color="primary"
       type="a"
-      href="https://www.ismehr.com/try"
+      href="https://www.ismehr.com/try/vision-submit"
       target="_blank"
+    />
+
+    <q-btn
+      label="🔍 Detect Material & Brand"
+      color="primary"
+      class="q-mt-md"
+      to="/detect-brand"
+    />
+
+    <q-btn
+      label="📊 Estimate Stains  &  $ Price"
+      color="primary"
+      class="q-mt-sm"
+      to="/bluebook-bag"
     />
 
     <q-btn
@@ -79,12 +103,24 @@
       icon="mail"
       label="Contact Us for Business Plan"
       to="mailto:support@ismehr.com"
+      class="q-mt-md"
     />
   </q-page>
 </template>
 
 <script setup>
-// No logic needed for static marketing page
+import { useMeta } from "quasar";
+
+useMeta({
+  title: "AI Tools for Leather & Fabric Cleaning | Ismehr",
+  meta: {
+    description: {
+      name: "description",
+      content:
+        "Use Ismehr to analyze cleaning results, detect stains, and share AI reports with clients. Perfect for dry cleaners and leather pros.",
+    },
+  },
+});
 </script>
 
 <style scoped>

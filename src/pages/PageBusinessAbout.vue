@@ -9,7 +9,7 @@
         document, and improve the quality of their cleaning services.
       </p>
       <p>
-        Using advanced image analysis and GPT-based evaluation, Ismehr
+        Using advanced image analysis and AI-based evaluation, Ismehr
         automatically detects stains, rates cleaning quality, suggests cleaning
         products, and generates instant reports — all from before-and-after
         photos.

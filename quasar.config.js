@@ -26,14 +26,41 @@ module.exports = configure(function () {
   console.log("🧪 Using FASTAPI_URL:", process.env.VITE_FASTAPI_URL);
 
   return {
-    build: {
+    bbuild: {
+      vueRouterMode: "history",
+      target: {
+        browser: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],
+        node: "node20",
+      },
       env: {
         VITE_API_LOCAL: process.env.VITE_API_LOCAL,
         VITE_API_PRODUCTION: process.env.VITE_API_PRODUCTION,
+        VITE_API_URL:
+          process.env.NODE_ENV === "production"
+            ? process.env.VITE_API_PRODUCTION || "https://fallback-api.com"
+            : process.env.VITE_API_LOCAL || "http://localhost:3000",
         VITE_FASTAPI_URL: process.env.VITE_FASTAPI_URL,
+        VUE_APP_FIREBASE_API_KEY: process.env.VUE_APP_FIREBASE_API_KEY,
+        VUE_APP_FIREBASE_AUTH_DOMAIN: process.env.VUE_APP_FIREBASE_AUTH_DOMAIN,
+        VUE_APP_FIREBASE_PROJECT_ID: process.env.VUE_APP_FIREBASE_PROJECT_ID,
+        VUE_APP_FIREBASE_STORAGE_BUCKET:
+          process.env.VUE_APP_FIREBASE_STORAGE_BUCKET,
+        VUE_APP_FIREBASE_MESSAGING_SENDER_ID:
+          process.env.VUE_APP_FIREBASE_MESSAGING_SENDER_ID,
+        VUE_APP_FIREBASE_APP_ID: process.env.VUE_APP_FIREBASE_APP_ID,
       },
+      extendWebpack(cfg) {
+        cfg.resolve.alias = {
+          ...cfg.resolve.alias,
+          "@": path.resolve(__dirname, "./src"),
+        };
+      },
+      htmlVariables: {
+        productName: "Ismehr: AI SaaS for Cleaning & HR",
+        productDescription: "Your AI-powered tool for Cleaning & HR tasks",
+      },
+      version: "1.0.1",
     },
-
     boot: ["router", "apiFastAPI", "apiNode"],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
@@ -214,8 +241,8 @@ module.exports = configure(function () {
       },
       injectPwaMetaTags: true, // ✅ Recommended for automatic `<meta>` tags
       manifest: {
-        name: "PaaS-Balls",
-        short_name: "PaaS",
+        name: "Ismehr: AI SaaS for Cleaning & HR",
+        short_name: "Ismehr",
         description: "Your AI-powered HR Assistant App",
         display: "standalone",
         orientation: "portrait",
@@ -285,8 +312,9 @@ module.exports = configure(function () {
 
       builder: {
         // https://www.electron.build/configuration/configuration
+        appId: "com.ismehr.pwa",
 
-        appId: "quasar-PaaSballs",
+        // appId: "quasar-SaaS",
       },
     },
 

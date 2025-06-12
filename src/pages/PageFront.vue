@@ -29,8 +29,8 @@
             AI Cleaning Evaluation
           </div>
           <div class="text-caption q-mt-xs text-grey-7">
-            Upload before & after photos. Let GPT-4 Vision assess cleanliness
-            and material quality.
+            Upload before & after photos. Let AI-4 Vision assess cleanliness and
+            material quality.
           </div>
         </q-card-section>
       </q-card>

@@ -16,6 +16,7 @@ const routes = [
         path: "front-page",
         name: "front-page",
         component: () => import("pages/PageFront.vue"),
+        meta: { title: "Home | Ismehr: AI SaaS for Cleaning & HR" },
       },
 
       {
@@ -27,6 +28,7 @@ const routes = [
       {
         path: "login",
         component: () => import("pages/Login.vue"),
+        meta: { title: "Sign In  | Ismehr: AI SaaS for Cleaning & HR" },
       },
       {
         path: "signup",
@@ -42,45 +44,61 @@ const routes = [
       {
         path: "settings",
         component: () => import("pages/PageSettings.vue"),
-        meta: { requiresAuth: true },
+        meta: {
+          title: "Setting | Ismehr: AI SaaS for Cleaning & HR",
+          requiresAuth: true,
+        },
       },
 
       {
         path: "camera",
         component: () => import("pages/PageCamera.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "Camera | Ismehr: AI SaaS for Cleaning & HR" },
         name: "Camera",
       },
       {
         path: "camera/batch",
         component: () => import("pages/PageCameraBatch.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "Camera | Ismehr: AI SaaS for Cleaning & HR" },
         name: "Batch Camera ",
       },
       {
         path: "videoCamera",
         component: () => import("pages/PageVideoCam.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "Video Camera | Ismehr: AI SaaS for Cleaning & HR" },
         name: "VideoCamera",
       },
       {
         path: "video-posts",
         component: () => import("pages/PageVideoView.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "Video Posts | Ismehr: AI SaaS for Cleaning & HR" },
         name: "VideoPost",
       },
       {
         path: "audio-posts",
         component: () => import("pages/PageAudioView.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "Audio Posts | Ismehr: AI SaaS for Cleaning & HR" },
         name: "audioPost",
       },
-      { path: "photos", component: () => import("pages/PageHome.vue") },
+      {
+        path: "photos",
+        component: () => import("pages/PageHome.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Camera | Ismehr: AI SaaS for Cleaning & HR",
+        },
+      },
 
       {
         path: "/photos/private",
         component: () => import("pages/PagePhotosPrivate.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "Client Photos | Ismehr: AI SaaS for Cleaning & HR" },
       },
       { path: "videos", component: () => import("pages/PageVideoView.vue") },
       {
@@ -136,21 +154,31 @@ const routes = [
         path: "mongo-transacts",
         component: () => import("pages/PageMongoTran.vue"),
         meta: { requiresAuth: true },
+        meta: {
+          title: "Transaction by ph# | IsmeHr: AI SaaS for Cleaning & HR",
+        },
       },
       {
         path: "mongo-mytransacts",
         component: () => import("pages/PageMongo-MyTransacts.vue"),
         meta: { requiresAuth: true },
+        meta: {
+          title: "🛒 my-Transaction | IsmeHr: AI SaaS for Cleaning & HR",
+        },
       },
       {
         path: "mongo-AllTransacts",
         component: () => import("pages/PageMongo-AllTransacts.vue"),
         meta: { requiresAuth: true },
+        meta: {
+          title: "🛒 All-Transact | IsmeHr: AI SaaS for Cleaning & HR",
+        },
       },
       {
         path: "view-transaction/:transactId",
         component: () => import("pages/ViewTransact.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "Transact by Id | Ismehr: AI SaaS for Cleaning & HR" },
       },
 
       // Route for creating a new transaction
@@ -158,28 +186,44 @@ const routes = [
         path: "new-transaction",
         component: () => import("pages/RetieveTranHistory.vue"),
         meta: { requiresAuth: true },
+        meta: {
+          title: "🛒 Create Transact | Ismehr: AI SaaS for Cleaning & HR",
+        },
       },
 
       {
         path: "ledger",
         component: () => import("pages/PageEntries.vue"),
         meta: { requiresAuth: true },
+        meta: {
+          title: "💰 Money bag | Ismehr: AI SaaS for Cleaning & HR",
+        },
       },
 
       {
         path: "merchant-transactions",
         component: () => import("pages/PageSellerTransacts.vue"),
         meta: { requiresAuth: true },
+        meta: {
+          title: "🛒 Merchant Transact | Ismehr: AI SaaS for Cleaning & HR",
+        },
       },
 
       {
         path: "tenants",
         component: () => import("pages/feature/PageTenantList.vue"),
+        meta: {
+          title: "🧑‍🤝‍🧑 tenant | Ismehr: AI SaaS for Cleaning & HR",
+        },
       },
       {
         path: "tenants/add",
         component: () => import("pages/feature/PageTenantAdd.vue"),
+        meta: {
+          title: "🧑 tenant | Ismehr: AI SaaS for Cleaning & HR",
+        },
       },
+
       {
         path: "tenants/edit/:id",
         component: () => import("pages/feature/PageTenantEdit.vue"),
@@ -275,54 +319,65 @@ const routes = [
         path: "marketplace",
         name: "marketplace",
         component: () => import("pages/feature/PageMarketplace.vue"),
+        meta: { title: "Marketplace | IsmeHr: AI SaaS for Cleaning & HR" },
       },
 
       {
         path: "/photos/:postId",
         component: () => import("pages/PagePhotoDetail.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "Photos By Id | IsmeHr: AI SaaS for Cleaning & HR" },
       },
 
       {
         path: "/photos/mine",
         component: () => import("pages/PagePhotosMine.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "My Photos | IsmeHr: AI SaaS for Cleaning & HR" },
       },
 
       {
         path: "private-posts",
         component: () => import("pages/PagePrivatePosts.vue"),
+        meta: { title: "Private Posts | Ismehr: AI SaaS for Cleaning & HR" },
       },
       {
         path: "assign-client",
         component: () => import("pages/PageAssignClient.vue"),
+        meta: { title: "Assign my client | Ismehr: AI SaaS for Cleaning & HR" },
       },
       {
         path: "preSignup",
         component: () => import("pages/PageRegisterClient.vue"),
+        meta: { title: "Register Client | Ismehr: AI SaaS for Cleaning & HR" },
       },
 
       {
         path: "products/:id",
         name: "ProductDetails",
         component: () => import("pages/feature/PostProduct.vue"), // ✅ or your correct file
+        meta: { requiresAuth: true },
+        meta: { title: "Product by Id | Ismehr: AI SaaS for Cleaning & HR" },
       },
 
       {
         path: "product-view/:id",
         component: () => import("pages/feature/PostProductMongo.vue"),
+        meta: { title: "Product Preview | Ismehr: AI SaaS for Cleaning & HR" },
       },
 
       {
         path: "new-transaction-cart", // 🚫 no leading slash
         name: "CartPage_NewTransaction",
         component: () => import("pages/feature/PageNewTransactionCart.vue"),
+        meta: { title: "🛒 Shopping Cart | Ismehr: AI SaaS for Cleaning & HR" },
       },
       {
         path: "transactions-unpaid",
         name: "CartPage_Unpaid",
         component: () => import("pages/PageCart.vue"),
         meta: { requiresAuth: true },
+        meta: { title: "🛒 Transaction| Ismehr: AI SaaS for Cleaning & HR" },
       },
       {
         path: "vision-submit",
@@ -383,10 +438,14 @@ const routes = [
       {
         path: "/business-info",
         component: () => import("pages/PageBusinessLanding.vue"),
+        meta: {
+          title: "AI Tools for Leather & Fabric Cleaning | Ismehr",
+        },
       },
       {
         path: "/business-about",
         component: () => import("pages/PageBusinessAbout.vue"),
+        meta: { title: "About | Ismehr: AI SaaS for Cleaning & HR" },
       },
       {
         path: "/for-cleaners",

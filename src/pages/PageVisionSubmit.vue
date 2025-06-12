@@ -56,6 +56,7 @@
         <!-------------------->
         <div class="q-mt-md" style="max-width: 300px">
           <q-select
+            ref="itemTypeSelect"
             v-model="itemType"
             :options="itemOptions"
             label="Item Type"
@@ -168,6 +169,12 @@ const zoomImageUrl = ref("");
 const showPromptEditor = ref(false);
 
 const userRole = ref("client"); // default
+
+const itemTypeSelect = ref(null);
+
+onMounted(() => {
+  itemTypeSelect.value?.showPopup(); // Opens dropdown automatically
+});
 
 // You should load actual role from Firebase or your backend
 // e.g., Firestore: users/{uid}.role

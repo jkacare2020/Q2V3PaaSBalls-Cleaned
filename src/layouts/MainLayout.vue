@@ -361,6 +361,7 @@ const navLinks = [
     links: [
       { title: "Settings", icon: "settings", link: "/settings" },
       { title: "About", icon: "info", link: "/business-about" },
+      { title: "Tools", icon: "info", link: "/business-info" },
     ],
   },
   {

@@ -3,7 +3,7 @@
     <q-header :elevated="useLightOrDark(true, false)">
       <q-banner v-if="showAppInstallBanner" class="bubble-banner">
         <div>
-          <b>Install PaaS-Balls as a native app?</b>
+          <b>Install SaaS-Balls as a native app?</b>
         </div>
         <div class="bubble-banner-buttons">
           <q-btn flat dense label="Yes" @click="installApp" color="white" />
@@ -38,7 +38,7 @@
           <div class="absolute-center">
             <div class="toolbar-title-text">
               <q-icon name="savings" />
-              PaaS-Balls
+              SaaS-Balls
             </div>
           </div>
         </q-toolbar-title>

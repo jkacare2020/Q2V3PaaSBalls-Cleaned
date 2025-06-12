@@ -18,4 +18,10 @@ const router = createRouter({
   history: createHistory(process.env.VUE_ROUTER_BASE),
 });
 
+router.afterEach((to) => {
+  if (to.meta.title) {
+    document.title = to.meta.title;
+  }
+});
+
 export default router;
