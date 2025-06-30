@@ -61,7 +61,7 @@ module.exports = configure(function () {
       },
       version: "1.0.1",
     },
-    boot: ["router", "apiFastAPI", "apiNode"],
+    boot: ["router", "apiFastAPI", "apiNode", "firebase"],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ["app.scss"],

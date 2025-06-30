@@ -10,12 +10,48 @@
     </div>
 
     <!-- Demo Video or Screenshot -->
-    <q-img
-      src="/ai-demo-preview.jpg"
-      ratio="16/9"
-      class="q-mb-xl shadow-2"
-      style="max-width: 800px"
-    />
+    <!-- Horizontal iPhone Preview -->
+    <div class="row wrap justify-center q-gutter-md q-mb-xl">
+      <div style="height: 600px"></div>
+      <q-intersection
+        once
+        @visibility="(val) => (bagVisible = val || bagVisible)"
+      >
+        <div :class="['fade-in-box', { visible: bagVisible }]">
+          <q-img
+            :src="iphone2BagsBig"
+            style="width: 200px"
+            class="shadow-4 rounded-borders"
+          />
+        </div>
+      </q-intersection>
+
+      <q-intersection
+        once
+        @visibility="(val) => (scoreVisible = val || scoreVisible)"
+      >
+        <div :class="['fade-in-box', { visible: scoreVisible }]">
+          <q-img
+            :src="iphoneBagScore"
+            style="width: 200px"
+            class="shadow-4 rounded-borders"
+          />
+        </div>
+      </q-intersection>
+
+      <q-intersection
+        once
+        @visibility="(val) => (piesVisible = val || piesVisible)"
+      >
+        <div :class="['fade-in-box', { visible: piesVisible }]">
+          <q-img
+            :src="iphone2Pies"
+            style="width: 200px"
+            class="shadow-4 rounded-borders"
+          />
+        </div>
+      </q-intersection>
+    </div>
 
     <!-- How It Works -->
     <div class="text-h5 q-mb-sm">How It Works</div>
@@ -111,6 +147,16 @@
 <script setup>
 import { useMeta } from "quasar";
 
+import iphone2BagsBig from "src/assets/iphone2BagsBig.jpg";
+import iphoneBagScore from "src/assets/iphoneBagScore.jpg";
+import iphone2Pies from "src/assets/iphone2Pies.jpg";
+
+import { ref } from "vue";
+
+const bagVisible = ref(false);
+const scoreVisible = ref(false);
+const piesVisible = ref(false);
+
 useMeta({
   title: "AI Tools for Leather & Fabric Cleaning | Ismehr",
   meta: {
@@ -124,7 +170,13 @@ useMeta({
 </script>
 
 <style scoped>
-.q-page {
-  min-height: 100vh;
+.fade-in-box {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease;
+}
+.fade-in-box.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>

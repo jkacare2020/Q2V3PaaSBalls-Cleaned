@@ -458,7 +458,9 @@ exports.mapPriceEstimating = async (req, res) => {
     const prompt = `
 You are an expert handbag restoration assistant using image analysis. For the uploaded handbag image, follow these steps:
 
-1. Identify **all visible stains** on the handbag surface.
+1. Identify **as many individual visible mold spots as possible**, even small ones. List each with accurate x, y, and radius. Return at least 10 stainCoordinates if visible.
+
+
 2. For each stain, provide:
    - zone: where it appears (e.g., "front", "handle", "side")
    - x: estimated horizontal pixel position
@@ -551,6 +553,7 @@ Return your full answer strictly as JSON using this exact schema:
       stainCount,
       stainLocations: parsed.stainLocations || [],
       cleaningInstructions: parsed.cleaningInstructions || [],
+      stainCoordinates: parsed.stainCoordinates || [], // ← ✅ ADD THIS LINE
       consumerPrice,
       merchantPrice,
       marketRange,

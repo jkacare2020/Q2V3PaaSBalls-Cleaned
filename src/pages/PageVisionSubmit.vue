@@ -1,161 +1,129 @@
 <template>
-  <!--PageVisionSubmit.vue-->
-  <q-page class="q-pa-md">
-    <div class="text-h5 q-mb-md">Submit Cleaning Evaluation</div>
-
-    <q-form @submit.prevent="submitToAI">
-      <div class="q-gutter-md">
-        <div class="row q-col-gutter-md q-mt-md">
-          <!-- Dirty Image -->
-          <!-- Dirty Image -->
-          <div class="col-6">
-            <q-file
-              v-model="dirtyImage"
-              label="Upload Dirty Image (Before Cleaning)"
-              accept="image/*"
-              filled
-            />
-            <div v-if="dirtyImage" class="image-preview q-mt-sm">
-              <div class="image-container">
-                <img
-                  :src="dirtyPreviewUrl"
-                  @click="showZoom('dirty')"
-                  class="preview-image"
-                />
-                <!-- ✅ Add scanner bar -->
-                <div v-if="isSubmitting" class="scanner-bar" />
-              </div>
-              <div class="text-caption text-center">Before</div>
-            </div>
-          </div>
-
-          <!-- Cleaned Image -->
-          <!-- Cleaned Image -->
-          <div class="col-6">
-            <q-file
-              v-model="cleanedImage"
-              label="Upload Cleaned Image (After Cleaning)"
-              accept="image/*"
-              filled
-            />
-            <div v-if="cleanedImage" class="image-preview q-mt-sm">
-              <div class="image-container">
-                <img
-                  :src="cleanedPreviewUrl"
-                  @click="showZoom('cleaned')"
-                  class="preview-image"
-                />
-                <!-- 👇 ADD THIS -->
-                <div v-if="isSubmitting" class="scanner-bar" />
-              </div>
-              <div class="text-caption text-center">After</div>
-            </div>
-          </div>
-        </div>
-
-        <!-------------------->
-        <div class="q-mt-md" style="max-width: 300px">
-          <q-select
-            ref="itemTypeSelect"
-            v-model="itemType"
-            :options="itemOptions"
-            label="Item Type"
-            outlined
-            dense
-            style="max-width: 300px"
-          />
-        </div>
-
+  <q-page class="q-pa-md flex flex-center bg-grey-1">
+    <div
+      class="column items-center q-gutter-md"
+      style="max-width: 800px; width: 100%"
+    >
+      <!-- 🖼️ Upload Buttons -->
+      <div class="row q-col-gutter-sm justify-center" style="width: 100%">
         <q-btn
-          type="submit"
-          color="primary"
-          label="Run AI Evaluation"
-          :loading="isSubmitting"
+          label="Upload Dirty Image"
+          color="negative"
+          class="col"
+          @click="$refs.dirtyInput.click()"
         />
 
         <q-btn
-          label="Reset Prompt"
-          flat
-          color="secondary"
-          @click="resetPrompt"
-        />
-
-        <!-- Link to detect brand/material -->
-        <q-btn
-          label="👜 Detect Brand & Material"
-          color="accent"
-          class="q-mt-sm"
-          to="/detect-brand"
+          label="Upload Cleaned Image"
+          color="positive"
+          class="col"
+          @click="$refs.cleanedInput.click()"
         />
       </div>
 
-      <!-- 🗘 Prompt Textarea -->
-      <!-- Toggle Button -->
-      <q-btn
-        v-if="!showPromptEditor"
-        label="✏️ Edit Prompt"
-        color="primary"
-        flat
-        @click="showPromptEditor = true"
-        :disable="!(userRole === 'admin' || userRole === 'merchant')"
-        class="q-mt-md"
+      <!-- Hidden Inputs -->
+      <input
+        type="file"
+        ref="dirtyInput"
+        accept="image/*"
+        @change="onDirtyChange"
+        hidden
       />
-      <q-tooltip v-if="userRole !== 'admin' && userRole !== 'merchant'">
-        Only merchants and admins can edit the prompt.
-      </q-tooltip>
+      <input
+        type="file"
+        ref="cleanedInput"
+        accept="image/*"
+        @change="onCleanedChange"
+        hidden
+      />
 
-      <!-- Hidden until button is clicked -->
+      <!-- 🔍 Image Preview -->
+      <div
+        class="row q-col-gutter-md justify-around q-mt-md"
+        style="width: 100%"
+      >
+        <!-- Dirty Image Container -->
+        <div class="image-container" style="flex: 1; min-width: 45%">
+          <q-img
+            v-if="dirtyPreviewUrl"
+            :src="dirtyPreviewUrl"
+            class="preview-img rounded-borders shadow-2"
+          />
+          <div v-if="isSubmitting" class="scanner-bar" />
+        </div>
+
+        <!-- Cleaned Image Container -->
+        <div class="image-container" style="flex: 1; min-width: 45%">
+          <q-img
+            v-if="cleanedPreviewUrl"
+            :src="cleanedPreviewUrl"
+            class="preview-img rounded-borders shadow-2"
+          />
+          <div v-if="isSubmitting" class="scanner-bar" />
+        </div>
+      </div>
+
+      <!-- 📋 Item Type -->
+      <q-select
+        filled
+        dense
+        v-model="itemType"
+        label="Item Type"
+        :options="itemOptions"
+        style="width: 100%"
+      />
+
+      <!-- ✏️ Action Buttons -->
+      <div class="row q-gutter-sm justify-center">
+        <q-btn
+          v-if="!showPromptEditor"
+          label="✏️ Edit Prompt"
+          color="primary"
+          flat
+          @click="showPromptEditor = true"
+          :disable="isRoleBlocked"
+        />
+        <q-btn
+          label="🔄 Reset Prompt"
+          flat
+          color="secondary"
+          @click="resetPrompt"
+          :disable="isRoleBlocked"
+        />
+      </div>
+
+      <!-- 📝 Prompt Text -->
       <q-input
-        v-else
+        v-if="showPromptEditor"
+        filled
         v-model="prompt"
         type="textarea"
-        label="Custom Prompt for GPT"
-        outlined
         autogrow
-        :rules="[(val) => !!val || 'Prompt is required']"
-        class="q-mt-md"
-        @blur="hidePromptIfEmpty"
+        label="AI Prompt"
+        style="width: 100%"
       />
+
+      <!-- 🚀 Submit -->
       <q-btn
-        v-if="showPromptEditor"
-        label="Cancel"
-        flat
-        color="negative"
-        class="q-mt-sm"
-        @click="showPromptEditor = false"
+        label="Submit Cleaning Evaluation"
+        color="primary"
+        class="q-mt-md"
+        :loading="isSubmitting"
+        @click="submitToAI"
+        style="width: 100%"
       />
-    </q-form>
-
-    <q-separator class="q-my-md" />
-
-    <div v-if="aiResponse">
-      <div class="text-subtitle1 q-mb-sm">AI Result:</div>
-      <q-card flat bordered class="q-pa-md bg-grey-2">
-        <div>{{ aiResponse.analysis || aiResponse.text }}</div>
-        <q-badge
-          v-if="aiResponse.score"
-          color="green"
-          :label="aiResponse.score + '%'"
-          class="q-mt-sm"
-        />
-      </q-card>
     </div>
-
-    <!-- Zoomed image dialog -->
-    <q-dialog v-model="zoomDialog">
-      <q-card style="max-width: 90vw; max-height: 90vh; overflow: auto">
-        <img :src="zoomImageUrl" style="width: 100%; height: auto" />
-      </q-card>
-    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useQuasar } from "quasar";
 import { auth } from "src/firebase/init";
 import { apiNode } from "boot/apiNode";
 import { useRouter } from "vue-router";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "src/firebase/init"; // or wherever your Firestore instance is
 const router = useRouter();
 const $q = useQuasar();
 const dirtyImage = ref(null);
@@ -171,6 +139,26 @@ const showPromptEditor = ref(false);
 const userRole = ref("client"); // default
 
 const itemTypeSelect = ref(null);
+
+const isRoleBlocked = computed(() => {
+  const allowed = ["admin", "merchant"];
+  const role = userRole.value;
+  return !(Array.isArray(role)
+    ? role.some((r) => allowed.includes(r))
+    : allowed.includes(role));
+});
+
+onMounted(async () => {
+  const user = auth.currentUser;
+  if (user) {
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      console.log("✅ Firestore user data:", data);
+      userRole.value = data.role; // assign the real role
+    }
+  }
+});
 
 onMounted(() => {
   itemTypeSelect.value?.showPopup(); // Opens dropdown automatically
@@ -416,6 +404,20 @@ async function submitToAI() {
     isSubmitting.value = false;
   }
 }
+
+function onDirtyChange(e) {
+  dirtyImage.value = e.target.files[0];
+  if (dirtyImage.value) {
+    dirtyPreviewUrl.value = URL.createObjectURL(dirtyImage.value);
+  }
+}
+
+function onCleanedChange(e) {
+  cleanedImage.value = e.target.files[0];
+  if (cleanedImage.value) {
+    cleanedPreviewUrl.value = URL.createObjectURL(cleanedImage.value);
+  }
+}
 </script>
 
 <style scoped>
@@ -435,48 +437,39 @@ async function submitToAI() {
   justify-content: center;
 }
 
-.preview-image {
-  height: 160px;
-  max-width: 100%;
+.preview-img {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  cursor: zoom-in;
+  border-radius: 8px;
 }
 
 .image-container {
   position: relative;
+  height: 320px;
   overflow: hidden;
-  height: 160px;
-  max-width: 100%;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  border-radius: 8px;
 }
 
 .scanner-bar {
   position: absolute;
   top: 0;
-  left: -50%;
-  width: 50%;
+  left: -60%;
+  width: 40%;
   height: 100%;
   background: linear-gradient(
     to right,
     transparent,
-    rgba(0, 174, 255, 0.5),
+    rgba(0, 174, 255, 0.4),
     transparent
   );
   animation: scan 2s linear infinite;
+  pointer-events: none;
 }
 
 @keyframes scan {
   0% {
-    left: -50%;
+    left: -60%;
   }
   100% {
     left: 100%;

@@ -24,7 +24,18 @@
         </q-expansion-item>
 
         <div class="text-h6">Brand & Material Detection</div>
-        <q-file v-model="imageFile" label="Upload Bag Image" accept="image/*" />
+        <q-file
+          v-model="imageFile"
+          label="📷 Upload Bag Image"
+          accept="image/*"
+          filled
+          outlined
+          color="primary"
+          class="q-mt-md"
+          use-chips
+          style="max-width: 320px; font-weight: bold"
+        />
+
         <div v-if="imagePreviewUrl" class="q-mt-md">
           <img
             :src="imagePreviewUrl"
@@ -217,3 +228,16 @@ const stainOptions = [
   { label: "Mold/Mildew", value: "mold" },
 ];
 </script>
+
+<style scoped>
+.q-file {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: border-color 0.2s;
+}
+
+.q-file:hover {
+  border-color: #2196f3;
+}
+</style>
