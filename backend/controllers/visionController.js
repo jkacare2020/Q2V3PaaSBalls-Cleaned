@@ -458,7 +458,7 @@ exports.mapPriceEstimating = async (req, res) => {
     const prompt = `
 You are an expert handbag restoration assistant using image analysis. For the uploaded handbag image, follow these steps:
 
-1. Identify **as many individual visible mold spots as possible**, even small ones. List each with accurate x, y, and radius. Return at least 10 stainCoordinates if visible.
+1. Identify **as many individual visible mold spots as possible**, even small ones. List each with accurate x, y, and radius. Return at least 8 stainCoordinates if visible.
 
 
 2. For each stain, provide:
